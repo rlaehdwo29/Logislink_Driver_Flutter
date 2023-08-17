@@ -1,0 +1,51 @@
+import 'package:flutter/cupertino.dart';
+import 'package:get/get.dart';
+import 'package:logger/logger.dart';
+import 'package:logislink_driver_flutter/common/common_util.dart';
+import 'package:logislink_driver_flutter/common/model/receipt_model.dart';
+import 'package:logislink_driver_flutter/provider/dio_service.dart';
+import 'package:dio/dio.dart';
+
+class ReceiptService with ChangeNotifier {
+
+  final receiptList = List.empty(growable: true).obs;
+
+  ReceiptService() {
+    receiptList.value = List.empty(growable: true);
+  }
+
+  void init() {
+    receiptList.value = List.empty(growable: true);
+  }
+
+  Future getReceipt(BuildContext? context, String? _auth, String? _orderId) async {
+    Logger logger = Logger();
+    receiptList.value = List.empty(growable: true);
+    await DioService.dioClient(header: true).getReceipt(_auth, _orderId).then((it) {
+      ReturnMap _response = DioService.dioResponse(it);
+      logger.d("getReceipt() _response -> ${_response.status} // ${_response.resultMap}");
+      if(_response.status == "200") {
+        if (_response.resultMap?["data"] != null) {
+          var list = _response.resultMap?["data"] as List;
+          List<ReceiptModel> itemsList = list.map((i) => ReceiptModel.fromJSON(i)).toList();
+          receiptList?.addAll(itemsList);
+        }
+      }else{
+        receiptList.value = List.empty(growable: true);
+      }
+    }).catchError((Object obj){
+      switch (obj.runtimeType) {
+        case DioError:
+        // Here's the sample to get the failed response error code and message
+          final res = (obj as DioError).response;
+          print("getReceipt() Error => ${res?.statusCode} // ${res?.statusMessage}");
+          break;
+        default:
+          print("getReceipt() Error Default => ");
+          break;
+      }
+    });
+    return receiptList;
+  }
+
+}

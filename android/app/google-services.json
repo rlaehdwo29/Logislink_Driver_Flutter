@@ -1,0 +1,46 @@
+{
+  "project_info": {
+    "project_number": "843222466718",
+    "project_id": "logislinkflutter-9f180",
+    "storage_bucket": "logislinkflutter-9f180.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:843222466718:android:ba80ec3e86aa1656e9bb8f",
+        "android_client_info": {
+          "package_name": "com.logislink.driver"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "843222466718-ahsq5k937uosnlovd6d2oepuv24q5fam.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyA-LcVr3DycYl4V6Gm1q_FCxgRLKbW_LK0"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "843222466718-ahsq5k937uosnlovd6d2oepuv24q5fam.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "843222466718-dlpr07u3lhflljb7ooktaul11sp2pnnb.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.logislink.driver.logislinkDriverFlutter"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
