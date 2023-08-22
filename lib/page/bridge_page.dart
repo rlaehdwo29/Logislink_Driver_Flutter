@@ -89,13 +89,11 @@ class _BridgePageState extends State<BridgePage> {
   }
 
   Future<void> checkLogin() async {
-    print("응애응애 송아지 =>${Const.userDebugger}");
     if(Const.userDebugger) {
       goToLogin();
       return;
     }
 
-    print("응애응애 송아지2222 =>${App().getUserInfo().authorization}");
     if(App().getUserInfo().authorization != null ){
       if(App().getUserInfo().vehicCnt! >= 2) {
         goToUserCar();
@@ -146,10 +144,10 @@ class _BridgePageState extends State<BridgePage> {
         case DioError:
         // Here's the sample to get the failed response error code and message
           final res = (obj as DioError).response;
-          print("에러에러 => ${res?.statusCode} // ${res?.statusMessage}");
+          print("bridge_page.dart getUserInfo() Exeption=> ${res?.statusCode} // ${res?.statusMessage}");
           break;
         default:
-          print("에러에러222 => ");
+          print("bridge_page.dart getUserInfo() Default Exeption => ");
           break;
       }
     });
@@ -240,7 +238,6 @@ class _BridgePageState extends State<BridgePage> {
               );
 
               if (results != null && results.containsKey("code")) {
-                print("IntentTax CallBack!! => ${results["code"]}");
                 if (results["code"] == 200) {
                   Navigator.of(context).pushAndRemoveUntil(
                       MaterialPageRoute(
@@ -254,7 +251,6 @@ class _BridgePageState extends State<BridgePage> {
               );
 
               if (results != null && results.containsKey("code")) {
-                print("IntentTax CallBack!! => ${results["code"]}");
                 if (results["code"] == 200) {
                   Navigator.of(context).pushAndRemoveUntil(
                       MaterialPageRoute(
@@ -268,8 +264,10 @@ class _BridgePageState extends State<BridgePage> {
                       builder: (BuildContext context) => const LoginPage()),
                       (route) => false);
             }
+            /*await Navigator.of(context).push(MaterialPageRoute(
+                builder: (BuildContext context) => const TermsPage()));*/
           }catch(e) {
-            print("호엥오엥옹 => $e");
+            print("CheckTermsAgree Exepction => $e");
           }
         }
       }

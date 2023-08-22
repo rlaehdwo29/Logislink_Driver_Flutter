@@ -53,7 +53,6 @@ Future<void> main() async {
   final binding = WidgetsFlutterBinding.ensureInitialized();
   FlutterNativeSplash.preserve(widgetsBinding: binding);
   await dotenv.load(fileName: 'assets/env/.env');
-  print("키르보자 키를 => ${dotenv.env['APP_KEY']}");
   AuthRepository.initialize(appKey: dotenv.env['APP_KEY'] ?? '');
   KakaoSdk.init(nativeAppKey: dotenv.env['NATIVE_KEY'] ?? '' ,javaScriptAppKey: dotenv.env['APP_KEY'] ?? '');
   //Firebase Setting

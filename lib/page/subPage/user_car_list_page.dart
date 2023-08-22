@@ -22,7 +22,6 @@ class _UserCarListPageState extends State<UserCarListPage> {
   final userCarList = List.empty(growable: true).obs;
 
   Widget getUserCarInfoFuture() {
-    print("뭐가 문제인거지? => ${userCarList.length}");
     UserModel user = controller.getUserInfo()!;
     final userCarService = Provider.of<UserCarInfoService>(context);
     return FutureBuilder(
@@ -31,7 +30,6 @@ class _UserCarListPageState extends State<UserCarListPage> {
           if(snapshot.hasData){
             if(userCarList.isNotEmpty) userCarList.value = List.empty(growable: true);
             userCarList.value.addAll(snapshot.data);
-            print("뭐가 문제인거지22222? => ${userCarList.length}");
             return getUserCarInfoListItem();
           }else if(snapshot.hasError) {
             return Container(

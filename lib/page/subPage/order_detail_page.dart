@@ -779,26 +779,62 @@ class _OrderDetailPageState extends State<OrderDetailPage>{
               )
           ): const SizedBox(),
 
-          _type == "wayon" ? ElevatedButton(
-              style: ElevatedButton.styleFrom(
-                  primary: widget.item?.allocState != "04" && widget.item?.allocState != "05" && widget.item?.allocState != "20"? sub_color : text_color_02,
-                  onPrimary: widget.item?.allocState != "04" && widget.item?.allocState != "05" && widget.item?.allocState != "20"? sub_color : text_color_02,
-                  padding: EdgeInsets.symmetric(vertical: CustomStyle.getHeight(5.0))
-              ),
-              onPressed: () {
-                if(widget.item?.allocState != "04" && widget.item?.allocState != "05" && widget.item?.allocState != "20") showStartOrder();
-              },
-              child: Text(
-                widget.item?.allocState == "04"? "출발 (${app_util.Util.getDateStrToStr(widget.item?.startDate, "MM.dd HH:mm")})"
-                : widget.item?.allocState == "05"? "출발 (${app_util.Util.getDateStrToStr(widget.item?.startDate, "MM.dd HH:mm")})"
-                : "${Strings.of(context)?.get("order_start")??"Not Found"}",
-                style: CustomStyle.loginTitleFont(),
-              )
-          ) : ElevatedButton(
+          _type == "wayon" ? Row(
+              children: [
+                Expanded(
+                    flex: 1,
+                    child:ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                          primary: widget.item?.allocState != "04" && widget.item?.allocState != "05" && widget.item?.allocState != "20" && widget.item?.allocState != "12"? sub_color : text_color_02,
+                          onPrimary: widget.item?.allocState != "04" && widget.item?.allocState != "05" && widget.item?.allocState != "20" && widget.item?.allocState != "12"? sub_color : text_color_02,
+                          padding: EdgeInsets.symmetric(vertical: CustomStyle.getHeight(5.0)),
+                          shape: const RoundedRectangleBorder(
+                              borderRadius: BorderRadius.all(Radius.circular(5.0))
+                          ),
+                        ),
+                        onPressed: () {
+                          if(widget.item?.allocState != "04" && widget.item?.allocState != "05" && widget.item?.allocState != "20" && widget.item?.allocState != "12") showEnterOrder();
+                        },
+                        child: Text(
+                          widget.item?.allocState == "04"? "입차 ${widget.item?.enterDate?.isNotEmpty == true && widget.item?.enterDate !=null ?"(${app_util.Util.getDateStrToStr(widget.item?.enterDate, "MM.dd HH:mm")})":""}"
+                              : widget.item?.allocState == "05"? "입차 ${widget.item?.enterDate?.isNotEmpty == true && widget.item?.enterDate !=null ?"(${app_util.Util.getDateStrToStr(widget.item?.enterDate, "MM.dd HH:mm")})":""}"
+                              : widget.item?.allocState == "12"? "입차 ${widget.item?.enterDate?.isNotEmpty == true && widget.item?.enterDate !=null ?"(${app_util.Util.getDateStrToStr(widget.item?.enterDate, "MM.dd HH:mm")})":""}"
+                              : "${Strings.of(context)?.get("order_enter")??"Not Found"}",
+                          style: CustomStyle.loginTitleFont(),
+                        )
+                    )
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  flex: 1,
+                   child:ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                        primary: widget.item?.allocState != "04" && widget.item?.allocState != "05" && widget.item?.allocState != "20"? sub_color : text_color_02,
+                        onPrimary: widget.item?.allocState != "04" && widget.item?.allocState != "05" && widget.item?.allocState != "20"? sub_color : text_color_02,
+                        padding: EdgeInsets.symmetric(vertical: CustomStyle.getHeight(5.0)),
+                      shape: const RoundedRectangleBorder(
+                          borderRadius: BorderRadius.all(Radius.circular(5.0))
+                      ),
+                    ),
+                    onPressed: () {
+                      if(widget.item?.allocState != "04" && widget.item?.allocState != "05" && widget.item?.allocState != "20") showStartOrder();
+                    },
+                    child: Text(
+                      widget.item?.allocState == "04"? "출발 (${app_util.Util.getDateStrToStr(widget.item?.startDate, "MM.dd HH:mm")})"
+                      : widget.item?.allocState == "05"? "출발 (${app_util.Util.getDateStrToStr(widget.item?.startDate, "MM.dd HH:mm")})"
+                      : "${Strings.of(context)?.get("order_start")??"Not Found"}",
+                      style: CustomStyle.loginTitleFont(),
+                    )
+                )
+                )
+              ]) : ElevatedButton(
               style: ElevatedButton.styleFrom(
                   primary: widget.item?.allocState != "05" ? sub_color : text_color_02,
                   onPrimary: widget.item?.allocState != "05" ? sub_color : text_color_02,
-                  padding: EdgeInsets.symmetric(vertical: CustomStyle.getHeight(5.0))
+                  padding: EdgeInsets.symmetric(vertical: CustomStyle.getHeight(5.0)),
+                shape: const RoundedRectangleBorder(
+                    borderRadius: BorderRadius.all(Radius.circular(5.0))
+                ),
               ),
               onPressed: () {
                 if(widget.item?.allocState == "04"){
@@ -828,15 +864,11 @@ class _OrderDetailPageState extends State<OrderDetailPage>{
   void setCalcView() {
     tvReceipt.value = !(widget.item?.receiptYn == "N");
 
-    print("뭔디아? =>${widget.item?.taxinvYn} // ${widget.item?.loadStatus}");
-    print("뭔디아33333? =>${widget.item?.taxinvYn == "N"} // ${!(widget.item?.taxinvYn == "N")}");
-    print("뭔디아4444? =>${widget.item?.loadStatus == "0"} // ${!(widget.item?.loadStatus == "0")}");
     if(!(widget.item?.taxinvYn == "N")) {
       tvTax.value = true;
     }else{
       tvTax.value = !(widget.item?.loadStatus == "0");
     }
-    print("뭔디아2222? =>${tvTax.value}");
     if(widget.item?.finishYn == "Y"){
       tvPay.value = true;
     }else{
@@ -1501,6 +1533,23 @@ class _OrderDetailPageState extends State<OrderDetailPage>{
           await setOrderState("20", "오더 취소를 요청했습니다.");
         });
 
+  }
+
+  void showEnterOrder() {
+    if(widget.item?.allocState == "01") {
+      openCommonConfirmBox(
+          context,
+          "상차지에서 입차처리하시겠습니까?",
+          Strings.of(context)?.get("cancel") ?? "Not Found",
+          Strings.of(context)?.get("confirm") ?? "Not Found",
+              () => Navigator.of(context).pop(false),
+              () async {
+            Navigator.of(context).pop(false);
+            await setOrderState("12", "상차지 입차 처리했습니다.");
+          });
+    }else{
+      app_util.Util.toast("출발 및 도착 진행중에는 입차처리가 불가능합니다.");
+    }
   }
 
   void showStartOrder() {

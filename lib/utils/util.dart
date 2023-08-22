@@ -57,9 +57,7 @@ class Util {
 
     final encrypter = enc.Encrypter(enc.AES(key,mode: enc.AESMode.cbc,padding: 'PKCS7'));
     final encrypted = encrypter.encrypt(value, iv: iv);
-    //print("응애옹애22 => ${encrypted.base64}");
     //var result = await Aespack.encrypt(value, file, mIv);
-    //print("응애옹애22 => ${result} // $file // ${iv.toString()}");
     return encrypted.base64;
   }
 

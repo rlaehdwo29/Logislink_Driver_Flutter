@@ -578,57 +578,6 @@ class _Rest implements Rest {
   }
 
   @override
-  Future<HttpResponse<dynamic>> uploadReceipt(
-    Authorization,
-    orderId,
-    allocId,
-    fileTypeCode,
-    uploadFile,
-  ) async {
-    const _extra = <String, dynamic>{};
-    final queryParameters = <String, dynamic>{};
-    queryParameters.removeWhere((k, v) => v == null);
-    final _headers = <String, dynamic>{r'Authorization': Authorization};
-    _headers.removeWhere((k, v) => v == null);
-    final _data = FormData();
-    if (orderId != null) {
-      _data.fields.add(MapEntry(
-        'orderId',
-        orderId,
-      ));
-    }
-    if (allocId != null) {
-      _data.fields.add(MapEntry(
-        'allocId',
-        allocId,
-      ));
-    }
-    if (fileTypeCode != null) {
-      _data.fields.add(MapEntry(
-        'fileTypeCode',
-        fileTypeCode,
-      ));
-    }
-    final _result =
-        await _dio.fetch(_setStreamType<HttpResponse<dynamic>>(Options(
-      method: 'POST',
-      headers: _headers,
-      extra: _extra,
-      contentType: 'application/x-www-form-urlencoded',
-    )
-            .compose(
-              _dio.options,
-              '/drv/order/file/upload/v2',
-              queryParameters: queryParameters,
-              data: _data,
-            )
-            .copyWith(baseUrl: baseUrl ?? _dio.options.baseUrl)));
-    final value = _result.data;
-    final httpResponse = HttpResponse(value, _result);
-    return httpResponse;
-  }
-
-  @override
   Future<HttpResponse<dynamic>> removeReceipt(
     Authorization,
     orderId,
@@ -1765,9 +1714,11 @@ class _Rest implements Rest {
   ) async {
     const _extra = <String, dynamic>{};
     final queryParameters = <String, dynamic>{};
+    queryParameters.removeWhere((k, v) => v == null);
     final _headers = <String, dynamic>{r'Authorization': Authorization};
     _headers.removeWhere((k, v) => v == null);
     final _data = {'tel': tel};
+    _data.removeWhere((k, v) => v == null);
     final _result =
         await _dio.fetch(_setStreamType<HttpResponse<dynamic>>(Options(
       method: 'POST',
@@ -1798,6 +1749,7 @@ class _Rest implements Rest {
   ) async {
     const _extra = <String, dynamic>{};
     final queryParameters = <String, dynamic>{};
+    queryParameters.removeWhere((k, v) => v == null);
     final _headers = <String, dynamic>{r'Authorization': Authorization};
     _headers.removeWhere((k, v) => v == null);
     final _data = {
@@ -1807,6 +1759,7 @@ class _Rest implements Rest {
       'selective': selective,
       'version': termsVersion,
     };
+    _data.removeWhere((k, v) => v == null);
     final _result =
         await _dio.fetch(_setStreamType<HttpResponse<dynamic>>(Options(
       method: 'POST',

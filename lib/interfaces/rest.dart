@@ -514,12 +514,12 @@ abstract class Rest {
   @FormUrlEncoded()
   @POST(URL_TERMS_INSERT)
   Future<HttpResponse> insertTermsAgree(
-      @Header("Authorization") String Authorization,
-      @Field("tel") String tel,
-      @Field("userId") String userName,
-      @Field("necessary") String necessary,
-      @Field("selective") String selective,
-      @Field("version") String termsVersion
+      @Header("Authorization") String? Authorization,
+      @Field("tel") String? tel,
+      @Field("userId") String? userName,
+      @Field("necessary") String? necessary,
+      @Field("selective") String? selective,
+      @Field("version") String? termsVersion
       );
 
   /**

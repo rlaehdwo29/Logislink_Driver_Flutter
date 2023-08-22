@@ -113,7 +113,6 @@ class _ReceiptPageState extends State<ReceiptPage>{
       var _formatFile = File(file!.path);
         var request = http.MultipartRequest(
             "POST", Uri.parse(SERVER_URL + URL_RECEIPT_UPLOAD));
-        print("음-----> ${SERVER_URL}$URL_RECEIPT_UPLOAD");
         request.headers.addAll({"Authorization": '${user?.authorization}'});
         request.fields['orderId'] = '${widget.item?.orderId}';
         request.fields['allocId'] = '${widget.item?.allocId}';
@@ -122,10 +121,9 @@ class _ReceiptPageState extends State<ReceiptPage>{
         request.files.add(await http.MultipartFile.fromPath('uploadFile', _formatFile!.path, contentType: MediaType.parse("multipart/form-data"))); // 이게 업로드 됨.
 
         var response = await request.send();
-        print("업로드 되었나? =>  ${response.request?.url} // ${response.request?.headers} // ${response.statusCode}");
         if (response.statusCode == 200) {
           var jsonBody = json.decode(await response.stream.bytesToString()); // json 응답 값을 decode
-          print("ddddddd => ${jsonBody} // ${jsonBody["result"]} ${jsonBody["msg"]}");
+          print("uploadReceipt() Result ToJson => ${jsonBody} // ${jsonBody["result"]} ${jsonBody["msg"]}");
           if(jsonBody["result"] == true) {
             await getReceiptList();
             setState(() {});
@@ -136,26 +134,6 @@ class _ReceiptPageState extends State<ReceiptPage>{
           Util.toast(Strings.of(context)?.get("error_message"));
         }
   }
-
-  /*void compressImage(Uri uri) {
-    uploadReceipt(FileUtils.getCompressFile(this, uri));
-  }*/
-
-  /*Future<String?>? getImageDate(String? uri) async {
-    String? date = null;
-    Content? inp = null;
-    try{
-      inp = await ContentResolver.resolveContent(uri??"");
-      print("으으으응ㅁ? => $inp");
-    }catch(e) {
-      print(e);
-    }finally{
-      if(inp != null) {
-
-      }
-    }
-  return date;
-  }*/
 
   Future<void> showAlbum() async {
     await _displayPickImageDialog(context,
@@ -185,7 +163,7 @@ class _ReceiptPageState extends State<ReceiptPage>{
   Future<void> checkPermission() async {
     if (await Permission.contacts.request().isGranted) {
       // Either the permission was already granted before or the user just granted it.
-      print("연결댐");
+      print("연결");
     }else{
       // You can request multiple permissions at once.
       Map<Permission, PermissionStatus> statuses = await [
@@ -253,7 +231,6 @@ class _ReceiptPageState extends State<ReceiptPage>{
               itemBuilder: (BuildContext context, int index) {
                 var filename =
                     SERVER_URL + RECEIPT_PATH + receiptList?[index].fileName;
-                print("파일 네임이 모야? => $filename");
                 return Stack(
                     fit: StackFit.expand,
                     children: [
@@ -294,13 +271,7 @@ class _ReceiptPageState extends State<ReceiptPage>{
               if(receiptList.isNotEmpty) receiptList.value = List.empty(growable: true);
               receiptList.addAll(snapshot.data);
               for(var receiptItem in receiptList){
-                try{
-                  print("옹앱 => ${receiptItem.fileSeq} // ${receiptItem.fileName} // ${receiptItem.filePath}");
                   XFile _xFile = XFile(receiptItem.filePath,name: receiptItem.fileName);
-                  print("옹앱11111 => ${_xFile.path} // ${_xFile.name}");
-                }catch(e) {
-                  print("ㅇㅇㅇㅇㅇㅇㅇㅇㅈㅈㅈㅈㅈㅈ => $e");
-                }
               }
               return getReceipt();
           } else if(snapshot.hasError) {

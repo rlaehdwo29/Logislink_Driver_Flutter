@@ -213,12 +213,8 @@ class _TaxPageState extends State<TaxPage> {
       logger.d("writeTax() _response -> ${_response.status} // ${_response.resultMap}");
       if(_response.status == "200") {
         if (_response.resultMap?["result"] == true) {
-          try {
             widget.item?.invId = it.response.data["invId"];
             issueTax();
-          }catch(e) {
-            print("잉씨방 => $e");
-          }
         } else {
           Util.toast(_response.resultMap?["msg"]);
         }
@@ -272,7 +268,6 @@ class _TaxPageState extends State<TaxPage> {
 
   void showPayConfirm(String? _result) {
     if(_result == "200") {
-      print("옹애 => ${checkBankDate()}");
       if(checkBankDate() != true) {
         sendPay();
       }else{

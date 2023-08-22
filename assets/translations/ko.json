@@ -39,6 +39,7 @@
   "m":"m",
   "driver":"차주님",
   "order_start":"출발",
+  "order_enter":"입차",
   "order_end":"도착",
   "order_way_on":"상차",
   "order_way_off":"하차",

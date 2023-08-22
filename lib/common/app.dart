@@ -27,7 +27,6 @@ class App extends GetxController{
   final isIsNoticeOpen = false.obs;
 
   /*void setBankInfo(BankInfoModel? bankInfo) {
-    print("엥?? =>${bankInfo?.acctNo} // ${bankInfo?.chkDate} // ${bankInfo?.acctNm} // ${bankInfo?.bankCd}");
     bank_info = bankInfo!;
   }
 

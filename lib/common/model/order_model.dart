@@ -78,6 +78,7 @@ class OrderModel extends ResultModel {
   String? allocDate;           //배차일
   String? startDate;           //출발일
   String? finishDate;          //도착일
+  String? enterDate;           //입차일
 
   String? receiptYn;           //인수증접수여부 (Y/P일 경우 접수 상태, 인수증은 종이랑 사진 동시 확인함)
   String? receiptDate;         //인수증접수일(해당 컬럼 값이 있을 경우, 사진인수증 접수)
@@ -169,6 +170,7 @@ class OrderModel extends ResultModel {
     this.allocDate,
     this.startDate,
     this.finishDate,
+    this.enterDate,
     this.receiptYn,
     this.receiptDate,
     this.receiptPath,
@@ -257,6 +259,7 @@ class OrderModel extends ResultModel {
       allocDate:json['allocDate'],
       startDate:json['startDate'],
       finishDate:json['finishDate'],
+      enterDate:json['enterDate'],
       receiptYn:json['receiptYn'],
       receiptDate:json['receiptDate'],
       receiptPath:json['receiptPath'],
