@@ -205,7 +205,7 @@ class _OrderDetailPageState extends State<OrderDetailPage>{
                             )
                         )
                     ),
-                  padding: EdgeInsets.only(top: CustomStyle.getHeight(5.0),right: CustomStyle.getWidth(20.0),left: CustomStyle.getWidth(20.0)),
+                  padding: EdgeInsets.only(top: CustomStyle.getHeight(5.0),right: CustomStyle.getWidth(10.0),left: CustomStyle.getWidth(10.0)),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     mainAxisAlignment: MainAxisAlignment.center,
@@ -273,7 +273,7 @@ class _OrderDetailPageState extends State<OrderDetailPage>{
                               flex: 1,
                               child: InkWell(
                                 onTap: (){
-                                  onFinishStopPoint(iData);
+                                  if(!app_util.Util.ynToBoolean(iData.finishYn)) onFinishStopPoint(iData);;
                                 },
                                 child: Container(
                                   decoration: CustomStyle.customBoxDeco(!app_util.Util.ynToBoolean(iData.finishYn) ?sub_color:text_color_02,radius: styleRadius5),
@@ -291,11 +291,11 @@ class _OrderDetailPageState extends State<OrderDetailPage>{
                               flex: 1,
                               child: InkWell(
                                 onTap: (){
-                                  onBeginStartPoint(iData);
+                                  if(!app_util.Util.ynToBoolean(iData.beginYn)) onBeginStartPoint(iData);
                                 },
                                   child: Container(
                                   decoration: CustomStyle.customBoxDeco(!app_util.Util.ynToBoolean(iData.beginYn) ?sub_color:text_color_02,radius: styleRadius5),
-                                  padding: const EdgeInsets.all(5.0),
+                                  padding: EdgeInsets.symmetric(vertical: CustomStyle.getHeight(5.0)),
                                   child: Text(
                                     textAlign: TextAlign.center,
                                     "${Strings.of(context)?.get("order_start")??"Not Found"}${iData.beginDate != null?" (${app_util.Util.getDateStrToStr(iData.beginDate, "MM.dd HH:mm")})":""}",
@@ -371,8 +371,9 @@ class _OrderDetailPageState extends State<OrderDetailPage>{
       if (_response.status == "200") {
         if (_response.resultMap?["result"] == true) {
           getOrderDetail(widget.item?.allocId);
-          setDriverClick("85", data.eAddr,"N");
+          await setDriverClick("85", data.eAddr,"N");
           app_util.Util.toast("경유지에 도착했습니다.");
+          setState(() {});
         } else {
           app_util.Util.toast(_response.resultMap?["msg"]);
         }
@@ -409,9 +410,10 @@ class _OrderDetailPageState extends State<OrderDetailPage>{
           "beginStartPoint() _response -> ${_response.status} // ${_response.resultMap}");
       if (_response.status == "200") {
         if (_response.resultMap?["result"] == true) {
-          getOrderDetail(widget.item?.allocId);
-          setDriverClick("84", data.eAddr,"N");
+          await getOrderDetail(widget.item?.allocId);
+          await setDriverClick("84", data.eAddr,"N");
           if(data.finishYn == "N") app_util.Util.toast("경유지에서 출발합니다.");
+          setState(() {});
         } else {
           app_util.Util.toast(_response.resultMap?["msg"]);
         }
@@ -424,8 +426,7 @@ class _OrderDetailPageState extends State<OrderDetailPage>{
         case DioError:
         // Here's the sample to get the failed response error code and message
           final res = (obj as DioError).response;
-          logger.e(
-              "order_detail_page.dart beginStartPoint() Error Default: ${res?.statusCode} -> ${res?.statusCode} // ${res?.statusMessage} // ${res}");
+          logger.e("order_detail_page.dart beginStartPoint() Error Default: ${res?.statusCode} -> ${res?.statusCode} // ${res?.statusMessage} // ${res}");
           openOkBox(context, "${res?.statusCode} / ${res?.statusMessage}", Strings.of(context)?.get("confirm") ?? "Error!!", () {
             Navigator.of(context).pop(false);
           });
@@ -596,11 +597,11 @@ class _OrderDetailPageState extends State<OrderDetailPage>{
                     goToTax();
                   },
                   child: Container(
-                      decoration: tvTax.value ? CustomStyle.customBoxDeco(sub_color) : CustomStyle.customBoxDeco(styleWhiteCol,border_color: text_color_02),
+                      decoration: !tvTax.value ? CustomStyle.customBoxDeco(sub_color) : CustomStyle.customBoxDeco(styleWhiteCol,border_color: text_color_02),
                       padding: EdgeInsets.symmetric(vertical: CustomStyle.getHeight(5.0),horizontal: CustomStyle.getWidth(10.0)),
                       child:Text(
                           Strings.of(context)?.get("tax_title")??"Not Found",
-                        style: CustomStyle.CustomFont(styleFontSize10, tvTax.value ? styleWhiteCol : text_color_02),
+                        style: CustomStyle.CustomFont(styleFontSize10, !tvTax.value ? styleWhiteCol : text_color_02),
                       )
                   ),
                 ):const SizedBox(),
@@ -732,8 +733,9 @@ class _OrderDetailPageState extends State<OrderDetailPage>{
           Container(
             width: MediaQuery.of(context).size.width,
               padding: EdgeInsets.fromLTRB(CustomStyle.getWidth(20.0),CustomStyle.getHeight(5.0),CustomStyle.getWidth(20.0),CustomStyle.getWidth(0.0)),
-                child: Flexible(
-                  child: Row(
+                child: Wrap(
+                  spacing: 5,
+                  runSpacing: 1,
                   children: [
                     (_type == "wayon"?widget.item?.sComName:widget.item?.eComName)?.isEmpty == false?
                     Text(
@@ -759,7 +761,6 @@ class _OrderDetailPageState extends State<OrderDetailPage>{
                     ): const SizedBox()
                   ],
                 ),
-              )
             ),
 
           Container(
@@ -827,12 +828,15 @@ class _OrderDetailPageState extends State<OrderDetailPage>{
   void setCalcView() {
     tvReceipt.value = !(widget.item?.receiptYn == "N");
 
-    if(widget.item?.taxinvYn == "N") {
+    print("뭔디아? =>${widget.item?.taxinvYn} // ${widget.item?.loadStatus}");
+    print("뭔디아33333? =>${widget.item?.taxinvYn == "N"} // ${!(widget.item?.taxinvYn == "N")}");
+    print("뭔디아4444? =>${widget.item?.loadStatus == "0"} // ${!(widget.item?.loadStatus == "0")}");
+    if(!(widget.item?.taxinvYn == "N")) {
       tvTax.value = true;
     }else{
       tvTax.value = !(widget.item?.loadStatus == "0");
     }
-
+    print("뭔디아2222? =>${tvTax.value}");
     if(widget.item?.finishYn == "Y"){
       tvPay.value = true;
     }else{
@@ -1335,7 +1339,7 @@ class _OrderDetailPageState extends State<OrderDetailPage>{
   }
 
   Future goToReceipt() async {
-    if(SP.getBoolean(Const.KEY_GUEST_MODE)??false){
+    if(SP.getBoolean(Const.KEY_GUEST_MODE)){
       showGuestDialog();
       return;
     }
@@ -1346,14 +1350,13 @@ class _OrderDetailPageState extends State<OrderDetailPage>{
 
     if(results != null && results.containsKey("code")){
       if(results["code"] == 200) {
-        setState(() {});
-        //getOrderDetail(widget.item?.allocId);
-        if (widget.item?.taxinvYn == "N" || !(widget.item?.loadStatus == "0")) {
+        await getOrderDetail(widget.item?.allocId);
+        if (widget.item?.taxinvYn == "N" && widget.item?.loadStatus == "0") {
           showNextTaxDialog();
         }
+        setState(() {});
       }
     }
-
   }
 
   void showNextTaxDialog() {
@@ -1386,9 +1389,9 @@ class _OrderDetailPageState extends State<OrderDetailPage>{
     if(results != null && results.containsKey("code")){
       print("IntentTax CallBack!! => ${results["code"]}");
       if(results["code"] == 200) {
-        getOrderDetail(widget.item?.allocId);
-        app_util.Util.toast("전자세금계산서 발행 신청이 완료되었습니다.");
+        await getOrderDetail(widget.item?.allocId);
         setState(() {});
+        app_util.Util.toast("전자세금계산서 발행 신청이 완료되었습니다.");
       }
     }
   }
@@ -1411,7 +1414,7 @@ class _OrderDetailPageState extends State<OrderDetailPage>{
               list.map((i) => OrderModel.fromJSON(i)).toList();
           if (itemsList != null && itemsList.isNotEmpty) {
             if(itemsList[0].taxinvYn == "N"){
-              if(!(widget.item?.loadStatus == "0")) {
+              if(tvTax.value) {
                 if (itemsList[0].loadStatus == "1") {
                   app_util.Util.toast("전자세금계산서 발행 대기중입니다.");
                 } else if (itemsList[0].loadStatus == "2") {
@@ -1528,16 +1531,13 @@ class _OrderDetailPageState extends State<OrderDetailPage>{
 
   Future<void> setDriverClick(String? code, String? addr, String? auto) async {
     Logger logger = Logger();
-    await pr?.show();
     await DioService.dioClient(header: true).setDriverClick(controller.getUserInfo()?.authorization, widget.item?.orderId, code, addr, auto).then((it) async {
       ReturnMap _response = DioService.dioResponse(it);
-      await pr?.hide();
       logger.d("setDriverClick() _response -> ${_response.status} // ${_response.resultMap}");
       if(_response.status == "200") {
 
       }
     }).catchError((Object obj) async {
-      await pr?.hide();
       switch (obj.runtimeType) {
         case DioError:
         // Here's the sample to get the failed response error code and message
@@ -1652,10 +1652,12 @@ class _OrderDetailPageState extends State<OrderDetailPage>{
             if(code == "04") {
               addAllocList();
               await setDriverClick(code,widget.item?.sAddr,"N");
+              setState(() {});
             }else if(code == "05"){
               widget.item?.allocState = code;
               removeAllocList();
               await setDriverClick(code,widget.item?.eAddr,"N");
+              setState(() {});
             }
             //removeGeofence(code);
             await getOrderDetail(widget.item?.allocId);
@@ -1777,12 +1779,13 @@ class _OrderDetailPageState extends State<OrderDetailPage>{
             SliverList(
                 delegate: SliverChildBuilderDelegate(
                     (BuildContext context, int index){
+                      print("뭐야뭐야? => ${widget.item} // ${widget.item!.stopCount!}");
                       return Container(
                           padding: EdgeInsets.all(CustomStyle.getHeight(10.0)),
                           child: Column(
                             children: [
                               // 길안내 버튼
-                              getNaviBtn(),
+                              finished.value == false? getNaviBtn() : const SizedBox(),
                               // 운송 상태 및 지불 방법
                               getAllocStateAndPayType(),
                               // 화물 적재 타입 및 운송 타입

@@ -1018,7 +1018,7 @@ class _AppBarSalesDetailPageState extends State<AppBarSalesDetailPage> {
       logger.d(
           "deleteDataAPI() _response -> ${response.status} // ${response.resultMap}");
       if (response.status == "200") {
-        Util.toast(Strings.of(context)?.get("Sales_Reg_Success")??"Not Found");
+        Util.toast(Strings.of(context)?.get("delete_message")??"Not Found");
         widget.onCallback(true);
         Navigator.of(context).pop(false);
       }else{
@@ -1083,7 +1083,7 @@ class _AppBarSalesDetailPageState extends State<AppBarSalesDetailPage> {
       logger.d(
           "updateDataAPI() _response -> ${response.status} // ${response.resultMap}");
       if (response.status == "200") {
-        Util.toast(Strings.of(context)?.get("Sales_Reg_Success")??"Not Found");
+        Util.toast(Strings.of(context)?.get("Sales_Mod_Success")??"Not Found");
         widget.onCallback(true);
         Navigator.of(context).pop(false);
       }else{
@@ -1148,6 +1148,7 @@ class _AppBarSalesDetailPageState extends State<AppBarSalesDetailPage> {
           "insertRegisterAPI() _response -> ${response.status} // ${response.resultMap}");
       if (response.status == "200") {
         Util.toast(Strings.of(context)?.get("Sales_Reg_Success")??"Not Found");
+        widget.onCallback(true);
         Navigator.of(context).pop(false);
       }else{
         Util.toast("등록에 실패하였습니다.");

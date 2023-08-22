@@ -1,6 +1,6 @@
 import 'package:logislink_driver_flutter/common/config_url.dart';
 import 'package:retrofit/retrofit.dart';
-import 'package:dio/dio.dart';
+import 'package:dio/dio.dart' ;
 
 part 'rest.g.dart';
 
@@ -172,13 +172,13 @@ abstract class Rest {
   /**
    * 인수증 업로드
    */
-  /*@POST(URL_RECEIPT_UPLOAD)
-  @MultiPart()
+  /*@FormUrlEncoded()
+  @POST(URL_RECEIPT_UPLOAD)
   Future<HttpResponse> uploadReceipt(@Header("Authorization") String? Authorization,
       @Part() String? orderId,
-      @Part() String? allocId,
+      @Part() String?  allocId,
       @Part() String? fileTypeCode,
-      @Part() MultipartBody.Part? uploadFile);*/
+      @Part() MultipartFile uploadFile);*/
 
   /**
    * 인수증 삭제
@@ -505,8 +505,8 @@ abstract class Rest {
   @FormUrlEncoded()
   @POST(URL_TERMS_TEL)
   Future<HttpResponse> getTermsTelAgree(
-      @Header("Authorization") String Authorization,
-      @Field("tel") String tel);
+      @Header("Authorization") String? Authorization,
+      @Field("tel") String? tel);
 
   /**
    * 약관 동의 업데이트(필수, 선택항목)

@@ -146,11 +146,17 @@ class Util {
   }
 
   static Future<String?> getPhoneNum() async {
-    String? mobileNumber = await MobileNumber.mobileNumber;
-    print('getPhoneNumber result: $mobileNumber');
-    final List<SimCard>? simCards = await MobileNumber.getSimCards;
-    simCards?.map((sim) => print("Sim Number => ${sim.number} // ${sim.carrierName} // ${sim.countryIso} // ${sim.countryPhonePrefix} // ${sim.displayName} // ${sim.slotIndex}")).toList();
-    return mobileNumber;
+    String? mobileNumber;
+    try {
+      mobileNumber = await MobileNumber.mobileNumber;
+      print('getPhoneNumber result: $mobileNumber');
+      final List<SimCard>? simCards = await MobileNumber.getSimCards;
+      simCards?.map((sim) => print("Sim Number => ${sim.number} // ${sim.carrierName} // ${sim.countryIso} // ${sim.countryPhonePrefix} // ${sim.displayName} // ${sim.slotIndex}")).toList();
+      return mobileNumber;
+    }catch(e) {
+      print("getPhoneNumber Exception => $e");
+    }
+    return null;
   }
 
   static String ynToPossible(String? yn) {

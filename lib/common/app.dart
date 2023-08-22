@@ -43,7 +43,7 @@ class App extends GetxController{
   }
 
 
-   UserModel? getUserInfo() {
+   UserModel getUserInfo() {
     if (user == null) {
       user.value = UserModel();
     }else{

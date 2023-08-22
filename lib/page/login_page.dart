@@ -30,7 +30,6 @@ class LoginPage extends StatefulWidget {
 
 class _LoginPageState extends State<LoginPage> with CommonMainWidget {
 
-  String user_phone="";
   late bool m_TermsCheck;
   late TERMS m_TermsMode;
   final controller = Get.find<App>();
@@ -47,14 +46,14 @@ class _LoginPageState extends State<LoginPage> with CommonMainWidget {
 
   void getPhoneNumber() {
 
-    MobileNumber.listenPhonePermission((isPermissionGranted) {
+    MobileNumber.listenPhonePermission((isPermissionGranted) async {
       if (isPermissionGranted){
         if(Util.getPhoneNum() == null){
           Util.snackbar(context, "전화번호를 가져올 수 없습니다.");
           mobileNumber.value = "";
         }else{
           try{
-            initMobileNumberState();
+            await initMobileNumberState();
           }catch(e) {
             mobileNumber.value = "";
           }
@@ -95,7 +94,7 @@ class _LoginPageState extends State<LoginPage> with CommonMainWidget {
             textAlign: TextAlign.start,
             keyboardType: TextInputType.number,
             onChanged: (value){
-              user_phone = value;
+              mobileNumber.value = value;
             },
             maxLength: 50,
             decoration: InputDecoration(
@@ -121,7 +120,7 @@ class _LoginPageState extends State<LoginPage> with CommonMainWidget {
   }
 
   bool validate() {
-    if (user_phone.replaceAll(" ","").isEmpty) {
+    if (mobileNumber.replaceAll(" ","").isEmpty) {
       Util.snackbar(context,"핸드폰 번호를 입력해주세요.");
       return false;
     }
@@ -132,7 +131,7 @@ class _LoginPageState extends State<LoginPage> with CommonMainWidget {
     var logger = Logger();
     UserModel? user = controller.getUserInfo();
     await pr?.show();
-    await DioService.dioClient(header: true).getTermsUserAgree(user?.authorization??"null",user_phone).then((it) async {
+    await DioService.dioClient(header: true).getTermsUserAgree(user?.authorization??"null",mobileNumber.value).then((it) async {
       await pr?.hide();
       ReturnMap _response = DioService.dioResponse(it);
 
@@ -274,7 +273,7 @@ class _LoginPageState extends State<LoginPage> with CommonMainWidget {
   Future<void> userLogin() async {
     Logger logger = Logger();
 
-    var phone = await Util.encryption(user_phone);
+    var phone = await Util.encryption(mobileNumber.value);
     phone.replaceAll("\n", "");
     SP.putBool(Const.KEY_GUEST_MODE, false);
     await pr?.show();

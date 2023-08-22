@@ -10,9 +10,11 @@ import 'package:logislink_driver_flutter/common/app.dart';
 import 'package:logislink_driver_flutter/common/common_util.dart';
 import 'package:logislink_driver_flutter/common/config_url.dart';
 import 'package:logislink_driver_flutter/common/model/order_model.dart';
+import 'package:logislink_driver_flutter/common/model/receipt_model.dart';
 import 'package:logislink_driver_flutter/common/model/user_model.dart';
 import 'package:logislink_driver_flutter/common/strings.dart';
 import 'package:logislink_driver_flutter/common/style_theme.dart';
+import 'package:logislink_driver_flutter/constants/const.dart';
 import 'package:logislink_driver_flutter/page/subPage/receipt_detail_page.dart';
 import 'package:logislink_driver_flutter/provider/dio_service.dart';
 import 'package:logislink_driver_flutter/provider/receipt_service.dart';
@@ -21,6 +23,8 @@ import 'package:permission_handler/permission_handler.dart';
 import 'package:progress_dialog_null_safe/progress_dialog_null_safe.dart';
 import 'package:provider/provider.dart';
 import 'package:dio/dio.dart';
+import 'package:http_parser/http_parser.dart';
+import '../../constants/custom_log_interceptor.dart';
 
 class ReceiptPage extends StatefulWidget{
   OrderModel? item;
@@ -80,7 +84,7 @@ class _ReceiptPageState extends State<ReceiptPage>{
       await pr?.hide();
       switch (obj.runtimeType) {
         case DioError:
-        // Here's the sample to get the failed response error code and message
+        // 's the sample to get the failed response error code and message
           final res = (obj as DioError).response;
           logger.e("receipt_page.dart removeReceipt() Error Default: ${res?.statusCode} -> ${res?.statusMessage}");
           openOkBox(context,"${res?.statusCode} / ${res?.statusMessage}",Strings.of(context)?.get("confirm")??"Error!!",() {Navigator.of(context).pop(false);});
@@ -99,51 +103,38 @@ class _ReceiptPageState extends State<ReceiptPage>{
     return map;
   }*/
 
-  void compressImage(XFile file) {
-    uploadReceipt(file);
+  Future<void> compressImage(XFile file) async {
+    await uploadReceipt(file);
   }
 
   Future<void> uploadReceipt(XFile? file) async {
-    /*Logger logger = Logger();
-    if(uri != null) {
-      print("파일 값들 => ${uri}");
-      await DioService.dioClient(image_option: true).uploadReceipt(controller.user.value?.authorization, widget.item?.orderId, widget.item?.allocId, "I", value).then((it) {
-        ReturnMap _response = DioService.dioResponse(it);
-        logger.d("removeReceipt() _response -> ${_response.status} // ${_response.resultMap}");
-      }).catchError((Object obj) async {
-        await pr?.hide();
-        switch (obj.runtimeType) {
-          case DioError:
-          // Here's the sample to get the failed response error code and message
-            final res = (obj as DioError).response;
-            logger.e("receipt_page.dart _setImageFileListFromFile() Error Default: ${res?.statusCode} -> ${res?.statusMessage}");
-            openOkBox(context,"${res?.statusCode} / ${res?.statusMessage}",Strings.of(context)?.get("confirm")??"Error!!",() {Navigator.of(context).pop(false);});
-            break;
-          default:
-            logger.e("receipt_page.dart _setImageFileListFromFile() Error Default:");
-            break;
-        }
-      });*/
-
       UserModel? user = controller.getUserInfo();
 
       var _formatFile = File(file!.path);
-      var request = http.MultipartRequest("POST", Uri.parse(SERVER_URL+URL_RECEIPT_UPLOAD));
-      request.headers.addAll({"Authorization": user?.authorization??""});
-      request.fields['orderId'] = user?.authorization??"";
-      request.fields['allocId'] = widget.item?.orderId??"";
-      request.fields['fileTypeCode'] = widget.item?.allocId??"";
-      request.files.add(await http.MultipartFile.fromPath("uploadFile", file!.path ,filename: file?.name ));
-      var response = await request.send();
-      print("업로드 되었나? => ${response.statusCode} // ${response.stream} // ${response.stream.bytesToString()}");
-      if (response.statusCode == 200) {
-        //var jsonBody = json.decode(response.stream.bytesToString()); // json 응답 값을 decode
+        var request = http.MultipartRequest(
+            "POST", Uri.parse(SERVER_URL + URL_RECEIPT_UPLOAD));
+        print("음-----> ${SERVER_URL}$URL_RECEIPT_UPLOAD");
+        request.headers.addAll({"Authorization": '${user?.authorization}'});
+        request.fields['orderId'] = '${widget.item?.orderId}';
+        request.fields['allocId'] = '${widget.item?.allocId}';
+        request.fields['fileTypeCode'] = 'I';
+        //request.files.add(http.MultipartFile.fromString('uploadFile', file!.path));
+        request.files.add(await http.MultipartFile.fromPath('uploadFile', _formatFile!.path, contentType: MediaType.parse("multipart/form-data"))); // 이게 업로드 됨.
 
-        // jsonBody를 바탕으로 data 핸들링
-
-      } else {
-
-      }
+        var response = await request.send();
+        print("업로드 되었나? =>  ${response.request?.url} // ${response.request?.headers} // ${response.statusCode}");
+        if (response.statusCode == 200) {
+          var jsonBody = json.decode(await response.stream.bytesToString()); // json 응답 값을 decode
+          print("ddddddd => ${jsonBody} // ${jsonBody["result"]} ${jsonBody["msg"]}");
+          if(jsonBody["result"] == true) {
+            await getReceiptList();
+            setState(() {});
+          }else{
+            Util.toast("${jsonBody["msg"]}");
+          }
+        } else {
+          Util.toast(Strings.of(context)?.get("error_message"));
+        }
   }
 
   /*void compressImage(Uri uri) {
@@ -177,12 +168,9 @@ class _ReceiptPageState extends State<ReceiptPage>{
           imageQuality: 50,
         ).then((file) {
           if (file == null) return null;
-
-          setState(() {
+          setState(() async {
             //getImageDate(pickedFile?.path);
-            var _file = File(file!.path);
-            print("파일 경로 보기 => ${_file.uri} // ${_file?.path}");
-            compressImage(file);
+            await compressImage(file);
           });
 
         });
@@ -216,6 +204,35 @@ class _ReceiptPageState extends State<ReceiptPage>{
         await showAlbum();
       }
     }
+  }
+
+  Future<void> getReceiptList () async {
+    Logger logger = Logger();
+    receiptList.value = List.empty(growable: true);
+    await DioService.dioClient(header: true).getReceipt(App().getUserInfo().authorization,  widget.item?.orderId).then((it) {
+      ReturnMap _response = DioService.dioResponse(it);
+      logger.d("receipt_page.dart getReceipt() _response -> ${_response.status} // ${_response.resultMap}");
+      if(_response.status == "200") {
+        if (_response.resultMap?["data"] != null) {
+          var list = _response.resultMap?["data"] as List;
+          List<ReceiptModel> itemsList = list.map((i) => ReceiptModel.fromJSON(i)).toList();
+          receiptList?.addAll(itemsList);
+        }
+      }else{
+        receiptList.value = List.empty(growable: true);
+      }
+    }).catchError((Object obj){
+      switch (obj.runtimeType) {
+        case DioError:
+        // Here's the sample to get the failed response error code and message
+          final res = (obj as DioError).response;
+          print("receipt_page.dart getReceipt() Error => ${res?.statusCode} // ${res?.statusMessage}");
+          break;
+        default:
+          print("receipt_page.dart getReceipt() Error Default => ");
+          break;
+      }
+    });
   }
 
   Widget getReceipt() {
@@ -303,7 +320,12 @@ class _ReceiptPageState extends State<ReceiptPage>{
   @override
   Widget build(BuildContext context) {
     pr = Util.networkProgress(context);
-    return Scaffold(
+    return WillPopScope(
+        onWillPop: () async {
+          Navigator.of(context).pop({'code':200});
+          return false;
+    } ,
+    child: Scaffold(
       backgroundColor: Theme.of(context).backgroundColor,
       appBar: PreferredSize(
           preferredSize: Size.fromHeight(CustomStyle.getHeight(50.0)),
@@ -371,6 +393,7 @@ class _ReceiptPageState extends State<ReceiptPage>{
             ),
           )
       ),
+    )
     );
   }
 

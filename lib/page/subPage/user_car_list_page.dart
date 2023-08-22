@@ -19,79 +19,20 @@ class UserCarListPage extends StatefulWidget {
 class _UserCarListPageState extends State<UserCarListPage> {
 
   final controller = Get.find<App>();
+  final userCarList = List.empty(growable: true).obs;
 
   Widget getUserCarInfoFuture() {
+    print("뭐가 문제인거지? => ${userCarList.length}");
     UserModel user = controller.getUserInfo()!;
     final userCarService = Provider.of<UserCarInfoService>(context);
     return FutureBuilder(
         future: userCarService.getUserCarInfo(user?.authorization),
         builder: (context, snapshot) {
           if(snapshot.hasData){
-            return Column(
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(10.0),
-                  child: Text(
-                    "${Strings.of(context)?.get("user_car_info")}",
-                    style: CustomStyle.baseFont(),
-                  )
-                ),
-                CustomStyle.getDivider2(),
-                ListView.builder(
-                    scrollDirection: Axis.vertical,
-                    shrinkWrap: true,
-                    itemCount: snapshot.data.length,
-                    itemBuilder: (context, index) {
-                      var item = snapshot.data[index];
-                      return InkWell(
-                        onTap: (){
-                          UserModel? user = controller.getUserInfo();
-                          user?.vehicId = item.vehicId;
-                          controller.setUserInfo(user!);
-
-                          Navigator.of(context).pop({'code':200});
-                        },
-                          child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Container(
-                            padding: EdgeInsets.symmetric(
-                                vertical: CustomStyle.getHeight(10.0),
-                                horizontal: CustomStyle.getWidth(20.0)),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text("${item.carNum}",
-                                    style: CustomStyle.CustomFont(
-                                        styleFontSize14, text_color_01)),
-                                Container(
-                                    padding: EdgeInsets.only(
-                                        top: CustomStyle.getHeight(5.0)),
-                                    child: Row(children: [
-                                      Text(
-                                        "${item.carTonName}",
-                                        style: CustomStyle.CustomFont(
-                                            styleFontSize12, text_color_03),
-                                      ),
-                                      Container(
-                                          padding: EdgeInsets.only(
-                                              left: CustomStyle.getWidth(5.0)),
-                                          child: Text(
-                                            "${item.carTypeName}",
-                                            style: CustomStyle.CustomFont(
-                                                styleFontSize12, text_color_03),
-                                          ))
-                                    ]))
-                              ],
-                            ),
-                          ),
-                          CustomStyle.getDivider2(),
-                        ],
-                      ));
-                    })
-              ],
-            );
+            if(userCarList.isNotEmpty) userCarList.value = List.empty(growable: true);
+            userCarList.value.addAll(snapshot.data);
+            print("뭐가 문제인거지22222? => ${userCarList.length}");
+            return getUserCarInfoListItem();
           }else if(snapshot.hasError) {
             return Container(
               padding: EdgeInsets.only(top: CustomStyle.getHeight(40.0)),
@@ -108,6 +49,76 @@ class _UserCarListPageState extends State<UserCarListPage> {
             ),
           );
         });
+  }
+
+  Widget getUserCarInfoListItem() {
+    return Obx((){
+      return Expanded(
+          child: userCarList.isNotEmpty ?
+          SingleChildScrollView(
+              child: Column(
+                  children: List.generate(userCarList.value.length, (index) {
+                    var item = userCarList[index];
+                    return InkWell(
+                        onTap: () {
+                          UserModel? user = controller.getUserInfo();
+                          user?.vehicId = item.vehicId;
+                          controller.setUserInfo(user!);
+
+                          Navigator.of(context).pop({'code': 200});
+                        },
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Container(
+                              padding: EdgeInsets.symmetric(
+                                  vertical: CustomStyle.getHeight(10.0),
+                                  horizontal: CustomStyle.getWidth(20.0)),
+                              child: Column(
+                                crossAxisAlignment:
+                                CrossAxisAlignment.start,
+                                children: [
+                                  Text("${item.carNum}",
+                                      style: CustomStyle.CustomFont(
+                                          styleFontSize14,
+                                          text_color_01)),
+                                  Container(
+                                      padding: EdgeInsets.only(
+                                          top:
+                                          CustomStyle.getHeight(5.0)),
+                                      child: Row(children: [
+                                        Text(
+                                          "${item.carTonName}",
+                                          style: CustomStyle.CustomFont(
+                                              styleFontSize12,
+                                              text_color_03),
+                                        ),
+                                        Container(
+                                            padding: EdgeInsets.only(
+                                                left:
+                                                CustomStyle.getWidth(
+                                                    5.0)),
+                                            child: Text(
+                                              "${item.carTypeName}",
+                                              style:
+                                              CustomStyle.CustomFont(
+                                                  styleFontSize12,
+                                                  text_color_03),
+                                            ))
+                                      ]))
+                                ],
+                              ),
+                            ),
+                            CustomStyle.getDivider2(),
+                          ],
+                        ));
+                  }
+                  )
+              )
+          ):const SizedBox()
+      );
+    });
   }
 
   @override
@@ -145,9 +156,21 @@ class _UserCarListPageState extends State<UserCarListPage> {
      ),
      body: SafeArea(
        child: Container(
-         child: getUserCarInfoFuture()
-       ),
-     ),
+             child: Column(
+             children :[
+               Container(
+                   padding: const EdgeInsets.all(10.0),
+                   child: Text(
+                     "${Strings.of(context)?.get("user_car_info")}",
+                     style: CustomStyle.baseFont(),
+                   )
+               ),
+               CustomStyle.getDivider2(),
+               getUserCarInfoFuture()
+              ]
+             )
+         )
+     )
    );
   }
 

@@ -213,10 +213,14 @@ class _TaxPageState extends State<TaxPage> {
       logger.d("writeTax() _response -> ${_response.status} // ${_response.resultMap}");
       if(_response.status == "200") {
         if (_response.resultMap?["result"] == true) {
-          widget.item?.invId = it.response.data["data"].invId;
-          issueTax();
+          try {
+            widget.item?.invId = it.response.data["invId"];
+            issueTax();
+          }catch(e) {
+            print("잉씨방 => $e");
+          }
         } else {
-          openOkBox(context, _response.resultMap?["msg"], Strings.of(context)?.get("close") ?? "Not Found", () => Navigator.of(context).pop(false));
+          Util.toast(_response.resultMap?["msg"]);
         }
       }else{
         Util.toast(_response.message);

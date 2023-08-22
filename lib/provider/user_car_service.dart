@@ -8,18 +8,19 @@ import 'package:dio/dio.dart';
 
 class UserCarInfoService with ChangeNotifier {
 
-  List<UserCarModel>? userCarList;
+  final userCarList = List.empty(growable: true).obs;
 
   UserCarInfoService() {
-    userCarList = List.empty(growable: true);
+    userCarList.value = List.empty(growable: true);
   }
 
   void init() {
-    userCarList = List.empty(growable: true);
+    userCarList.value = List.empty(growable: true);
   }
 
   Future getUserCarInfo(String? auth) async {
     Logger logger = Logger();
+    userCarList.value = List.empty(growable: true);
     await DioService.dioClient(header: true).getUserCarInfo(auth).then((it) {
       ReturnMap _response = DioService.dioResponse(it);
       logger.i("getUserCarInfo() _response -> ${_response.status} // ${_response.resultMap}");
@@ -28,12 +29,12 @@ class UserCarInfoService with ChangeNotifier {
           try {
           var list = _response.resultMap?["data"] as List;
           List<UserCarModel> itemsList = list.map((i) => UserCarModel.fromJSON(i)).toList();
-          userCarList!.isNotEmpty? userCarList = List.empty(growable: true): userCarList?.addAll(itemsList);
+          userCarList?.addAll(itemsList);
           }catch(e) {
             print(e);
           }
         }else{
-          userCarList = List.empty(growable: true);
+          userCarList.value = List.empty(growable: true);
         }
       }
     }).catchError((Object obj) {
@@ -41,10 +42,10 @@ class UserCarInfoService with ChangeNotifier {
         case DioError:
         // Here's the sample to get the failed response error code and message
           final res = (obj as DioError).response;
-          print("에러에러 => ${res?.statusCode} // ${res?.statusMessage}");
+          print("getUserCarInfo() Error => ${res?.statusCode} // ${res?.statusMessage}");
           break;
         default:
-          print("에러에러222 => ");
+          print("getUserCarInfo() Error Default => ");
           break;
       }
     });

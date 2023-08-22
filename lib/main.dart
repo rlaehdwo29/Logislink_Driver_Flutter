@@ -347,6 +347,7 @@ Future<void> checkVersion() async {
         //showNotDetail();
       }
 
+
     }
   }).catchError((Object obj) async {
     switch (obj.runtimeType) {

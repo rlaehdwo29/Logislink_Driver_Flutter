@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
+import 'package:logger/logger.dart';
 import 'package:logislink_driver_flutter/common/app.dart';
 import 'package:logislink_driver_flutter/common/common_util.dart';
 import 'package:logislink_driver_flutter/common/model/sales_manage_model.dart';
@@ -8,11 +9,13 @@ import 'package:logislink_driver_flutter/common/strings.dart';
 import 'package:logislink_driver_flutter/constants/const.dart';
 import 'package:logislink_driver_flutter/page/subPage/app_bar_sales_detail_page.dart';
 import 'package:logislink_driver_flutter/provider/appbar_service.dart';
+import 'package:logislink_driver_flutter/provider/dio_service.dart';
 import 'package:logislink_driver_flutter/utils/sp.dart';
 import 'package:logislink_driver_flutter/utils/util.dart';
 import 'package:progress_dialog_null_safe/progress_dialog_null_safe.dart';
 import 'package:provider/provider.dart';
 import 'package:table_calendar/table_calendar.dart';
+import 'package:dio/dio.dart';
 
 import '../../common/style_theme.dart';
 
@@ -369,6 +372,43 @@ class _AppBarSalesPageState extends State<AppBarSalesPage> {
     );
   }
 
+  Future<void> getSlaesManage() async {
+    Logger logger = Logger();
+    await DioService.dioClient(header: true).getSalesManageList(
+        controller.getUserInfo()?.authorization,
+      Util.getDateCalToStr(_rangeStart.value,'yyyy-MM-dd'),
+      Util.getDateCalToStr(_rangeEnd.value,'yyyy-MM-dd')).then((it) {
+      if (mList.isNotEmpty == true) mList.value = List.empty(growable: true);
+      ReturnMap _response = DioService.dioResponse(it);
+      logger.d("getSalesManage() _response -> ${_response.status} // ${_response.resultMap}");
+      if(_response.status == "200") {
+        if (_response.resultMap?["data"] != null) {
+          try {
+            var list = _response.resultMap?["data"] as List;
+            List<SalesManageModel> itemsList = list.map((i) =>
+                SalesManageModel.fromJSON(i)).toList();
+            mList?.addAll(itemsList);
+          }catch(e) {
+            Util.toast("데이터를 가져오는 중 오류가 발생하였습니다.");
+          }
+        }
+      }else{
+        mList.value = List.empty(growable: true);
+      }
+    }).catchError((Object obj){
+      switch (obj.runtimeType) {
+        case DioError:
+        // Here's the sample to get the failed response error code and message
+          final res = (obj as DioError).response;
+          print("getSalesManage() Error => ${res?.statusCode} // ${res?.statusMessage}");
+          break;
+        default:
+          print("getSalesManage() Error Default => ");
+          break;
+      }
+    });
+  }
+
   Widget itemListFuture() {
     final appBarService = Provider.of<AppbarService>(context);
     return FutureBuilder(
@@ -618,6 +658,7 @@ class _AppBarSalesPageState extends State<AppBarSalesPage> {
               animationDuration: const Duration(milliseconds: 500),
               expandedHeaderPadding: EdgeInsets.only(bottom: 0.0.h),
               elevation: 0,
+              initialOpenPanelValue: 0,
               children: [
                 ExpansionPanelRadio(
                   value: index,

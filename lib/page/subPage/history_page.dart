@@ -802,6 +802,7 @@ class _HistoryPageState extends State<HistoryPage> {
               animationDuration: const Duration(milliseconds: 500),
               expandedHeaderPadding: EdgeInsets.only(bottom: 0.0.h),
               elevation: 0,
+              initialOpenPanelValue: 0,
               children: [
                 ExpansionPanelRadio(
                   value: index,

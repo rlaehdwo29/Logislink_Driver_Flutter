@@ -30,6 +30,7 @@ import 'package:logislink_driver_flutter/page/subPage/appbar_notice_page.dart';
 import 'package:logislink_driver_flutter/page/subPage/appbar_setting_page.dart';
 import 'package:logislink_driver_flutter/page/subPage/history_page.dart';
 import 'package:logislink_driver_flutter/page/subPage/order_detail_page.dart';
+import 'package:logislink_driver_flutter/page/subPage/user_car_list_page.dart';
 import 'package:logislink_driver_flutter/provider/dio_service.dart';
 import 'package:logislink_driver_flutter/provider/geofence_receiver.dart';
 import 'package:logislink_driver_flutter/provider/order_service.dart';
@@ -52,6 +53,8 @@ class _MainPageState extends State<MainPage> with CommonMainWidget {
 
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey();
   final controller = Get.find<App>();
+  final beforeUser = UserModel().obs;
+  final _nowUser = UserModel().obs;
 
   static bool? isRunning;
 
@@ -67,7 +70,6 @@ class _MainPageState extends State<MainPage> with CommonMainWidget {
   late final InAppWebViewController webViewController;
   late final PullToRefreshController pullToRefreshController;
 
-  UserModel? beforeUser = null;
 
   static bool isNoticeOpen = false;
 
@@ -80,6 +82,7 @@ class _MainPageState extends State<MainPage> with CommonMainWidget {
   void initState() {
     super.initState();
     isRunning = true;
+    _nowUser.value = controller.getUserInfo();
     FBroadcast.instance().register(Const.INTENT_ORDER_REFRESH, (value, callback) {
       getOrderMethod(true);
     });
@@ -97,6 +100,7 @@ class _MainPageState extends State<MainPage> with CommonMainWidget {
     ))!;
 
     Future.delayed(Duration.zero, () {
+
       switch (SP.getFirstScreen(context)) {
         case SCREEN_HISTORY:
           goToHistory();
@@ -431,19 +435,42 @@ class _MainPageState extends State<MainPage> with CommonMainWidget {
                 decoration: BoxDecoration(
                   color: main_color,
                 ),
-                child: Column(
+                child: InkWell(
+                  onTap: () async {
+                    beforeUser.value = controller.getUserInfo()??UserModel();
+                    Map<String,int> results = await Navigator.of(context).push(MaterialPageRoute(
+                        builder: (BuildContext context) => UserCarListPage())
+                    );
+
+                    print("옹애응 -> ${results["code"]}");
+                    if(results != null && results.containsKey("code")){
+                      if(results["code"] == 200) {
+                        String? vehic = beforeUser.value.vehicId;
+                        AppDataBase db = App().getRepository();
+                        List<GeofenceModel> list = await db.getAllGeoFenceList(vehic);
+                        db.deleteAll(list);
+                        getUserInfo();
+                        getOrderMethod(true);
+                        Navigator.pop(context);
+                      }
+                    }
+                  },
+                    child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
+                      Obx(()=>
                       Text(
-                        "${controller.getUserInfo()?.driverName} 차주님",
+                        "${_nowUser.value.driverName} 차주님",
                         style: CustomStyle.CustomFont(styleFontSize18, styleWhiteCol),
-                      ),
+                      )),
                       CustomStyle.sizedBoxHeight(10.0),
-                      Text(
-                        "${controller.getUserInfo()?.carNum}",
+                      Obx(()=>Text(
+                        "${_nowUser.value.carNum}",
                         style: CustomStyle.CustomFont(styleFontSize16, styleWhiteCol),
                       )
+                      )
                     ]
+                  )
                 )
             ),
 
@@ -529,6 +556,40 @@ class _MainPageState extends State<MainPage> with CommonMainWidget {
           ],
         )
     );
+  }
+
+  Future<void> getUserInfo() async {
+    Logger logger = Logger();
+    UserModel? nowUser = controller.getUserInfo();
+    await DioService.dioClient(header: true).getUserInfo(nowUser?.authorization, nowUser?.vehicId).then((it) async {
+      ReturnMap _response = DioService.dioResponse(it);
+      logger.i("getUserInfo() _response -> ${_response.status} // ${_response.resultMap}");
+      if (_response.status == "200") {
+        if(_response.resultMap?["data"] != null) {
+          try {
+            UserModel newUser = UserModel.fromJSON(it.response.data["data"]);
+            newUser.authorization = nowUser?.authorization;
+            controller.setUserInfo(newUser);
+            _nowUser.value = newUser;
+            print("응앱 => ${_nowUser.value.driverName} // ${_nowUser.value.carNum}");
+          }catch(e) {
+            print(e);
+          }
+        }
+      }
+    }).catchError((Object obj) async {
+      switch (obj.runtimeType) {
+        case DioError:
+        // Here's the sample to get the failed response error code and message
+          final res = (obj as DioError).response;
+          print("에러에러 => ${res?.statusCode} // ${res?.statusMessage}");
+          break;
+        default:
+          print("에러에러222 => ");
+          break;
+      }
+    });
+
   }
 
   Widget getListCardView(OrderModel item) {
@@ -818,27 +879,27 @@ class _MainPageState extends State<MainPage> with CommonMainWidget {
             ),
             ),
           drawer: getAppBarMenu(),
-          body: Obx(() {
-              return SafeArea(
-                  child: orderList.isNotEmpty ?ListView.builder(
-                scrollDirection: Axis.vertical,
-                shrinkWrap: true,
-                itemCount: orderList.length,
-                itemBuilder: (context, index) {
-                  var item = orderList[index];
-                  return getListCardView(item);
-                },
-              ): Container(
+          body: SafeArea(
+                child: Obx((){
+                  return orderList.isNotEmpty ? ListView.builder(
+                    scrollDirection: Axis.vertical,
+                    shrinkWrap: true,
+                    itemCount: orderList.length,
+                    itemBuilder: (context, index) {
+                      var item = orderList[index];
+                      return getListCardView(item);
+                    },
+                  ): Container(
                       alignment: Alignment.center,
-                    child:Center(
-                      child:Text(
-                        Strings.of(context)?.get("empty_list")??"Not Found",
-                          style: CustomStyle.baseFont(),
+                      child:Center(
+                          child:Text(
+                            Strings.of(context)?.get("empty_list")??"Not Found",
+                            style: CustomStyle.baseFont(),
+                          )
                       )
-                    )
-                  )
-              );
-            }),
+                  );
+                  })
+          ),
           bottomNavigationBar:  SizedBox(
               height: CustomStyle.getHeight(60.0),
               child: Row(
