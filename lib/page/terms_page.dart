@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:logger/logger.dart';
@@ -60,7 +61,9 @@ class _TermsPageState extends State<TermsPage> {
     String? m_Nece = "N";
     String? m_Sel = "N";
 
-    m_Number = await Util.getPhoneNum();
+    if(defaultTargetPlatform == TargetPlatform.android) {
+      m_Number = await Util.getPhoneNum();
+    }
     if(checkBoxArrayList.value[0] == true && checkBoxArrayList.value[1] == true && checkBoxArrayList.value[2] == true && checkBoxArrayList.value[3] && checkBoxArrayList.value[4]){
       m_Nece = "Y";
     }else{

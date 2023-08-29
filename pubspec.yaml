@@ -61,7 +61,6 @@ dependencies:
   mobile_number: ^2.1.1
   encrypt: ^5.0.1
   intl: ^0.18.1
-  aespack: ^0.0.3
   fbroadcast: ^2.0.0
   permission_handler: ^10.3.0
   app_settings: ^5.0.0

@@ -1,5 +1,7 @@
 import 'dart:convert';
+import 'dart:html';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:get/get.dart';
@@ -238,9 +240,13 @@ class _BridgePageState extends State<BridgePage> {
 
   Future<void> goToLogin() async {
     try {
-      if (!await MobileNumber.hasPhonePermission) {
-        await MobileNumber.requestPhonePermission;
-      } else {
+      if(defaultTargetPlatform == TargetPlatform.android){
+        if (!await MobileNumber.hasPhonePermission) {
+          await MobileNumber.requestPhonePermission;
+        } else {
+          await checkTermsAgree();
+        }
+      }else{
         await checkTermsAgree();
       }
     }catch(e) {
@@ -249,7 +255,13 @@ class _BridgePageState extends State<BridgePage> {
   }
 
   Future<void> checkTermsAgree() async {
-    String? telNum = await Util.getPhoneNum();
+
+    String? telNum;
+    if(defaultTargetPlatform == TargetPlatform.android) {
+      telNum = await Util.getPhoneNum();
+    }else{
+      telNum = "";
+    }
     Logger logger = Logger();
     await DioService.dioClient(header: true).getTermsTelAgree(App().getUserInfo().authorization, telNum).then((it) async {
       ReturnMap response = DioService.dioResponse(it);

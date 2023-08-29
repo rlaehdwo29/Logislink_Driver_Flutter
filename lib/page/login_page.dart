@@ -1,5 +1,6 @@
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/cupertino.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
@@ -34,6 +35,7 @@ class _LoginPageState extends State<LoginPage> with CommonMainWidget {
   late TERMS m_TermsMode;
   final controller = Get.find<App>();
   final mobileNumber = "".obs;
+  final userName = "".obs;
   List<SimCard> _simCard = <SimCard>[];
 
   ProgressDialog? pr;
@@ -57,7 +59,9 @@ class _LoginPageState extends State<LoginPage> with CommonMainWidget {
       }
     });
     initMobileNumberState();*/
-    mobileNumber.value = await Util.getPhoneNum();
+    if(defaultTargetPlatform == TargetPlatform.android) {
+      mobileNumber.value = await Util.getPhoneNum();
+    }
   }
 
   Future<void> initMobileNumberState() async {
@@ -90,7 +94,7 @@ class _LoginPageState extends State<LoginPage> with CommonMainWidget {
             maxLength: 50,
             decoration: InputDecoration(
                 counterText: '',
-                hintText: "phone",
+                hintText: "전화번로를 입력해주세요.",
                 hintStyle:CustomStyle.whiteFont(),
                 contentPadding: EdgeInsets.symmetric(horizontal: CustomStyle.getWidth(15.0)),
               enabledBorder: UnderlineInputBorder(
@@ -109,6 +113,73 @@ class _LoginPageState extends State<LoginPage> with CommonMainWidget {
       ],
     );
   }
+
+  Widget _entryFieldNotAndroid() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        SizedBox(
+            height: CustomStyle.getHeight(70.0),
+            child: TextField(
+              style: CustomStyle.baseFont(),
+              textAlign: TextAlign.start,
+              keyboardType: TextInputType.number,
+              onChanged: (value){
+                userName.value = value;
+              },
+              maxLength: 50,
+              decoration: InputDecoration(
+                  counterText: '',
+                  hintText: "성명을 입력해주세요.",
+                  hintStyle:CustomStyle.greyDefFont(),
+                  contentPadding: EdgeInsets.symmetric(horizontal: CustomStyle.getWidth(15.0)),
+                  enabledBorder: UnderlineInputBorder(
+                      borderSide: BorderSide(color: line, width: CustomStyle.getWidth(0.5))
+                  ),
+                  disabledBorder: UnderlineInputBorder(
+                      borderSide: BorderSide(color: line, width: CustomStyle.getWidth(0.5))
+                  ),
+                  focusedBorder: UnderlineInputBorder(
+                      borderSide: BorderSide(color: line, width: CustomStyle.getWidth(0.5))
+                  )
+
+              ),
+            )
+        ),
+        CustomStyle.sizedBoxHeight(20.0),
+        SizedBox(
+            height: CustomStyle.getHeight(70.0),
+            child: TextField(
+              style: CustomStyle.baseFont(),
+              textAlign: TextAlign.start,
+              keyboardType: TextInputType.number,
+              onChanged: (value){
+                mobileNumber.value = value;
+              },
+              maxLength: 50,
+              decoration: InputDecoration(
+                  counterText: '',
+                  hintText: "전화번호를 입력해주세요.",
+                  hintStyle:CustomStyle.greyDefFont(),
+                  contentPadding: EdgeInsets.symmetric(horizontal: CustomStyle.getWidth(15.0)),
+                  enabledBorder: UnderlineInputBorder(
+                      borderSide: BorderSide(color: line, width: CustomStyle.getWidth(0.5))
+                  ),
+                  disabledBorder: UnderlineInputBorder(
+                      borderSide: BorderSide(color: line, width: CustomStyle.getWidth(0.5))
+                  ),
+                  focusedBorder: UnderlineInputBorder(
+                      borderSide: BorderSide(color: line, width: CustomStyle.getWidth(0.5))
+                  )
+
+              ),
+            )
+        ),
+      ],
+    );
+  }
+
 
   bool validate() {
     if (mobileNumber.replaceAll(" ","").isEmpty) {
@@ -405,6 +476,7 @@ class _LoginPageState extends State<LoginPage> with CommonMainWidget {
                             Image.asset("assets/image/ic_top_logo.png"),
                             CustomStyle.sizedBoxHeight(100.0),
                             Const.userDebugger? _entryField():
+                            (defaultTargetPlatform != TargetPlatform.android)?_entryFieldNotAndroid():
                             Obx(() {
                             return Container(
                               alignment: Alignment.centerLeft,

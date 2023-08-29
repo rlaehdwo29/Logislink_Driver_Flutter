@@ -31,7 +31,7 @@ class GeoFenceReceiver {
     _geofenceStreamController.sink.add(geofence);
     AppDataBase db = App().getRepository();
     GeofenceModel? data = await db.getGeoFence(App().getUserInfo()?.vehicId, int.parse(geofence.id));
-    print("하아아아=>${data?.allocState}");
+    print("하아아아=>${data?.allocState} // ${data}");
     if(data != null) {
       if(data.flag == "Y") {
         if(geofenceStatus == GeofenceStatus.ENTER) {
