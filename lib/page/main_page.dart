@@ -7,6 +7,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_background_service/flutter_background_service.dart';
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
+
 import 'package:get/get.dart';
 import 'package:logger/logger.dart';
 import 'package:logislink_driver_flutter/common/app.dart';
@@ -84,8 +85,9 @@ class _MainPageState extends State<MainPage> with CommonMainWidget {
     isRunning = true;
     _nowUser.value = controller.getUserInfo();
     FBroadcast.instance().register(Const.INTENT_ORDER_REFRESH, (value, callback) {
+      print("나 탔어??");
       getOrderMethod(true);
-    });
+    },context: this);
     FBroadcast.instance().broadcast(Const.INTENT_ORDER_REFRESH);
     pullToRefreshController = (kIsWeb
         ? null
@@ -143,7 +145,7 @@ class _MainPageState extends State<MainPage> with CommonMainWidget {
   void checkCarInfo() {
     String? carType = App().getUserInfo()?.carTypeCode;
     String? carTon = App().getUserInfo()?.carTonCode;
-
+    print("응애옹애옹 => ${carType} // ${carTon}");
     if((carType != null && carType.isNotEmpty) && (carTon != null && carTon.isNotEmpty)) {
       startService();
     }else{
@@ -205,7 +207,7 @@ class _MainPageState extends State<MainPage> with CommonMainWidget {
       ].request();
 
       print("위치 => ${statuses[Permission.location]}");
-      print("Location 권한 비허용");
+      print("Location 권한 미허용");
 
       if(statuses[Permission.location] != PermissionStatus.granted){
         await Permission.location.request();
@@ -233,7 +235,11 @@ class _MainPageState extends State<MainPage> with CommonMainWidget {
     SP.putBool(Const.KEY_SETTING_WORK, true);
     final service = FlutterBackgroundService();
     bool isRunning = await service.isRunning();
+    print("음음 => ${isRunning}");
     if(!isRunning) {
+      GpsService.initializeService();
+    }else{
+      await stopService();
       GpsService.initializeService();
     }
 
@@ -300,12 +306,43 @@ class _MainPageState extends State<MainPage> with CommonMainWidget {
 
   Future<void> getOrder(bool flag) async {
     bool data = flag;
-    var logger = Logger();
-    UserModel? user = controller.getUserInfo();
-    final orderService = Provider.of<OrderService>(context,listen: false);
-    orderList.value = await orderService.getOrder(context,user?.authorization, user?.vehicId);
+    await getOrderList();
     setAllocList();
-    setGeoList(data);
+    await setGeoList(data);
+  }
+
+  Future<void> getOrderList() async {
+    Logger logger = Logger();
+    await DioService.dioClient(header: true).getOrder(App().getUserInfo().authorization, App().getUserInfo().vehicId).then((it) {
+      ReturnMap _response = DioService.dioResponse(it);
+      logger.d("getOrder() _response -> ${_response.status} // ${_response.resultMap}");
+      //openOkBox(context,_response.resultMap!["data"].toString(),Strings.of(context)?.get("confirm")??"Error!!",() {Navigator.of(context).pop(false);});
+      if(_response.status == "200") {
+        if(_response.resultMap?["data"] != null) {
+          if(orderList.isNotEmpty) orderList.clear();
+          try{
+            var list = _response.resultMap?["data"] as List;
+            List<OrderModel> itemsList = list.map((i) => OrderModel.fromJSON(i)).toList();
+            orderList?.addAll(itemsList);
+          }catch(e) {
+            print(e);
+          }
+        } else {
+          orderList.value = List.empty(growable: true);
+        }
+      }
+    }).catchError((Object obj){
+      switch (obj.runtimeType) {
+        case DioError:
+        // Here's the sample to get the failed response error code and message
+          final res = (obj as DioError).response;
+          print("getOrder() Error => ${res?.statusCode} // ${res?.statusMessage}");
+          break;
+        default:
+          print("getOrder() getOrder Default => ");
+          break;
+      }
+    });
   }
 
   Future<void> setGeoList(bool flag) async {
@@ -314,7 +351,6 @@ class _MainPageState extends State<MainPage> with CommonMainWidget {
     String? vehicId = App().getUserInfo()?.vehicId;
 
     geoUpdate = false;
-
 
     for(var data in orderList) {
       if(!(data.allocState == "20")){
@@ -585,7 +621,7 @@ class _MainPageState extends State<MainPage> with CommonMainWidget {
           print("에러에러 => ${res?.statusCode} // ${res?.statusMessage}");
           break;
         default:
-          print("에러에러222 => ");
+          print("getUserInfo() Exepction => ");
           break;
       }
     });
@@ -841,6 +877,7 @@ class _MainPageState extends State<MainPage> with CommonMainWidget {
 
   @override
   Widget build(BuildContext context) {
+    Util.notificationDialog(context,"기본",webViewKey);
     return mainWidget(context,
         child: Scaffold(
           key: _scaffoldKey,

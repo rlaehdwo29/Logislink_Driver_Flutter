@@ -31,6 +31,7 @@ class GeoFenceReceiver {
     _geofenceStreamController.sink.add(geofence);
     AppDataBase db = App().getRepository();
     GeofenceModel? data = await db.getGeoFence(App().getUserInfo()?.vehicId, int.parse(geofence.id));
+    print("하아아아=>${data?.allocState}");
     if(data != null) {
       if(data.flag == "Y") {
         if(geofenceStatus == GeofenceStatus.ENTER) {
@@ -98,7 +99,7 @@ class GeoFenceReceiver {
     Logger logger = Logger();
     await DioService.dioClient(header: true).setOrderState(App().getUserInfo()?.authorization, data?.orderId, data?.allocId, code).then((it) async {
       ReturnMap _response = DioService.dioResponse(it);
-      logger.d("geofence_receiver setOrderState() _response -> ${_response.status} // ${_response.resultMap}");
+      logger.d("geofence_receiver setOrderState() _response -> ${_response.status} // ${_response.resultMap} // $code");
       if(_response.status == "200") {
         if(_response.resultMap?["result"] == true) {
           switch(code) {

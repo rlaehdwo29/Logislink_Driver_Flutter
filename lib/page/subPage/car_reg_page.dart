@@ -82,7 +82,7 @@ class _CarRegPageState extends State<CarRegPage> {
      Util.toast("${Strings.of(context)?.get("car_reg_value_02")??"Not Found"}${Strings.of(context)?.get("valid_fail")??"Not Found"}");
      return false;
    }
-   if(mCar.value.accMileage?.isNull == true) {
+   if(mCar.value.accMileage == null) {
      Util.toast("${Strings.of(context)?.get("car_reg_value_03")??"Not Found"}${Strings.of(context)?.get("valid_fail")??"Not Found"}");
      return false;
    }
@@ -219,9 +219,9 @@ class _CarRegPageState extends State<CarRegPage> {
   }
 
   Widget bodyWidget() {
-    carNameController.text = (mCar?.value.carName.isNull == true ? "" : mCar?.value.carName)!;
-    carNumController.text = (mCar?.value.carNum.isNull == true ? "" : mCar?.value.carNum)!;
-    accMileageController.text = (mCar?.value.accMileage.isNull == true ? "" : mCar?.value.accMileage.toString())!;
+    carNameController.text = (mCar?.value.carName == null ? "" : mCar?.value.carName)!;
+    carNumController.text = (mCar?.value.carNum == null ? "" : mCar?.value.carNum)!;
+    accMileageController.text = (mCar?.value.accMileage == null ? "0" : mCar?.value.accMileage.toString())!;
     return Container(
       margin: const EdgeInsets.all(20.0),
       decoration: BoxDecoration(
@@ -415,42 +415,71 @@ class _CarRegPageState extends State<CarRegPage> {
                   ),
                   Expanded(
                       flex: 6,
-                      child: TextField(
-                        maxLines: 1,
-                        keyboardType: TextInputType.number,
-                        style: CustomStyle.CustomFont(styleFontSize14, Colors.black),
-                        maxLengthEnforcement: MaxLengthEnforcement.enforced,
-                        textAlignVertical: TextAlignVertical.center,
-                        controller: accMileageController,
-                        decoration: accMileageController.text.isNotEmpty ?
-                        InputDecoration(
-                          border: InputBorder.none,
-                          contentPadding: EdgeInsets.symmetric(horizontal: CustomStyle.getWidth(10.0)),
-                          suffixIcon: IconButton(
-                            onPressed: () {
-                              accMileageController.clear();
-                              mCar.value.accMileage = null;
-                            },
-                            icon: const Icon(Icons.clear, size: 18,color: Colors.black,),
-                          ),
-                        ) : InputDecoration(
-                          border: InputBorder.none,
-                          contentPadding: EdgeInsets.symmetric(horizontal: CustomStyle.getWidth(10.0)),
-                          suffixIcon: IconButton(
-                            onPressed: () {},
-                            icon: const Icon(Icons.clear, size: 18,color: Colors.white,),
-                          ),
-                        ),
-                        onChanged: (accMileageText) {
-                          if (accMileageText.isNotEmpty) {
-                            mCar.value.accMileage = int.parse(accMileageText);
-                            accMileageController.selection = TextSelection.collapsed(offset: accMileageController.text.length);
-                          } else {
-                            mCar.value.accMileage = null;
-                          }
-                        },
-                      )
-                  )
+                      child: Row(children: [
+                        Expanded(
+                            flex: 10,
+                            child: TextField(
+                              maxLines: 1,
+                              keyboardType: TextInputType.number,
+                              style: CustomStyle.CustomFont(
+                                  styleFontSize14, Colors.black),
+                              maxLengthEnforcement:
+                                  MaxLengthEnforcement.enforced,
+                              textAlignVertical: TextAlignVertical.center,
+                              controller: accMileageController,
+                              decoration: accMileageController.text.isNotEmpty
+                                  ? InputDecoration(
+                                      border: InputBorder.none,
+                                      contentPadding: EdgeInsets.symmetric(
+                                          horizontal:
+                                              CustomStyle.getWidth(10.0)),
+                                      suffixIcon: IconButton(
+                                        onPressed: () {
+                                          accMileageController.clear();
+                                          mCar.value.accMileage = 0;
+                                        },
+                                        icon: const Icon(
+                                          Icons.clear,
+                                          size: 18,
+                                          color: Colors.black,
+                                        ),
+                                      ),
+                                    )
+                                  : InputDecoration(
+                                      border: InputBorder.none,
+                                      contentPadding: EdgeInsets.symmetric(
+                                          horizontal:
+                                              CustomStyle.getWidth(10.0)),
+                                      suffixIcon: IconButton(
+                                        onPressed: () {},
+                                        icon: const Icon(
+                                          Icons.clear,
+                                          size: 18,
+                                          color: Colors.white,
+                                        ),
+                                      ),
+                                    ),
+                              onChanged: (accMileageText) {
+                                if (accMileageText.isNotEmpty) {
+                                  mCar.value.accMileage =
+                                      int.parse(accMileageText);
+                                  accMileageController.selection =
+                                      TextSelection.collapsed(
+                                          offset:
+                                              accMileageController.text.length);
+                                } else {
+                                  mCar.value.accMileage = 0;
+                                }
+                              },
+                            )),
+                        Expanded(
+                          flex: 2,
+                            child: Text(
+                          "km",
+                          style: CustomStyle.CustomFont(
+                              styleFontSize14, text_color_01),
+                        ))
+                      ]))
                 ],
               )
           )

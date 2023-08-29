@@ -27,7 +27,7 @@ import 'package:logislink_driver_flutter/provider/order_service.dart';
 import 'package:logislink_driver_flutter/utils/sp.dart';
 import 'package:logislink_driver_flutter/utils/util.dart' as app_util;
 import 'package:logislink_driver_flutter/widget/show_bank_check_widget.dart';
-import 'package:permission_handler/permission_handler.dart';
+import 'package:webview_flutter/webview_flutter.dart';
 import 'package:progress_dialog_null_safe/progress_dialog_null_safe.dart';
 import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -58,9 +58,8 @@ class _OrderDetailPageState extends State<OrderDetailPage>{
   String platformVersion = "Unknown";
   String initStatus = "Unknown";
 
-  late KakaoMapController mapController;
+  late KakaoMapController? mapController;
   final platform = const MethodChannel("testing.flutter.android");
-
   Set<Marker> markers = {};
 
   @override
@@ -545,7 +544,7 @@ class _OrderDetailPageState extends State<OrderDetailPage>{
               onTap: (){
                   goToPay();
               },
-              child: app_util.Util.ynToBoolean(widget.item?.payType)?
+              child: widget.item?.allocState == "05" && app_util.Util.ynToBoolean(widget.item?.payType)?
                Container(
                 padding: EdgeInsets.symmetric(vertical: CustomStyle.getHeight(5.0),horizontal: CustomStyle.getWidth(10.0)),
                 decoration: tvPay.value ? CustomStyle.customBoxDeco(styleWhiteCol,border_color: text_color_02) : CustomStyle.customBoxDeco(sub_color),
@@ -553,7 +552,7 @@ class _OrderDetailPageState extends State<OrderDetailPage>{
                   Strings.of(context)?.get("pay_title")??"Not Found",
                   style: CustomStyle.CustomFont(styleFontSize10, tvPay.value ? text_color_02 : styleWhiteCol),
                 ),
-              ) :const SizedBox()
+              ) : const SizedBox()
             )
           ],
         )
@@ -712,12 +711,12 @@ class _OrderDetailPageState extends State<OrderDetailPage>{
               padding:EdgeInsets.symmetric(vertical: CustomStyle.getHeight(5.0),horizontal: CustomStyle.getWidth(10.0)),
               margin: EdgeInsets.symmetric(horizontal: CustomStyle.getWidth(10.0)),
               child: Text(
-                widget.item.isNull == false ? _type == "wayon" ? Strings.of(context)?.get("order_way_on")??"Not Found":Strings.of(context)?.get("order_way_off")??"Not Found" : "-",
+                widget.item != null ? _type == "wayon" ? Strings.of(context)?.get("order_way_on")??"Not Found":Strings.of(context)?.get("order_way_off")??"Not Found" : "-",
                 style: CustomStyle.CustomFont(styleFontSize10, widget.item?.allocState == "04"|| widget.item?.allocState == "05" || widget.item?.allocState == "20" ? text_color_01 : sub_color),
               )
           ),
           Text(
-            widget.item.isNull == false ? app_util.Util.splitSDate(_type == "wayon"?widget.item?.sDate:widget.item?.eDate)??"":"-",
+            widget.item != null ? app_util.Util.splitSDate(_type == "wayon"?widget.item?.sDate:widget.item?.eDate)??"":"-",
             style: CustomStyle.CustomFont(styleFontSize14, text_color_01),
           )
         ],
@@ -793,7 +792,7 @@ class _OrderDetailPageState extends State<OrderDetailPage>{
                           ),
                         ),
                         onPressed: () {
-                          if(widget.item?.allocState != "04" && widget.item?.allocState != "05" && widget.item?.allocState != "20" && widget.item?.allocState != "12") showEnterOrder();
+                          if(widget.item?.allocState != "04" && widget.item?.allocState != "05" && widget.item?.allocState != "20") showStartOrder();
                         },
                         child: Text(
                           widget.item?.allocState == "04"? "입차 ${widget.item?.enterDate?.isNotEmpty == true && widget.item?.enterDate !=null ?"(${app_util.Util.getDateStrToStr(widget.item?.enterDate, "MM.dd HH:mm")})":""}"
@@ -864,11 +863,15 @@ class _OrderDetailPageState extends State<OrderDetailPage>{
   void setCalcView() {
     tvReceipt.value = !(widget.item?.receiptYn == "N");
 
+    print("뭔디아? =>${widget.item?.taxinvYn} // ${widget.item?.loadStatus}");
+    print("뭔디아33333? =>${widget.item?.taxinvYn == "N"} // ${!(widget.item?.taxinvYn == "N")}");
+    print("뭔디아4444? =>${widget.item?.loadStatus == "0"} // ${!(widget.item?.loadStatus == "0")}");
     if(!(widget.item?.taxinvYn == "N")) {
       tvTax.value = true;
     }else{
       tvTax.value = !(widget.item?.loadStatus == "0");
     }
+    print("뭔디아2222? =>${tvTax.value}");
     if(widget.item?.finishYn == "Y"){
       tvPay.value = true;
     }else{
@@ -972,6 +975,7 @@ class _OrderDetailPageState extends State<OrderDetailPage>{
     await pr?.hide();
     ReturnMap _response = DioService.dioResponse(it);
     if(_response.status == "200") {
+      Navigator.of(context).pop(false);
       widget.item?.reqPayYN = "Y";
       setCalcView();
       app_util.Util.toast("빠른지급 신청이 완료되었습니다.");
@@ -1539,19 +1543,19 @@ class _OrderDetailPageState extends State<OrderDetailPage>{
     if(widget.item?.allocState == "01") {
       openCommonConfirmBox(
           context,
-          "상차지에서 입차처리하시겠습니까?",
+          "상차지에서 출발하시겠습니까?",
           Strings.of(context)?.get("cancel") ?? "Not Found",
           Strings.of(context)?.get("confirm") ?? "Not Found",
               () => Navigator.of(context).pop(false),
               () async {
             Navigator.of(context).pop(false);
-            await setOrderState("12", "상차지 입차 처리했습니다.");
+            await setOrderState("04", "상차지에서 출발했습니다.");
           });
     }else{
       app_util.Util.toast("출발 및 도착 진행중에는 입차처리가 불가능합니다.");
     }
   }
-
+  
   void showStartOrder() {
     openCommonConfirmBox(
         context,
@@ -1763,6 +1767,7 @@ class _OrderDetailPageState extends State<OrderDetailPage>{
             ),
             leading: IconButton(
               onPressed: (){
+                FBroadcast.instance().broadcast(Const.INTENT_ORDER_REFRESH);
                 Navigator.pop(context);
               },
               color: styleWhiteCol,
@@ -1781,31 +1786,35 @@ class _OrderDetailPageState extends State<OrderDetailPage>{
               flexibleSpace: FlexibleSpaceBar(
                title: KakaoMap(
                  onMapCreated: ((controller) async {
-                   mapController = controller;
+                   setState(() {
+                     mapController = controller;
+                   });
 
                    List<LatLng> bounds = List.empty(growable: true);
                     bounds.add(LatLng(widget.item!.sLat!, widget.item!.sLon!));
                     bounds.add(LatLng(widget.item!.eLat!, widget.item!.eLon!));
 
-                   widget.item?.sLat.isNull != true || widget.item?.sLon.isNull != null ?
-                   markers.add(Marker(
-                     markerId: widget.item?.sComName??"상차지",
-                     markerImageSrc: 'https://t1.daumcdn.net/localimg/localimages/07/2018/pc/flagImg/blue_b.png',
-                     latLng: LatLng(widget.item!.sLat!, widget.item!.sLon!),
-                     infoWindowContent: '<div style="font: bold italic 돋움체;">${widget.item?.sComName??"상차지"}</div>'
-                   )) : const SizedBox();
+                   if(widget.item?.sLat.isNull != true || widget.item?.sLon.isNull != null) {
+                     markers.add(Marker(
+                         markerId: widget.item?.sComName ?? "상차지",
+                         markerImageSrc: 'https://t1.daumcdn.net/localimg/localimages/07/2018/pc/flagImg/blue_b.png',
+                         latLng: LatLng(widget.item!.sLat!, widget.item!.sLon!),
+                         infoWindowContent: '<div style="font: bold italic 0.5em 돋움체;">${widget.item?.sComName ?? "상차지"}</div>'
+                     ));
+                   }
 
-                   widget.item?.eLat.isNull != true || widget.item?.eLon.isNull != null ?
-                   markers.add(Marker(
+                   if(widget.item?.eLat.isNull != true || widget.item?.eLon.isNull != null) {
+                     markers.add(Marker(
                      markerId: widget.item?.eComName??"하차지",
                      markerImageSrc: 'https://t1.daumcdn.net/localimg/localimages/07/2018/pc/flagImg/red_b.png',
                      latLng: LatLng(widget.item!.eLat!, widget.item!.eLon!),
-                       infoWindowContent: '<div style="font: bold italic 돋움체;">${widget.item?.eComName??"하차지"}</div>',
-                   )) : const SizedBox();
+                       infoWindowContent: '<div style="font: bold italic 0.5em 돋움체;">${widget.item?.eComName??"하차지"}</div>',
+                   ));
+                   }
 
                    setState(() {
-                     mapController.fitBounds(bounds);
-                     mapController.setBounds();
+                     mapController?.fitBounds(bounds);
+                     mapController?.setBounds();
                    });
 
                  }),
@@ -1816,8 +1825,8 @@ class _OrderDetailPageState extends State<OrderDetailPage>{
 
                  onMarkerTap: (markerId, latLng, zoomLevel) {
                    setState(() {
-                     mapController.setLevel(3);
-                     mapController.panTo(latLng);
+                     mapController?.setLevel(3);
+                     mapController?.panTo(latLng);
                    });
                  },
                ),
@@ -1849,7 +1858,7 @@ class _OrderDetailPageState extends State<OrderDetailPage>{
                               getWayCargoesInfo("wayon"),
                               CustomStyle.getDivider1(),
                               //경유지 정보
-                              widget.item.isNull == false ? widget.item!.stopCount! > 0 ? getStopPointFuture() : const SizedBox() : const SizedBox(),
+                              widget.item != null ? widget.item!.stopCount! > 0 ? getStopPointFuture() : const SizedBox() : const SizedBox(),
                               CustomStyle.sizedBoxHeight(CustomStyle.getHeight(10.0)),
                               getCargoesStateAndTime("wayoff"),
                               getWayCargoesInfo("wayoff"),

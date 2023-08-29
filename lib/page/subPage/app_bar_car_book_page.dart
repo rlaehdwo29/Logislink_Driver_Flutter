@@ -12,10 +12,12 @@ import 'package:logislink_driver_flutter/common/style_theme.dart';
 import 'package:logislink_driver_flutter/main.dart';
 import 'package:logislink_driver_flutter/page/subPage/car_book_reg_page.dart';
 import 'package:logislink_driver_flutter/page/subPage/car_list_page.dart';
+import 'package:logislink_driver_flutter/provider/appbar_service.dart';
 import 'package:logislink_driver_flutter/provider/dio_service.dart';
 import 'package:dio/dio.dart';
 import 'package:logislink_driver_flutter/utils/util.dart';
 import 'package:progress_dialog_null_safe/progress_dialog_null_safe.dart';
+import 'package:provider/provider.dart';
 
 import 'car_reg_page.dart';
 
@@ -45,10 +47,8 @@ class _AppBarCarBookPageState extends State<AppBarCarBookPage> with TickerProvid
 
   @override
   void initState() {
-
     super.initState();
 
-    getCar();
     startDate.value = DateTime(focusDate.value.year,focusDate.value.month,1);
     endDate.value = DateTime(focusDate.value.year,focusDate.value.month+1,0);
     _tabController = TabController(
@@ -60,6 +60,7 @@ class _AppBarCarBookPageState extends State<AppBarCarBookPage> with TickerProvid
 
     WidgetsBinding.instance.addPostFrameCallback((timeStamp) async {
       await getTabApi(mTabCode.value);
+      await getCar();
     });
 
     pullToRefreshController = (kIsWeb
@@ -106,7 +107,7 @@ class _AppBarCarBookPageState extends State<AppBarCarBookPage> with TickerProvid
     await getTabApi(code);
   }
 
-  void _handleTabSelection() {
+  Future<void> _handleTabSelection() async {
     if (_tabController.indexIsChanging) {
       // 탭이 변경되는 중에만 호출됩니다.
       // _tabController.index를 통해 현재 선택된 탭의 인덱스를 가져올 수 있습니다.
@@ -125,7 +126,7 @@ class _AppBarCarBookPageState extends State<AppBarCarBookPage> with TickerProvid
           mTabCode.value = "04";
           break;
       }
-      getTabApi(mTabCode.value);
+      await getTabApi(mTabCode.value);
     }
   }
 
@@ -181,11 +182,43 @@ class _AppBarCarBookPageState extends State<AppBarCarBookPage> with TickerProvid
     );
   }
 
+  Widget getTabFuture() {
+    final appbarService = Provider.of<AppbarService>(context);
+    return FutureBuilder(
+        future: appbarService.getTabList(
+            controller.getUserInfo()?.authorization,
+            controller.getCarInfo()?.carSeq,
+            Util.getDateCalToStr(startDate.value, "yyyy-MM-dd"),
+            Util.getDateCalToStr(endDate.value, "yyyy-MM-dd"),
+            mTabCode.value
+        ),
+        builder: (context, snapshot) {
+          if(snapshot.hasData) {
+            mCarBookList.value = snapshot.data;
+            return tabBarViewWidget();
+          }else if(snapshot.hasError) {
+            return  Container(
+              padding: EdgeInsets.only(top: CustomStyle.getHeight(40.0)),
+              alignment: Alignment.center,
+              child: Text(
+                  "${Strings.of(context)?.get("empty_list")}",
+                  style: CustomStyle.baseFont()),
+            );
+          }
+          return Container(
+            alignment: Alignment.center,
+            child: CircularProgressIndicator(
+              backgroundColor: styleGreyCol1,
+            ),
+          );
+        }
+    );
+  }
+
   Future<void> getTabApi(String? tabValue) async {
 
     Logger logger = Logger();
     await pr?.show();
-    mCarBookList.value = List.empty(growable: true);
     await DioService.dioClient(header: true).getCarBook(
       controller.getUserInfo()?.authorization,
       controller.getCarInfo()?.carSeq,
@@ -199,14 +232,14 @@ class _AppBarCarBookPageState extends State<AppBarCarBookPage> with TickerProvid
       if(response.status == "200") {
         if (response.resultMap?["data"] != null) {
             var list = response.resultMap?["data"] as List;
-            List<CarBookModel> itemsList = list.map((i) =>
-                CarBookModel.fromJSON(i)).toList();
+            List<CarBookModel> itemsList = list.map((i) => CarBookModel.fromJSON(i)).toList();
+            if(mCarBookList.isNotEmpty) mCarBookList.clear();
             mCarBookList.value?.addAll(itemsList);
-            setState(() {});
         }else{
           mCarBookList.value = List.empty(growable: true);
         }
       }
+      setState(() {});
     }).catchError((Object obj) async {
       await pr?.hide();
       switch (obj.runtimeType) {
@@ -719,6 +752,7 @@ class _AppBarCarBookPageState extends State<AppBarCarBookPage> with TickerProvid
         if (_response.resultMap?["data"] != null) {
           var list = _response.resultMap?["data"] as List;
           List<CarModel> itemsList = list.map((i) => CarModel.fromJSON(i)).toList();
+          if(mCarList.value.isNotEmpty) mCarList.clear();
           mCarList.value?.addAll(itemsList);
           if(mCarList.isNotEmpty) {
             var count = 0;
@@ -733,11 +767,12 @@ class _AppBarCarBookPageState extends State<AppBarCarBookPage> with TickerProvid
             }
             controller.setCar(mCar.value);
           }else{
-            //showCarReg();
+            showCarReg();
           }
         }else{
           mCarList.value = List.empty(growable: true);
         }
+        setState(() {});
       }else{
         openOkBox(context,_response.message??"",Strings.of(context)?.get("confirm")??"Error!!",() {Navigator.of(context).pop(false);});
       }
@@ -827,8 +862,98 @@ class _AppBarCarBookPageState extends State<AppBarCarBookPage> with TickerProvid
         ));
   }
 
+  Widget carServiceFuture() {
+    final appbarService = Provider.of<AppbarService>(context);
+    return FutureBuilder(
+        future: appbarService.getCar(context, controller.getUserInfo()?.authorization),
+        builder: (context, snapshot) {
+          if(snapshot.hasData) {
+            mCarList.value = snapshot.data;
+            if(mCarList.isNotEmpty) {
+              var count = 0;
+              for (var carItem in mCarList.value) {
+                if(carItem.mainYn == "Y") {
+                  count++;
+                  mCar.value = carItem;
+                }
+              }
+              if(count == 0) {
+                mCar.value = mCarList.value[0];
+              }
+              controller.setCar(mCar.value);
+            }else{
+              showCarReg();
+            }
+            return carServiceWidget();
+          }else if(snapshot.hasError) {
+            return  Container(
+              padding: EdgeInsets.only(top: CustomStyle.getHeight(40.0)),
+              alignment: Alignment.center,
+              child: Text(
+                  "${Strings.of(context)?.get("empty_list")}",
+                  style: CustomStyle.baseFont()),
+            );
+          }
+          return Container(
+            alignment: Alignment.center,
+            child: CircularProgressIndicator(
+              backgroundColor: styleGreyCol1,
+            ),
+          );
+        }
+    );
+  }
+
+  void showCarReg(){
+    openCommonConfirmBox(
+        context,
+        Strings.of(context)?.get("car_reg_message")??"Not Found",
+        Strings.of(context)?.get("cancel")??"Not Found",
+        Strings.of(context)?.get("confirm")??"Not Found",
+            () => Navigator.of(context).pop(false),
+            () async {
+          Navigator.of(context).pop(false);
+          carReg();
+        });
+  }
+
+  Future<void> carReg() async {
+    Logger logger = Logger();
+    await DioService.dioClient(header: true).carReg(
+        controller.getUserInfo()?.authorization,
+        controller.getUserInfo().driverName,
+        controller.getUserInfo().carNum,
+        "Y", 0).then((it) async {
+      ReturnMap _response = DioService.dioResponse(it);
+      logger.d("carReg() _response -> ${_response.status} // ${_response.resultMap}");
+      if(_response.status == "200") {
+        if (_response.resultMap?["data"] != null) {
+          await getCar();
+          Util.toast("${Strings.of(context)?.get("car_reg_title")}${Strings.of(context)?.get("reg_success")}");
+        }else{
+          Util.toast(_response.message);
+        }
+      }else{
+        openOkBox(context,_response.message??"",Strings.of(context)?.get("confirm")??"Error!!",() {Navigator.of(context).pop(false);});
+      }
+    }).catchError((Object obj){
+      switch (obj.runtimeType) {
+        case DioError:
+        // Here's the sample to get the failed response error code and message
+          final res = (obj as DioError).response;
+          print("carReg() Error => ${res?.statusCode} // ${res?.statusMessage}");
+          break;
+        default:
+          print("carReg() Error Default => ");
+          break;
+      }
+    });
+  }
+
   Widget carServiceWidget() {
-    return Container(
+    return Column(
+        children: [
+          Container(
       width: MediaQuery.of(context).size.width,
       padding: const EdgeInsets.all(20.0),
       child: Row(
@@ -882,7 +1007,10 @@ class _AppBarCarBookPageState extends State<AppBarCarBookPage> with TickerProvid
           ])
         ],
       )
-    );
+    ),
+    customTabBarWidget(),
+    getTabFuture()
+    ]);
   }
 
   @override
@@ -910,13 +1038,7 @@ class _AppBarCarBookPageState extends State<AppBarCarBookPage> with TickerProvid
       ),
       body: Obx((){
         return SafeArea(
-            child: Column(
-              children: [
-                carServiceWidget(),
-                customTabBarWidget(),
-                tabBarViewWidget()
-              ],
-            )
+            child: carServiceFuture(),
         );
       }),
         bottomNavigationBar: InkWell(

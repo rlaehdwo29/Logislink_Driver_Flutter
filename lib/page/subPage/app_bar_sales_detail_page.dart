@@ -90,7 +90,7 @@ class _AppBarSalesDetailPageState extends State<AppBarSalesDetailPage> {
       );
 
       _selectStartDate.value = Util.getDateStrToStr(mData.value?.startDate, "yyyy-MM-dd")??"";
-      _selectEndDate.value  = mData.value?.endDate??"";
+      _selectEndDate.value  = Util.getDateStrToStr(mData.value?.endDate, "yyyy-MM-dd")??"";
       _selectReceipt.value = Util.getDateStrToStr(mData.value?.receiptDate,"yyyy-MM-dd") == "-" ? "":Util.getDateStrToStr(mData.value?.receiptDate,"yyyy-MM-dd")!;
       _selectTax.value = Util.getDateStrToStr(mData.value?.taxDate,"yyyy-MM-dd") == "-" ? "" : Util.getDateStrToStr(mData.value?.taxDate,"yyyy-MM-dd")!;
     }else if(widget.mode == "reg"){
@@ -135,16 +135,16 @@ class _AppBarSalesDetailPageState extends State<AppBarSalesDetailPage> {
     DateTime? _tempSelectedDay = DateTime.now();
     switch(_type) {
       case "startDate" :
-        _tempSelectedDay = mTempData.value.startDate.isNull ? DateTime.now() : DateTime.parse(mTempData.value.startDate!);
+        _tempSelectedDay = mTempData.value.startDate == null ? DateTime.now() : DateTime.parse(mTempData.value.startDate!);
         break;
       case "endDate" :
-        _tempSelectedDay = mTempData.value.endDate.isNull ? DateTime.now() : DateTime.parse(mTempData.value.endDate!);
+        _tempSelectedDay = mTempData.value.endDate == null ? DateTime.now() : DateTime.parse(mTempData.value.endDate!);
         break;
       case "receipt":
-        _tempSelectedDay = mTempData.value.receiptDate.isNull || mTempData.value.receiptDate?.isEmpty == true? DateTime.now() : DateTime.parse(mTempData.value.receiptDate!);
+        _tempSelectedDay = mTempData.value.receiptDate == null || mTempData.value.receiptDate?.isEmpty == true? DateTime.now() : DateTime.parse(mTempData.value.receiptDate!);
         break;
       case "tax" :
-        _tempSelectedDay = mTempData.value.taxDate.isNull  || mTempData.value.taxDate?.isEmpty == true ? DateTime.now() : DateTime.parse(mTempData.value.taxDate!);
+        _tempSelectedDay = mTempData.value.taxDate == null  || mTempData.value.taxDate?.isEmpty == true ? DateTime.now() : DateTime.parse(mTempData.value.taxDate!);
         break;
     }
     return showDialog(
@@ -164,7 +164,7 @@ class _AppBarSalesDetailPageState extends State<AppBarSalesDetailPage> {
                       padding: EdgeInsets.symmetric(vertical: CustomStyle.getHeight(15.0),horizontal: CustomStyle.getWidth(15.0)),
                       color: main_color,
                       child: Text(
-                        "선택 날짜 : ${_tempSelectedDay.isNull?"-":"${_tempSelectedDay?.year}년 ${_tempSelectedDay?.month}월 ${_tempSelectedDay?.day}일"}",
+                        "선택 날짜 : ${_tempSelectedDay == null ?"-":"${_tempSelectedDay?.year}년 ${_tempSelectedDay?.month}월 ${_tempSelectedDay?.day}일"}",
                         style: CustomStyle.CustomFont(
                             styleFontSize16, styleWhiteCol),
                       ),
@@ -296,11 +296,13 @@ class _AppBarSalesDetailPageState extends State<AppBarSalesDetailPage> {
                                             switch(_type) {
                                               case "startDate" :
                                                 _selectStartDate.value = Util.getDateCalToStr(_tempSelectedDay, Const.dateFormat6);
+                                                _selectEndDate.value = Util.getDateCalToStr(_tempSelectedDay, Const.dateFormat6);
                                                 mTempData.value.driveDate = _selectStartDate.value;
                                                 mTempData.value.startDate = Util.getDateCalToStr(_tempSelectedDay, Const.dateFormat4);
+                                                mTempData.value.endDate = Util.getDateCalToStr(_tempSelectedDay, Const.dateFormat4);
                                                 break;
                                               case "endDate" :
-                                                _selectEndDate.value = Util.getDateCalToStr(_tempSelectedDay, Const.dateFormat6)!;
+                                                _selectEndDate.value = Util.getDateCalToStr(_tempSelectedDay, Const.dateFormat6);
                                                 mTempData.value.endDate = Util.getDateCalToStr(_tempSelectedDay, Const.dateFormat4);
                                                 break;
                                               case "receipt":
@@ -341,7 +343,7 @@ class _AppBarSalesDetailPageState extends State<AppBarSalesDetailPage> {
     smOrderCompController.text = mTempData.value.orderComp??"";
     smTruckController.text = mTempData.value.truckNetwork??"";
     smGoodNameController.text =  mTempData.value.goodsName??"";
-    smMoneyController.text =  mTempData.value.money.isNull?"0":mTempData.value.money.toString();
+    smMoneyController.text =  mTempData.value.money == null?"0":mTempData.value.money.toString();
     memoController.text = mTempData.value.memo??"";
 
     return Column(
@@ -743,7 +745,7 @@ class _AppBarSalesDetailPageState extends State<AppBarSalesDetailPage> {
               Expanded(
                 flex: 1,
                 child: Text(
-                  Strings.of(context)?.get("Sales_Manage_Goods_Name") ?? "Not Found",
+                  Strings.of(context)?.get("Sales_Manage_Money") ?? "Not Found",
                   style: CustomStyle.CustomFont(
                       styleFontSize14, text_color_04),
                 ),
@@ -1046,11 +1048,11 @@ class _AppBarSalesDetailPageState extends State<AppBarSalesDetailPage> {
       showGuestDialog();
       return;
     }
-    if(mTempData.value.startDate?.isEmpty == true || mTempData.value.startDate?.isNull == true) {
+    if(mTempData.value.startDate?.isEmpty == true || mTempData.value.startDate == null) {
       Util.toast("운행일자를 입력해주세요");
       return;
     }
-    if(mTempData.value.orderComp?.isEmpty == true || mTempData.value.orderComp?.isNull == true) {
+    if(mTempData.value.orderComp?.isEmpty == true || mTempData.value.orderComp == null) {
       Util.toast("청구업체를 입력해주세요");
       return;
     }
@@ -1111,11 +1113,12 @@ class _AppBarSalesDetailPageState extends State<AppBarSalesDetailPage> {
       showGuestDialog();
       return;
     }
-    if(mTempData.value.startDate?.isEmpty == true || mTempData.value.startDate?.isNull == true) {
+    print("응애응애? => ${mTempData.value.startDate} // ${mTempData.value.orderComp}");
+    if(mTempData.value.startDate?.isEmpty == true || mTempData.value.startDate == null) {
       Util.toast("운행일자를 입력해주세요");
       return;
     }
-    if(mTempData.value.orderComp?.isEmpty == true || mTempData.value.orderComp?.isNull == true) {
+    if(mTempData.value.orderComp?.isEmpty == true || mTempData.value.orderComp == null) {
       Util.toast("청구업체를 입력해주세요");
       return;
     }
@@ -1124,6 +1127,7 @@ class _AppBarSalesDetailPageState extends State<AppBarSalesDetailPage> {
 
   Future<void> insertRegisterAPI() async {
     Logger logger = Logger();
+    print("응애옹애  => ${mTempData.value.startDate} // ${mTempData.value.endDate}");
     await pr?.show();
     await DioService.dioClient(header: true).insertSalesManage(
         controller.getUserInfo()?.authorization,

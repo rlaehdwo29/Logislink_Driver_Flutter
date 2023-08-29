@@ -1,19 +1,25 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:get/get.dart';
 import 'package:logger/logger.dart';
 import 'package:logislink_driver_flutter/common/app.dart';
 import 'package:logislink_driver_flutter/common/common_util.dart';
+import 'package:logislink_driver_flutter/common/model/geofence_model.dart';
 import 'package:logislink_driver_flutter/common/model/terms_agree_model.dart';
 import 'package:logislink_driver_flutter/common/model/user_model.dart';
+import 'package:logislink_driver_flutter/common/model/version_model.dart';
 import 'package:logislink_driver_flutter/common/strings.dart';
 import 'package:logislink_driver_flutter/constants/const.dart';
+import 'package:logislink_driver_flutter/db/appdatabase.dart';
 import 'package:logislink_driver_flutter/page/main_page.dart';
 import 'package:logislink_driver_flutter/page/subPage/user_car_list_page.dart';
 import 'package:logislink_driver_flutter/page/terms_page.dart';
 import 'package:logislink_driver_flutter/provider/dio_service.dart';
 import 'package:logislink_driver_flutter/utils/sp.dart';
 import 'package:logislink_driver_flutter/utils/util.dart';
+import 'package:mobile_number/mobile_number.dart';
 import 'package:progress_dialog_null_safe/progress_dialog_null_safe.dart';
 import '../common/style_theme.dart';
 import 'login_page.dart';
@@ -38,62 +44,89 @@ class _BridgePageState extends State<BridgePage> {
   void initState() {
     super.initState();
 
-    WidgetsBinding.instance.addPostFrameCallback((timeStamp) async {
-      /*try {
-        final dir = await getApplicationDocumentsDirectory();
-        var dirSChk = Directory('${dir.path}/sample/');
-        if (await dirSChk.exists()) {
-          dirSChk.deleteSync(recursive: true);
-        }
-        loginService = context.read<UserInfoService>();
-        var userDb = LocalDbProvider();
-        UserModel _user = await userDb.getUser();
-        await loginService.getVersion();
-        if (_user != null) {
-          if (_user.loginKeep == "Y") {
-            await loginService.refreshToken().then((value) {
-              if (value.status == "0" || value.status == "888") {
-                Navigator.of(context).pushAndRemoveUntil(
-                    MaterialPageRoute(
-                        builder: (BuildContext context) => MainPage()),
-                        (route) => false);
-              } else {
-                Navigator.of(context).pushAndRemoveUntil(
-                    MaterialPageRoute(
-                        builder: (BuildContext context) => const LoginPage()),
-                        (route) => false);
-              }
-            });
-          } else {
-            Navigator.of(context).pushAndRemoveUntil(
-                MaterialPageRoute(
-                    builder: (BuildContext context) => const LoginPage()),
-                    (route) => false);
-          }
-        } else {
-          Navigator.of(context).pushAndRemoveUntil(
-              MaterialPageRoute(builder: (BuildContext context) => const LoginPage()),
-                  (route) => false);
-        }
-      } catch (e) {
-        Navigator.of(context).pushAndRemoveUntil(
-            MaterialPageRoute(builder: (BuildContext context) => const LoginPage()),
-                (route) => false);
-      }*/
-      /*Navigator.of(context).pushAndRemoveUntil(
-          MaterialPageRoute(builder: (BuildContext context) => const LoginPage()),
-              (route) => false);*/
-      await checkLogin();
-
+    Future.delayed(Duration.zero, () async {
+      checkFinishGeofence();
+      await checkVersion();
     });
+
+  }
+
+  Future<void> checkFinishGeofence() async {
+    AppDataBase db = App().getRepository();
+    List<GeofenceModel>? list = await db.getFinishGeofence();
+    if(list != null && list.length != 0) {
+      db.deleteAll(list);
+    }
+  }
+
+  Future<void> checkVersion() async {
+    Logger logger = Logger();
+    await DioService.dioClient(header: true).getVersion("D").then((it) async {
+      ReturnMap _response = DioService.dioResponse(it);
+      logger.d("checkVersion() _response -> ${_response.status} // ${_response.resultMap}");
+      try {
+        if (_response.status == "200") {
+          var list = _response.resultMap?["data"] as List;
+
+          if (list != null && list.isNotEmpty) {
+            VersionModel? codeVersion = VersionModel.fromJSON(list[1]);
+            if (SP.get(Const.CD_VERSION) != codeVersion.versionCode) {
+              SP.putString(Const.CD_VERSION, codeVersion.versionCode ?? "");
+              await GetCodeTask();
+            }
+          }
+          await checkLogin();
+        }
+      }catch(e) {
+        print("checkVersion() Exection=>$e");
+      }
+    }).catchError((Object obj) async {
+      switch (obj.runtimeType) {
+        case DioError:
+        // Here's the sample to get the failed response error code and message
+          final res = (obj as DioError).response;
+          logger.e("brige_page.dart checkVersion() Error Default: ${res?.statusCode} -> ${res?.statusMessage}");
+          break;
+        default:
+          logger.e("brige_page.dart checkVersion() Error Default:");
+          break;
+      }
+    });
+  }
+
+  Future<void> GetCodeTask() async {
+    Logger logger = Logger();
+    List<String> codeList = Const.getCodeList();
+    for(String code in codeList){
+      await DioService.dioClient(header: true).getCodeList(code).then((it){
+        ReturnMap _response = DioService.dioResponse(it);
+        logger.d("GetCodeTask() _response -> ${_response.status} // ${_response.resultMap}");
+        if(_response.status == "200") {
+          if(_response.resultMap?["data"] != null) {
+            var jsonString = jsonEncode(it.response.data);
+            SP.putCodeList(code, jsonString);
+          }
+        }
+      }).catchError((Object obj) async {
+        switch (obj.runtimeType) {
+          case DioError:
+          // Here's the sample to get the failed response error code and message
+            final res = (obj as DioError).response;
+            logger.e("brige_page.dart GetCodeTask() Error Default: ${res?.statusCode} -> ${res?.statusMessage}");
+            break;
+          default:
+            logger.e("brige_page.dart GetCodeTask() Error Default:");
+            break;
+        }
+      });
+    }
   }
 
   Future<void> checkLogin() async {
     if(Const.userDebugger) {
-      goToLogin();
+      await goToLogin();
       return;
     }
-
     if(App().getUserInfo().authorization != null ){
       if(App().getUserInfo().vehicCnt! >= 2) {
         goToUserCar();
@@ -101,7 +134,7 @@ class _BridgePageState extends State<BridgePage> {
         getUserInfo();
       }
     }else{
-      goToLogin();
+      await goToLogin();
     }
 
   }
@@ -204,20 +237,28 @@ class _BridgePageState extends State<BridgePage> {
   }
 
   Future<void> goToLogin() async {
-    await CheckTermsAgree();
+    try {
+      if (!await MobileNumber.hasPhonePermission) {
+        await MobileNumber.requestPhonePermission;
+      } else {
+        await checkTermsAgree();
+      }
+    }catch(e) {
+      print("goToLogin() Exection ==>${e}");
+    }
   }
 
-  Future<void> CheckTermsAgree() async {
+  Future<void> checkTermsAgree() async {
     String? telNum = await Util.getPhoneNum();
     Logger logger = Logger();
     await DioService.dioClient(header: true).getTermsTelAgree(App().getUserInfo().authorization, telNum).then((it) async {
       ReturnMap response = DioService.dioResponse(it);
       logger.d("CheckTermsAgree() _response -> ${response.status} // ${response.resultMap}");
       if(response.status == "200") {
-        if (response.resultMap?["data"] != null) {
+        if (response.resultMap?["result"] == true) {
           try {
-            TermsAgreeModel user = TermsAgreeModel.fromJSON(response.resultMap?["data"]);
-            if (user != null) {
+            if (response.resultMap?["data"] != null) {
+              TermsAgreeModel user = TermsAgreeModel.fromJSON(response.resultMap?["data"]);
               if (user.necessary == "N" || user.necessary == "") {
                 m_TermsCheck = true;
                 m_TermsMode = TERMS.UPDATE;

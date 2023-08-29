@@ -40,46 +40,37 @@ class _LoginPageState extends State<LoginPage> with CommonMainWidget {
 
   @override
   void initState() {
-    if(!Const.userDebugger) getPhoneNumber();
     super.initState();
+
+    if(!Const.userDebugger) getPhoneNumber();
+
   }
 
-  void getPhoneNumber() {
 
-    MobileNumber.listenPhonePermission((isPermissionGranted) async {
+  Future<void> getPhoneNumber() async {
+
+    /*MobileNumber.listenPhonePermission((isPermissionGranted) async {
       if (isPermissionGranted){
-        if(Util.getPhoneNum() == null){
-          Util.snackbar(context, "전화번호를 가져올 수 없습니다.");
-          mobileNumber.value = "";
-        }else{
-          try{
-            await initMobileNumberState();
-          }catch(e) {
-            mobileNumber.value = "";
-          }
-        }
+        initMobileNumberState();
       } else {
         Util.snackbar(context, "핸드폰 권한을 설정해주세요.");
       }
     });
+    initMobileNumberState();*/
+    mobileNumber.value = await Util.getPhoneNum();
   }
 
-   Future<void> initMobileNumberState() async {
+  Future<void> initMobileNumberState() async {
     if (!await MobileNumber.hasPhonePermission) {
       await MobileNumber.requestPhonePermission;
       return;
     }
-    try {
-      mobileNumber.value = (await MobileNumber.mobileNumber)!;
-      _simCard = (await MobileNumber.getSimCards)!;
-    } on PlatformException catch (e) {
-      debugPrint("Failed to get mobile number because of '${e.message}'");
-    }
 
     if (!mounted) return;
 
-    setState((){});
-
+    setState(() async {
+      mobileNumber.value = await Util.getPhoneNum();
+    });
   }
 
   Widget _entryField() {

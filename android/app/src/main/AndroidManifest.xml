@@ -3,16 +3,24 @@
     package="com.logislink.driver">
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.WAKE_LOCK" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" /> <!-- Location -->
     <uses-permission android:name="android.permission.QUERY_ALL_PACKAGES"/>
     <uses-permission android:name="android.permission.READ_PHONE_STATE"/>
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/>
-    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
-    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"/>
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" /> <!-- ACCESS_COARSE_LOCATION와 ACCESS_BACKGROUND_LOCATION 권한 동시 사용. 하나만 사용시 성능 저하-->
     <uses-permission android:name="android.permission.ACCESS_BACKGROUND_LOCATION" /> <!-- phone -->
-    <uses-permission android:name="android.permission.MANAGE_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS" />
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"/>
+    <uses-permission android:name="android.permission.MANAGE_EXTERNAL_STORAGE"/>
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" android:minSdkVersion="33" />
+    <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" android:minSdkVersion="33"/>
+    <uses-permission android:name="android.permission.READ_MEDIA_VIDEO" android:minSdkVersion="33"/>
+    <uses-permission android:name="android.permission.BLUETOOTH_ADMIN"/>
+    <uses-permission android:name="android.permission.BLUETOOTH"/>
+    <uses-permission android:name="com.google.android.gms.permission.ACTIVITY_RECOGNITION" />
+
     <!-- 위치 정보 엑세스 권한 -->
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/>
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
@@ -85,9 +93,6 @@
             android:name="flutterEmbedding"
             android:value="2" />
         <meta-data
-            android:name="com.kakao.sdk.AppKey"
-            android:value="9c7cb4fd9cdd9bc998a4f30370322033" />
-        <meta-data
             android:name="com.kakao.sdk.kakaonavi.useWebView"
             android:value="false" />
         <meta-data
@@ -96,6 +101,9 @@
         <meta-data
             android:name="firebase_messaging_auto_init_enabled"
             android:value="false" />
+        <meta-data
+            android:name="com.kakao.sdk.AppKey"
+            android:value="d64d22181998c713191ff6a03ce3564c" />
         <meta-data
             android:name="firebase_analytics_collection_enabled"
             android:value="false" />

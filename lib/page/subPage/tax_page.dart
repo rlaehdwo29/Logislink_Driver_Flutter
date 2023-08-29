@@ -144,7 +144,7 @@ class _TaxPageState extends State<TaxPage> {
        controller.getUserInfo()?.bankCode?.isEmpty == true) {
       Util.toast("등록된 계좌가 없습니다.");
     }
-    if(controller.getUserInfo()?.bankchkDate.isNull == true) {
+    if(controller.getUserInfo()?.bankchkDate == null) {
       Util.toast("확인되지 않은 계좌입니다.");
       return false;
     }
@@ -666,7 +666,6 @@ class _TaxPageState extends State<TaxPage> {
                                                     materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
                                                     onChanged: (value) {
                                                       setState(() {
-                                                        print("안대? => $value");
                                                         _isChecked.value = value!;
                                                       });
                                                     }
@@ -746,7 +745,7 @@ class _TaxPageState extends State<TaxPage> {
                       padding: EdgeInsets.symmetric(vertical: CustomStyle.getHeight(15.0),horizontal: CustomStyle.getWidth(15.0)),
                       color: main_color,
                       child: Text(
-                              "선택 날짜 : ${_tempSelectedDay.isNull?"-":"${_tempSelectedDay?.year}년 ${_tempSelectedDay?.month}월 ${_tempSelectedDay?.day}일"}",
+                              "선택 날짜 : ${_tempSelectedDay == null?"-":"${_tempSelectedDay?.year}년 ${_tempSelectedDay?.month}월 ${_tempSelectedDay?.day}일"}",
                               style: CustomStyle.CustomFont(
                                   styleFontSize16, styleWhiteCol),
                             ),

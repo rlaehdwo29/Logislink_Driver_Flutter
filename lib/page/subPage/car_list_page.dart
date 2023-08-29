@@ -272,6 +272,7 @@ class _CarListPageState extends State<CarListPage> {
     pr = Util.networkProgress(context);
     return WillPopScope(
         onWillPop: () async {
+          Navigator.pop(context);
           widget.onCallback(true, null);
           return false;
         } ,

@@ -80,15 +80,16 @@ class GpsService {
     );
 
     FBroadcast.instance().broadcast(Const.INTENT_GEOFENCE);
-    setGeofencingClient();
+    await setGeofencingClient();
     service.startService();
   }
 
   static Future<void> setGeofencingClient() async {
     AppDataBase db = App().getRepository();
     List<GeofenceModel> list = await db.getAllGeoFenceList(App().getUserInfo()?.vehicId);
+    print("설마 얘가 없나? => ${list.length}");
     if(list != null && list.length != 0) {
-      geofenceList = List.empty(growable: true);
+      if(geofenceList.isNotEmpty) geofenceList.clear();
       for(var data in list) {
         geofenceList?.add(Geofence(id: data.id.toString(), latitude: double.parse(data.lat), longitude: double.parse(data.lon), radius: [GeofenceRadius(id: 'radius_150', length: double.parse(Const.GEOFENCE_RADIUS_IN_METERS.toString()))]));
       }
@@ -150,10 +151,10 @@ class GpsService {
             888,
             'COOL SERVICE',
             'Awesome ${DateTime.now()}',
-            const NotificationDetails(
+             NotificationDetails(
               android: AndroidNotificationDetails(
-                'my_foreground',
-                'MY FOREGROUND SERVICE',
+                Const.LOCATION_SERVICE_CHANNEL_ID, // id
+                '로지스링크 차주용', //
                 icon: 'ic_bg_service_small',
                 ongoing: true,
                 enableVibration: false,
@@ -166,7 +167,7 @@ class GpsService {
           // if you don't using custom notification, uncomment this
           service.setForegroundNotificationInfo(
             title: "로지스링크 차주용",
-            content: "로지스링크에서 현재 위치를 전송중입니다.11111",
+            content: "로지스링크에서 현재 위치를 전송중입니다.",
           );
         }
       }

@@ -124,9 +124,9 @@ class _CarBookRegPageState extends State<CarBookRegPage>{
 
   // 기타 Widget
   Widget etcWidget() {
-    priceController.text = (mData?.value.price.isNull == true ? "": mData?.value.price.toString())!;
-    memoController.text = (mData?.value.memo.isNull == true ? "": mData?.value.memo.toString())!;
-    mileageController.text = (mData?.value.mileage.isNull == true ? "" : mData?.value.mileage.toString())!;
+    priceController.text = (mData?.value.price == null ? "": mData?.value.price.toString())!;
+    memoController.text = (mData?.value.memo == null ? "": mData?.value.memo.toString())!;
+    mileageController.text = (mData?.value.mileage == null ? "" : mData?.value.mileage.toString())!;
     return Container(
       margin: const EdgeInsets.all(20.0),
       decoration: BoxDecoration(
@@ -170,45 +170,71 @@ class _CarBookRegPageState extends State<CarBookRegPage>{
                   ),
                   Expanded(
                       flex: 6,
-                      child: TextField(
-                        maxLines: 1,
-                        keyboardType: TextInputType.number,
-                        style: CustomStyle.CustomFont(styleFontSize14, Colors.black),
-                        maxLengthEnforcement: MaxLengthEnforcement.enforced,
-                        textAlignVertical: TextAlignVertical.center,
-                        controller: priceController,
-                        decoration: priceController.text.isNotEmpty ?
-                        InputDecoration(
-                          border: InputBorder.none,
-                          contentPadding: EdgeInsets.symmetric(horizontal: CustomStyle.getWidth(10.0)),
-                          suffixIcon: IconButton(
-                            onPressed: () {
-                              priceController.clear();
-                              mData?.value.price = null;
-                            },
-                            icon: const Icon(Icons.clear, size: 18,color: Colors.black,),
-                          ),
-                        ) : InputDecoration(
-                          border: InputBorder.none,
-                          contentPadding: EdgeInsets.symmetric(horizontal: CustomStyle.getWidth(10.0)),
-                          suffixIcon: IconButton(
-                            onPressed: () {},
-                            icon: const Icon(Icons.clear, size: 18,color: Colors.white,),
-                          ),
-                        ),
-                        onChanged: (etcPriceText) {
-                          if (etcPriceText.isNotEmpty) {
-                            mData?.value.price = int.parse(etcPriceText);
-                            priceController.selection =  TextSelection.collapsed(offset: priceController.text.length);
-                          } else {
-                            mData?.value.price = null;
-                          }
-                        },
-                      )
-                  )
+                      child: Row(children: [
+                        Expanded(
+                            flex: 10,
+                            child: TextField(
+                              maxLines: 1,
+                              keyboardType: TextInputType.number,
+                              style: CustomStyle.CustomFont(
+                                  styleFontSize14, Colors.black),
+                              maxLengthEnforcement:
+                                  MaxLengthEnforcement.enforced,
+                              textAlignVertical: TextAlignVertical.center,
+                              controller: priceController,
+                              decoration: priceController.text.isNotEmpty
+                                  ? InputDecoration(
+                                      border: InputBorder.none,
+                                      contentPadding: EdgeInsets.symmetric(
+                                          horizontal:
+                                              CustomStyle.getWidth(10.0)),
+                                      suffixIcon: IconButton(
+                                        onPressed: () {
+                                          priceController.clear();
+                                          mData?.value.price = null;
+                                        },
+                                        icon: const Icon(
+                                          Icons.clear,
+                                          size: 18,
+                                          color: Colors.black,
+                                        ),
+                                      ),
+                                    )
+                                  : InputDecoration(
+                                      border: InputBorder.none,
+                                      contentPadding: EdgeInsets.symmetric(
+                                          horizontal:
+                                              CustomStyle.getWidth(10.0)),
+                                      suffixIcon: IconButton(
+                                        onPressed: () {},
+                                        icon: const Icon(
+                                          Icons.clear,
+                                          size: 18,
+                                          color: Colors.white,
+                                        ),
+                                      ),
+                                    ),
+                              onChanged: (etcPriceText) {
+                                if (etcPriceText.isNotEmpty) {
+                                  mData?.value.price = int.parse(etcPriceText);
+                                  priceController.selection =
+                                      TextSelection.collapsed(
+                                          offset: priceController.text.length);
+                                } else {
+                                  mData?.value.price = null;
+                                }
+                              },
+                            )),
+                        Expanded(
+                            flex: 2,
+                            child: Text(
+                                "원",
+                              style: CustomStyle.CustomFont(styleFontSize14, text_color_01),
+                            )
+                        )
+                      ]))
                 ],
-              )
-          ),
+              )),
           // 2번째줄
           Container(
               height: CustomStyle.getHeight(100.0),
@@ -237,7 +263,7 @@ class _CarBookRegPageState extends State<CarBookRegPage>{
                             )
                         ),
                         child: Text(
-                          Strings.of(context)?.get("car_book_etc_value_01")??"Not Found",
+                          Strings.of(context)?.get("car_book_etc_value_02")??"Not Found",
                           textAlign: TextAlign.center,
                           style: CustomStyle.CustomFont(styleFontSize14, text_color_01),
                         ),
@@ -312,7 +338,7 @@ class _CarBookRegPageState extends State<CarBookRegPage>{
                             )
                         ),
                         child: Text(
-                          Strings.of(context)?.get("car_book_oil_value_03")??"Not Found",
+                          Strings.of(context)?.get("car_book_etc_value_03")??"Not Found",
                           textAlign: TextAlign.center,
                           style: CustomStyle.CustomFont(styleFontSize14, text_color_01),
                         ),
@@ -320,7 +346,11 @@ class _CarBookRegPageState extends State<CarBookRegPage>{
                   ),
                   Expanded(
                       flex: 6,
-                      child: TextField(
+                      child: Row(
+                          children: [
+                            Expanded(
+                                flex:9,
+                                child: TextField(
                         maxLines: 1,
                         keyboardType: TextInputType.number,
                         style: CustomStyle.CustomFont(styleFontSize14, Colors.black),
@@ -354,6 +384,16 @@ class _CarBookRegPageState extends State<CarBookRegPage>{
                             mData.value.mileage = null;
                           }
                         },
+                      )
+                            ),
+                            Expanded(
+                                flex:2,
+                                child: Text(
+                                    "km",
+                                  style: CustomStyle.CustomFont(styleFontSize14, text_color_01),
+                                )
+                            )
+                      ]
                       )
                   )
                 ],
@@ -396,8 +436,8 @@ class _CarBookRegPageState extends State<CarBookRegPage>{
                               alignment: Alignment.centerLeft,
                               padding: EdgeInsets.symmetric(horizontal: CustomStyle.getWidth(10.0)),
                               child: Text(
-                                _selectDay.value.isEmpty ? "날짜를 선택해주세요." : _selectDay.value,
-                                style: CustomStyle.CustomFont(styleFontSize14, text_color_01),
+                                _selectDay.value.isEmpty ? "날짜를 선택하세요." : _selectDay.value,
+                                style: CustomStyle.CustomFont(styleFontSize14, _selectDay.value.isEmpty?text_color_03:text_color_01),
                               )
                           )
                       )
@@ -413,8 +453,8 @@ class _CarBookRegPageState extends State<CarBookRegPage>{
 
   // 보험 Widget
   Widget insuranceWidget() {
-    priceController.text = (mData?.value.price.isNull == true ? "" : mData?.value.price.toString())!;
-    memoController.text = (mData?.value.memo.isNull == true ? "" : mData?.value.memo.toString())!;
+    priceController.text = (mData?.value.price == null ? "" : mData?.value.price.toString())!;
+    memoController.text = (mData?.value.memo == null ? "" : mData?.value.memo.toString())!;
     return Container(
       margin: const EdgeInsets.all(20.0),
       decoration: BoxDecoration(
@@ -458,7 +498,11 @@ class _CarBookRegPageState extends State<CarBookRegPage>{
                   ),
                   Expanded(
                       flex: 6,
-                      child: TextField(
+                      child: Row(
+                          children: [
+                            Expanded(
+                              flex:9,
+                                child: TextField(
                         maxLines: 1,
                         keyboardType: TextInputType.number,
                         style: CustomStyle.CustomFont(styleFontSize14, Colors.black),
@@ -492,7 +536,14 @@ class _CarBookRegPageState extends State<CarBookRegPage>{
                             mData?.value.price = null;
                           }
                         },
-                      )
+                      )),
+                            Expanded(
+                                child: Text(
+                                  "원",
+                                  style: CustomStyle.CustomFont(styleFontSize14, text_color_01),
+                                )
+                            )
+                      ])
                   )
                 ],
               )
@@ -609,8 +660,8 @@ class _CarBookRegPageState extends State<CarBookRegPage>{
                               alignment: Alignment.centerLeft,
                               padding: EdgeInsets.symmetric(horizontal: CustomStyle.getWidth(10.0)),
                               child: Text(
-                                _selectDay.value ?? "날짜를 선택해주세요.",
-                                style: CustomStyle.CustomFont(styleFontSize14, text_color_01),
+                                _selectDay.value.isEmpty ? "날짜를 선택하세요." : _selectDay.value,
+                                style: CustomStyle.CustomFont(styleFontSize14, _selectDay.value.isEmpty?text_color_03:text_color_01),
                               )
                           )
                       )
@@ -626,9 +677,9 @@ class _CarBookRegPageState extends State<CarBookRegPage>{
 
   // 정비내역 Widget
   Widget repairWidget() {
-    priceController.text = (mData?.value.price.isNull == true ? "" : mData?.value.price.toString())!;
-    memoController.text = (mData?.value.memo.isNull == true ? "" : mData?.value.memo.toString())!;
-    mileageController.text = (mData?.value.mileage.isNull == true ? "" : mData?.value.mileage.toString())!;
+    priceController.text = (mData?.value.price == null ? "" : mData?.value.price.toString())!;
+    memoController.text = (mData?.value.memo == null ? "" : mData?.value.memo.toString())!;
+    mileageController.text = (mData?.value.mileage == null ? "" : mData?.value.mileage.toString())!;
     return Container(
       margin: const EdgeInsets.all(20.0),
       decoration: BoxDecoration(
@@ -672,42 +723,69 @@ class _CarBookRegPageState extends State<CarBookRegPage>{
                   ),
                   Expanded(
                       flex: 6,
-                      child: TextField(
-                        maxLines: 1,
-                        keyboardType: TextInputType.number,
-                        style: CustomStyle.CustomFont(styleFontSize14, Colors.black),
-                        maxLengthEnforcement: MaxLengthEnforcement.enforced,
-                        textAlignVertical: TextAlignVertical.center,
-                        controller: priceController,
-                        decoration: priceController.text.isNotEmpty ?
-                        InputDecoration(
-                          border: InputBorder.none,
-                          contentPadding: EdgeInsets.symmetric(horizontal: CustomStyle.getWidth(10.0)),
-                          suffixIcon: IconButton(
-                            onPressed: () {
-                              priceController.clear();
-                              mData?.value.price = null;
-                            },
-                            icon: const Icon(Icons.clear, size: 18,color: Colors.black,),
-                          ),
-                        ) : InputDecoration(
-                          border: InputBorder.none,
-                          contentPadding: EdgeInsets.symmetric(horizontal: CustomStyle.getWidth(10.0)),
-                          suffixIcon: IconButton(
-                            onPressed: () {},
-                            icon: const Icon(Icons.clear, size: 18,color: Colors.white,),
-                          ),
-                        ),
-                        onChanged: (repairPriceText) {
-                          if (repairPriceText.isNotEmpty) {
-                            mData?.value.price = int.parse(repairPriceText);
-                            priceController.selection =  TextSelection.collapsed(offset: priceController.text.length);
-                          } else {
-                            mData?.value.price = null;
-                          }
-                        },
-                      )
-                  )
+                      child: Row(children: [
+                        Expanded(
+                            flex: 10,
+                            child: TextField(
+                              maxLines: 1,
+                              keyboardType: TextInputType.number,
+                              style: CustomStyle.CustomFont(
+                                  styleFontSize14, Colors.black),
+                              maxLengthEnforcement:
+                                  MaxLengthEnforcement.enforced,
+                              textAlignVertical: TextAlignVertical.center,
+                              controller: priceController,
+                              decoration: priceController.text.isNotEmpty
+                                  ? InputDecoration(
+                                      border: InputBorder.none,
+                                      contentPadding: EdgeInsets.symmetric(
+                                          horizontal:
+                                              CustomStyle.getWidth(10.0)),
+                                      suffixIcon: IconButton(
+                                        onPressed: () {
+                                          priceController.clear();
+                                          mData?.value.price = null;
+                                        },
+                                        icon: const Icon(
+                                          Icons.clear,
+                                          size: 18,
+                                          color: Colors.black,
+                                        ),
+                                      ),
+                                    )
+                                  : InputDecoration(
+                                      border: InputBorder.none,
+                                      contentPadding: EdgeInsets.symmetric(
+                                          horizontal:
+                                              CustomStyle.getWidth(10.0)),
+                                      suffixIcon: IconButton(
+                                        onPressed: () {},
+                                        icon: const Icon(
+                                          Icons.clear,
+                                          size: 18,
+                                          color: Colors.white,
+                                        ),
+                                      ),
+                                    ),
+                              onChanged: (repairPriceText) {
+                                if (repairPriceText.isNotEmpty) {
+                                  mData?.value.price =
+                                      int.parse(repairPriceText);
+                                  priceController.selection =
+                                      TextSelection.collapsed(
+                                          offset: priceController.text.length);
+                                } else {
+                                  mData?.value.price = null;
+                                }
+                              },
+                            )),
+                        Expanded(
+                            child: Text(
+                          "원",
+                          style: CustomStyle.CustomFont(
+                              styleFontSize14, text_color_01),
+                        ))
+                      ]))
                 ],
               )
           ),
@@ -822,42 +900,70 @@ class _CarBookRegPageState extends State<CarBookRegPage>{
                   ),
                   Expanded(
                       flex: 6,
-                      child: TextField(
-                        maxLines: 1,
-                        keyboardType: TextInputType.number,
-                        style: CustomStyle.CustomFont(styleFontSize14, Colors.black),
-                        maxLengthEnforcement: MaxLengthEnforcement.enforced,
-                        textAlignVertical: TextAlignVertical.center,
-                        controller: mileageController,
-                        decoration: mileageController.text.isNotEmpty ?
-                        InputDecoration(
-                          border: InputBorder.none,
-                          contentPadding: EdgeInsets.symmetric(horizontal: CustomStyle.getWidth(10.0)),
-                          suffixIcon: IconButton(
-                            onPressed: () {
-                              mileageController.clear();
-                              mData.value.mileage = null;
-                            },
-                            icon: const Icon(Icons.clear, size: 18,color: Colors.black,),
-                          ),
-                        ) : InputDecoration(
-                          border: InputBorder.none,
-                          contentPadding: EdgeInsets.symmetric(horizontal: CustomStyle.getWidth(10.0)),
-                          suffixIcon: IconButton(
-                            onPressed: () {},
-                            icon: const Icon(Icons.clear, size: 18,color: Colors.white,),
-                          ),
-                        ),
-                        onChanged: (mileageText) {
-                          if (mileageText.isNotEmpty) {
-                            mData.value.mileage = int.parse(mileageText);
-                            mileageController.selection = TextSelection.collapsed(offset: mileageController.text.length);
-                          } else {
-                            mData.value.mileage = null;
-                          }
-                        },
-                      )
-                  )
+                      child: Row(children: [
+                        Expanded(
+                            flex: 10,
+                            child: TextField(
+                              maxLines: 1,
+                              keyboardType: TextInputType.number,
+                              style: CustomStyle.CustomFont(
+                                  styleFontSize14, Colors.black),
+                              maxLengthEnforcement:
+                                  MaxLengthEnforcement.enforced,
+                              textAlignVertical: TextAlignVertical.center,
+                              controller: mileageController,
+                              decoration: mileageController.text.isNotEmpty
+                                  ? InputDecoration(
+                                      border: InputBorder.none,
+                                      contentPadding: EdgeInsets.symmetric(
+                                          horizontal:
+                                              CustomStyle.getWidth(10.0)),
+                                      suffixIcon: IconButton(
+                                        onPressed: () {
+                                          mileageController.clear();
+                                          mData.value.mileage = null;
+                                        },
+                                        icon: const Icon(
+                                          Icons.clear,
+                                          size: 18,
+                                          color: Colors.black,
+                                        ),
+                                      ),
+                                    )
+                                  : InputDecoration(
+                                      border: InputBorder.none,
+                                      contentPadding: EdgeInsets.symmetric(
+                                          horizontal:
+                                              CustomStyle.getWidth(10.0)),
+                                      suffixIcon: IconButton(
+                                        onPressed: () {},
+                                        icon: const Icon(
+                                          Icons.clear,
+                                          size: 18,
+                                          color: Colors.white,
+                                        ),
+                                      ),
+                                    ),
+                              onChanged: (mileageText) {
+                                if (mileageText.isNotEmpty) {
+                                  mData.value.mileage = int.parse(mileageText);
+                                  mileageController.selection =
+                                      TextSelection.collapsed(
+                                          offset:
+                                              mileageController.text.length);
+                                } else {
+                                  mData.value.mileage = null;
+                                }
+                              },
+                            )),
+                        Expanded(
+                          flex: 2,
+                            child: Text(
+                          "km",
+                          style: CustomStyle.CustomFont(
+                              styleFontSize14, text_color_01),
+                        ))
+                      ]))
                 ],
               )
           ),
@@ -898,8 +1004,8 @@ class _CarBookRegPageState extends State<CarBookRegPage>{
                               alignment: Alignment.centerLeft,
                               padding: EdgeInsets.symmetric(horizontal: CustomStyle.getWidth(10.0)),
                               child: Text(
-                                _selectDay.value ?? "날짜를 선택해주세요.",
-                                style: CustomStyle.CustomFont(styleFontSize14, text_color_01),
+                                _selectDay.value.isEmpty ? "날짜를 선택하세요." : _selectDay.value,
+                                style: CustomStyle.CustomFont(styleFontSize14, _selectDay.value.isEmpty?text_color_03:text_color_01),
                               )
                           )
                       )
@@ -914,9 +1020,9 @@ class _CarBookRegPageState extends State<CarBookRegPage>{
 
   // 주유 Widget
   Widget oilWidget() {
-    priceController.text = (mData?.value.price.isNull == true ? "": mData?.value.price.toString())!;
-    oilUnitPriceController.text = (mData?.value.unitPrice.isNull == true ? "" : mData?.value.unitPrice.toString())!;
-    mileageController.text = (mData?.value.mileage.isNull == true ? "" : mData?.value.mileage.toString())!;
+    priceController.text = (mData?.value.price == null ? "": mData?.value.price.toString())!;
+    oilUnitPriceController.text = (mData?.value.unitPrice == null ? "" : mData?.value.unitPrice.toString())!;
+    mileageController.text = (mData?.value.mileage == null ? "" : mData?.value.mileage.toString())!;
     return Container(
           margin: const EdgeInsets.all(20.0),
           decoration: BoxDecoration(
@@ -958,44 +1064,71 @@ class _CarBookRegPageState extends State<CarBookRegPage>{
                       ),
                     )
                   ),
-                   Expanded(
-                     flex: 6,
-                     child: TextField(
-                      maxLines: 1,
-                      keyboardType: TextInputType.number,
-                      style: CustomStyle.CustomFont(styleFontSize14, Colors.black),
-                      maxLengthEnforcement: MaxLengthEnforcement.enforced,
-                      textAlignVertical: TextAlignVertical.center,
-                      controller: priceController,
-                      decoration: priceController.text.isNotEmpty ?
-                      InputDecoration(
-                        border: InputBorder.none,
-                        contentPadding: EdgeInsets.symmetric(horizontal: CustomStyle.getWidth(10.0)),
-                        suffixIcon: IconButton(
-                          onPressed: () {
-                            priceController.clear();
-                            mData?.value.price = null;
-                          },
-                          icon: const Icon(Icons.clear, size: 18,color: Colors.black,),
-                        ),
-                      ) : InputDecoration(
-                        border: InputBorder.none,
-                        contentPadding: EdgeInsets.symmetric(horizontal: CustomStyle.getWidth(10.0)),
-                        suffixIcon: IconButton(
-                          onPressed: () {},
-                          icon: const Icon(Icons.clear, size: 18,color: Colors.white,),
-                        ),
-                      ),
-                      onChanged: (oilPriceText) {
-                        if (oilPriceText.isNotEmpty) {
-                          mData?.value.price = int.parse(oilPriceText);
-                          priceController.selection =  TextSelection.collapsed(offset: priceController.text.length);
-                        } else {
-                          mData?.value.price = null;
-                        }
-                      },
-                    )
-                   )
+                  Expanded(
+                      flex: 6,
+                      child: Row(children: [
+                        Expanded(
+                            flex: 10,
+                            child: TextField(
+                              maxLines: 1,
+                              keyboardType: TextInputType.number,
+                              style: CustomStyle.CustomFont(
+                                  styleFontSize14, Colors.black),
+                              maxLengthEnforcement:
+                                  MaxLengthEnforcement.enforced,
+                              textAlignVertical: TextAlignVertical.center,
+                              controller: priceController,
+                              decoration: priceController.text.isNotEmpty
+                                  ? InputDecoration(
+                                      border: InputBorder.none,
+                                      contentPadding: EdgeInsets.symmetric(
+                                          horizontal:
+                                              CustomStyle.getWidth(10.0)),
+                                      suffixIcon: IconButton(
+                                        onPressed: () {
+                                          priceController.clear();
+                                          mData?.value.price = null;
+                                        },
+                                        icon: const Icon(
+                                          Icons.clear,
+                                          size: 18,
+                                          color: Colors.black,
+                                        ),
+                                      ),
+                                    )
+                                  : InputDecoration(
+                                      border: InputBorder.none,
+                                      contentPadding: EdgeInsets.symmetric(
+                                          horizontal:
+                                              CustomStyle.getWidth(10.0)),
+                                      suffixIcon: IconButton(
+                                        onPressed: () {},
+                                        icon: const Icon(
+                                          Icons.clear,
+                                          size: 18,
+                                          color: Colors.white,
+                                        ),
+                                      ),
+                                    ),
+                              onChanged: (oilPriceText) {
+                                if (oilPriceText.isNotEmpty) {
+                                  mData?.value.price = int.parse(oilPriceText);
+                                  priceController.selection =
+                                      TextSelection.collapsed(
+                                          offset: priceController.text.length);
+                                } else {
+                                  mData?.value.price = null;
+                                }
+                              },
+                            )),
+                        Expanded(
+                            flex: 2,
+                            child: Text(
+                              "원",
+                              style: CustomStyle.CustomFont(
+                                  styleFontSize14, text_color_01),
+                            ))
+                      ]))
                 ],
                 )
               ),
@@ -1033,47 +1166,78 @@ class _CarBookRegPageState extends State<CarBookRegPage>{
                             ),
                           )
                       ),
-                      Expanded(
-                          flex: 6,
-                          child: TextField(
-                            maxLines: 1,
-                            keyboardType: TextInputType.number,
-                            style: CustomStyle.CustomFont(styleFontSize14, Colors.black),
-                            maxLengthEnforcement: MaxLengthEnforcement.enforced,
-                            textAlignVertical: TextAlignVertical.center,
-                            controller: oilUnitPriceController,
-                            decoration: oilUnitPriceController.text.isNotEmpty ?
-                            InputDecoration(
-                              border: InputBorder.none,
-                              contentPadding: EdgeInsets.symmetric(horizontal: CustomStyle.getWidth(10.0)),
-                              suffixIcon: IconButton(
-                                onPressed: () {
-                                  oilUnitPriceController.clear();
+                  Expanded(
+                      flex: 6,
+                      child: Row(children: [
+                        Expanded(
+                            flex: 10,
+                            child: TextField(
+                              maxLines: 1,
+                              keyboardType: TextInputType.number,
+                              style: CustomStyle.CustomFont(
+                                  styleFontSize14, Colors.black),
+                              maxLengthEnforcement:
+                                  MaxLengthEnforcement.enforced,
+                              textAlignVertical: TextAlignVertical.center,
+                              controller: oilUnitPriceController,
+                              decoration: oilUnitPriceController.text.isNotEmpty
+                                  ? InputDecoration(
+                                      border: InputBorder.none,
+                                      contentPadding: EdgeInsets.symmetric(
+                                          horizontal:
+                                              CustomStyle.getWidth(10.0)),
+                                      suffixIcon: IconButton(
+                                        onPressed: () {
+                                          oilUnitPriceController.clear();
+                                          mData.value.unitPrice = null;
+                                        },
+                                        icon: const Icon(
+                                          Icons.clear,
+                                          size: 18,
+                                          color: Colors.black,
+                                        ),
+                                      ),
+                                    )
+                                  : InputDecoration(
+                                      border: InputBorder.none,
+                                      contentPadding: EdgeInsets.symmetric(
+                                          horizontal:
+                                              CustomStyle.getWidth(10.0)),
+                                      suffixIcon: IconButton(
+                                        onPressed: () {},
+                                        icon: const Icon(
+                                          Icons.clear,
+                                          size: 18,
+                                          color: Colors.white,
+                                        ),
+                                      ),
+                                    ),
+                              onChanged: (oilUnitPriceText) {
+                                if (oilUnitPriceText.isNotEmpty) {
+                                  mData.value.unitPrice =
+                                      int.parse(oilUnitPriceText);
+                                  mData.value.refuelAmt = (mData.value.price! /
+                                          mData.value.unitPrice!)
+                                      .toInt();
+                                  oilUnitPriceController.selection =
+                                      TextSelection.collapsed(
+                                          offset: oilUnitPriceController
+                                              .text.length);
+                                } else {
                                   mData.value.unitPrice = null;
-                                },
-                                icon: const Icon(Icons.clear, size: 18,color: Colors.black,),
-                              ),
-                            ) : InputDecoration(
-                              border: InputBorder.none,
-                              contentPadding: EdgeInsets.symmetric(horizontal: CustomStyle.getWidth(10.0)),
-                              suffixIcon: IconButton(
-                                onPressed: () {},
-                                icon: const Icon(Icons.clear, size: 18,color: Colors.white,),
-                              ),
-                            ),
-                            onChanged: (oilUnitPriceText) {
-                              if (oilUnitPriceText.isNotEmpty) {
-                                mData.value.unitPrice = int.parse(oilUnitPriceText);
-                                mData.value.refuelAmt = (mData.value.price! / mData.value.unitPrice!).toInt();
-                                oilUnitPriceController.selection = TextSelection.collapsed(offset: oilUnitPriceController.text.length);
-                              } else {
-                                mData.value.unitPrice = null;
-                                mData.value.refuelAmt = 0;
-                              }
-                            },
-                          )
-                      )
-                    ],
+                                  mData.value.refuelAmt = 0;
+                                }
+                              },
+                            )),
+                        Expanded(
+                          flex: 2,
+                            child: Text(
+                          "원",
+                          style: CustomStyle.CustomFont(
+                              styleFontSize14, text_color_01),
+                        ))
+                      ]))
+                ],
                   )
               ),
               // 3번째줄
@@ -1111,44 +1275,72 @@ class _CarBookRegPageState extends State<CarBookRegPage>{
                           )
                       ),
                       Expanded(
-                          flex: 6,
-                          child: TextField(
-                            maxLines: 1,
-                            keyboardType: TextInputType.number,
-                            style: CustomStyle.CustomFont(styleFontSize14, Colors.black),
-                            maxLengthEnforcement: MaxLengthEnforcement.enforced,
-                            textAlignVertical: TextAlignVertical.center,
-                            controller: mileageController,
-                            decoration: mileageController.text.isNotEmpty ?
-                            InputDecoration(
-                              border: InputBorder.none,
-                              contentPadding: EdgeInsets.symmetric(horizontal: CustomStyle.getWidth(10.0)),
-                              suffixIcon: IconButton(
-                                onPressed: () {
-                                  mileageController.clear();
+                      flex: 6,
+                      child: Row(children: [
+                        Expanded(
+                            flex: 10,
+                            child: TextField(
+                              maxLines: 1,
+                              keyboardType: TextInputType.number,
+                              style: CustomStyle.CustomFont(
+                                  styleFontSize14, Colors.black),
+                              maxLengthEnforcement:
+                                  MaxLengthEnforcement.enforced,
+                              textAlignVertical: TextAlignVertical.center,
+                              controller: mileageController,
+                              decoration: mileageController.text.isNotEmpty
+                                  ? InputDecoration(
+                                      border: InputBorder.none,
+                                      contentPadding: EdgeInsets.symmetric(
+                                          horizontal:
+                                              CustomStyle.getWidth(10.0)),
+                                      suffixIcon: IconButton(
+                                        onPressed: () {
+                                          mileageController.clear();
+                                          mData.value.mileage = null;
+                                        },
+                                        icon: const Icon(
+                                          Icons.clear,
+                                          size: 18,
+                                          color: Colors.black,
+                                        ),
+                                      ),
+                                    )
+                                  : InputDecoration(
+                                      border: InputBorder.none,
+                                      contentPadding: EdgeInsets.symmetric(
+                                          horizontal:
+                                              CustomStyle.getWidth(10.0)),
+                                      suffixIcon: IconButton(
+                                        onPressed: () {},
+                                        icon: const Icon(
+                                          Icons.clear,
+                                          size: 18,
+                                          color: Colors.white,
+                                        ),
+                                      ),
+                                    ),
+                              onChanged: (mileageText) {
+                                if (mileageText.isNotEmpty) {
+                                  mData.value.mileage = int.parse(mileageText);
+                                  mileageController.selection =
+                                      TextSelection.collapsed(
+                                          offset:
+                                              mileageController.text.length);
+                                } else {
                                   mData.value.mileage = null;
-                                },
-                                icon: const Icon(Icons.clear, size: 18,color: Colors.black,),
-                              ),
-                            ) : InputDecoration(
-                              border: InputBorder.none,
-                              contentPadding: EdgeInsets.symmetric(horizontal: CustomStyle.getWidth(10.0)),
-                              suffixIcon: IconButton(
-                                onPressed: () {},
-                                icon: const Icon(Icons.clear, size: 18,color: Colors.white,),
-                              ),
-                            ),
-                            onChanged: (mileageText) {
-                              if (mileageText.isNotEmpty) {
-                                mData.value.mileage = int.parse(mileageText);
-                                mileageController.selection = TextSelection.collapsed(offset: mileageController.text.length);
-                              } else {
-                                mData.value.mileage = null;
-                              }
-                            },
-                          )
-                      )
-                    ],
+                                }
+                              },
+                            )),
+                        Expanded(
+                            flex: 2,
+                            child: Text(
+                              "km",
+                              style: CustomStyle.CustomFont(
+                                  styleFontSize14, text_color_01),
+                            ))
+                      ]))
+                ],
                   )
               ),
               // 4번째줄
@@ -1188,8 +1380,8 @@ class _CarBookRegPageState extends State<CarBookRegPage>{
                               alignment: Alignment.centerLeft,
                               padding: EdgeInsets.symmetric(horizontal: CustomStyle.getWidth(10.0)),
                                 child: Text(
-                                  _selectDay.value.isEmpty ? "날짜를 선택해주세요." : _selectDay.value,
-                                style: CustomStyle.CustomFont(styleFontSize14, text_color_01),
+                                  _selectDay.value.isEmpty ? "날짜를 선택하세요." : _selectDay.value,
+                                style: CustomStyle.CustomFont(styleFontSize14, _selectDay.value.isEmpty?text_color_03:text_color_01),
                               )
                             )
                           )
@@ -1227,7 +1419,7 @@ class _CarBookRegPageState extends State<CarBookRegPage>{
                       padding: EdgeInsets.symmetric(vertical: CustomStyle.getHeight(15.0),horizontal: CustomStyle.getWidth(15.0)),
                       color: main_color,
                       child: Text(
-                        "선택 날짜 : ${_tempSelectedDay.isNull?"-":"${_tempSelectedDay?.year}년 ${_tempSelectedDay?.month}월 ${_tempSelectedDay?.day}일"}",
+                        "선택 날짜 : ${_tempSelectedDay == null?"-":"${_tempSelectedDay?.year}년 ${_tempSelectedDay?.month}월 ${_tempSelectedDay?.day}일"}",
                         style: CustomStyle.CustomFont(
                             styleFontSize16, styleWhiteCol),
                       ),
@@ -1407,72 +1599,72 @@ class _CarBookRegPageState extends State<CarBookRegPage>{
 
     switch(widget.mCode) {
       case "01" :
-        if(mData.value.price.isNull) {
+        if(mData.value.price == null) {
           Util.toast("${Strings.of(context)?.get("car_book_oil_value_01") ?? "Not Found"}${Strings.of(context)?.get("valid_fail") ?? "Not Found"}");
           return false;
         }
-        if(mData.value.unitPrice.isNull) {
+        if(mData.value.unitPrice == null) {
           Util.toast("${Strings.of(context)?.get("car_book_oil_value_02") ?? "Not Found"}${Strings.of(context)?.get("valid_fail") ?? "Not Found"}");
           return false;
         }
-        if(mData.value.mileage.isNull) {
+        if(mData.value.mileage == null) {
           Util.toast("${Strings.of(context)?.get("car_book_oil_value_03") ?? "Not Found"}${Strings.of(context)?.get("valid_fail") ?? "Not Found"}");
           return false;
         }
-        if(mData.value.bookDate.isNull) {
+        if(mData.value.bookDate == null) {
           Util.toast("${Strings.of(context)?.get("car_book_oil_value_04") ?? "Not Found"}${Strings.of(context)?.get("valid_fail") ?? "Not Found"}");
           return false;
         }
           break;
 
       case "02" :
-        if(mData.value.price.isNull) {
+        if(mData.value.price == null) {
           Util.toast("${Strings.of(context)?.get("car_book_repair_value_01") ?? "Not Found"}${Strings.of(context)?.get("valid_fail") ?? "Not Found"}");
           return false;
         }
-        if(mData.value.memo.isNull) {
+        if(mData.value.memo == null) {
           Util.toast("${Strings.of(context)?.get("car_book_repair_value_02") ?? "Not Found"}${Strings.of(context)?.get("valid_fail") ?? "Not Found"}");
           return false;
         }
-        if(mData.value.mileage.isNull) {
+        if(mData.value.mileage == null) {
           Util.toast("${Strings.of(context)?.get("car_book_repair_value_03") ?? "Not Found"}${Strings.of(context)?.get("valid_fail") ?? "Not Found"}");
           return false;
         }
-        if(mData.value.bookDate.isNull) {
+        if(mData.value.bookDate == null) {
           Util.toast("${Strings.of(context)?.get("car_book_repair_value_04") ?? "Not Found"}${Strings.of(context)?.get("valid_fail") ?? "Not Found"}");
           return false;
         }
         break;
 
       case "03" :
-        if(mData.value.price.isNull) {
+        if(mData.value.price == null) {
           Util.toast("${Strings.of(context)?.get("car_book_insurance_value_01") ?? "Not Found"}${Strings.of(context)?.get("valid_fail") ?? "Not Found"}");
           return false;
         }
-        if(mData.value.memo.isNull) {
+        if(mData.value.memo == null) {
           Util.toast("${Strings.of(context)?.get("car_book_insurance_value_02") ?? "Not Found"}${Strings.of(context)?.get("valid_fail") ?? "Not Found"}");
           return false;
         }
-        if(mData.value.bookDate.isNull) {
+        if(mData.value.bookDate == null) {
           Util.toast("${Strings.of(context)?.get("car_book_insurance_value_03") ?? "Not Found"}${Strings.of(context)?.get("valid_fail") ?? "Not Found"}");
           return false;
         }
         break;
 
       case "04" :
-        if(mData.value.price.isNull) {
+        if(mData.value.price == null) {
           Util.toast("${Strings.of(context)?.get("car_book_etc_value_01") ?? "Not Found"}${Strings.of(context)?.get("valid_fail") ?? "Not Found"}");
           return false;
         }
-        if(mData.value.memo.isNull) {
+        if(mData.value.memo == null) {
           Util.toast("${Strings.of(context)?.get("car_book_etc_value_02") ?? "Not Found"}${Strings.of(context)?.get("valid_fail") ?? "Not Found"}");
           return false;
         }
-        if(mData.value.mileage.isNull) {
+        if(mData.value.mileage == null) {
           Util.toast("${Strings.of(context)?.get("car_book_oil_value_03") ?? "Not Found"}${Strings.of(context)?.get("valid_fail") ?? "Not Found"}");
           return false;
         }
-        if(mData.value.bookDate.isNull) {
+        if(mData.value.bookDate == null) {
           Util.toast("${Strings.of(context)?.get("car_book_etc_value_04") ?? "Not Found"}${Strings.of(context)?.get("valid_fail") ?? "Not Found"}");
           return false;
         }
@@ -1588,12 +1780,11 @@ class _CarBookRegPageState extends State<CarBookRegPage>{
         mData.value.mileage,
         mData.value.refuelAmt,
         mData.value.unitPrice,
-        mData.value.memo.isNull?"":mData.value.memo
+        mData.value.memo == null?"":mData.value.memo
       ).then((it) async {
         await pr?.hide();
         ReturnMap response = DioService.dioResponse(it);
         logger.d("carBookReg() _response -> ${response.status} // ${response.resultMap}");
-        try {
           if (response.status == "200") {
             if (mCar!.accMileage! < mData.value.mileage!) {
               carUpdate();
@@ -1610,9 +1801,6 @@ class _CarBookRegPageState extends State<CarBookRegPage>{
                   Navigator.of(context).pop(false);
                 });
           }
-        }catch(e) {
-          print("응애옹애잉앵 => $e");
-        }
       }).catchError((Object obj) async {
         await pr?.hide();
         switch (obj.runtimeType) {
@@ -1643,7 +1831,7 @@ class _CarBookRegPageState extends State<CarBookRegPage>{
         mData.value.mileage,
         mData.value.refuelAmt,
         mData.value.unitPrice,
-        mData.value.memo.isNull?"":mData.value.memo,
+        mData.value.memo == null?"":mData.value.memo,
       ).then((it) async {
         await pr?.hide();
         ReturnMap response = DioService.dioResponse(it);

@@ -143,18 +143,22 @@ class Util {
     controller.app_info.value = app;
   }
 
-  static Future<String?> getPhoneNum() async {
+  static Future<String> getPhoneNum() async {
     String? mobileNumber;
     try {
-      mobileNumber = await MobileNumber.mobileNumber;
+      String number = (await MobileNumber.mobileNumber)!.substring(2);
+      mobileNumber = number.replaceAll("+82", "0");
+
       print('getPhoneNumber result: $mobileNumber');
-      final List<SimCard>? simCards = await MobileNumber.getSimCards;
+      final List<SimCard> simCards = (await MobileNumber.getSimCards)!;
       simCards?.map((sim) => print("Sim Number => ${sim.number} // ${sim.carrierName} // ${sim.countryIso} // ${sim.countryPhonePrefix} // ${sim.displayName} // ${sim.slotIndex}")).toList();
       return mobileNumber;
-    }catch(e) {
+    } on PlatformException catch (e) {
       print("getPhoneNumber Exception => $e");
+      debugPrint("Failed to get mobile number because of '${e.message}'");
+      //toast("${e.message}");
+      return "";
     }
-    return null;
   }
 
   static String ynToPossible(String? yn) {
@@ -219,7 +223,7 @@ class Util {
   }
 
   static String? makeBizNum(String? num) {
-    if(num?.isEmpty == true || num?.isNull == true){
+    if(num?.isEmpty == true || num == null){
       return "";
     }else{
       return num?.replaceAllMapped(RegExp(r'(\d{3})(\d{1,2})(\d{1,5})'),(Match m) => "${m[1]}-${m[2]}-${m[3]}");
@@ -255,7 +259,7 @@ class Util {
   }
 
   static String? makeString(String? _string){
-    if(_string.isNull || _string == ""){
+    if(_string == null || _string == ""){
       return "-";
     }
     return _string;

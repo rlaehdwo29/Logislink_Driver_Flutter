@@ -95,7 +95,7 @@ class _AppBarSalesPageState extends State<AppBarSalesPage> {
                                                         main_color),
                                                   )),
                                               Text(
-                                                item.truckNetwork?.isEmpty == true || item.truckNetwork.isNull == true ? "" : "/ ${item.truckNetwork}",
+                                                item.truckNetwork?.isEmpty == true || item.truckNetwork == null ? "" : "/ ${item.truckNetwork}",
                                                 style: CustomStyle.CustomFont(
                                                     styleFontSize10, main_color),
                                               )
@@ -300,7 +300,7 @@ class _AppBarSalesPageState extends State<AppBarSalesPage> {
                                         )
                                     ),
                                     child: Text(
-                                      (item.receiptMethod??"").isEmpty || (item.receiptDate.isNull == true || item.receiptDate?.isEmpty == true) ?
+                                      (item.receiptMethod??"").isEmpty || (item.receiptDate == null || item.receiptDate?.isEmpty == true) ?
                                       "-" : "${item.receiptMethod} (${item.receiptDate?.split(" ")[0]})",
                                       textAlign: TextAlign.center,
                                       style: CustomStyle.CustomFont(
@@ -321,7 +321,7 @@ class _AppBarSalesPageState extends State<AppBarSalesPage> {
                                         )
                                     ),
                                     child: Text(
-                                      (item.taxMethod??"").isEmpty || (item.taxDate.isNull == true || item.taxDate?.isEmpty == true) ?
+                                      (item.taxMethod??"").isEmpty || (item.taxDate == null || item.taxDate?.isEmpty == true) ?
                                       "-" : "${item.taxMethod} (${item.taxDate?.split(" ")[0]})",
                                       textAlign: TextAlign.center,
                                       style: CustomStyle.CustomFont(
@@ -332,7 +332,7 @@ class _AppBarSalesPageState extends State<AppBarSalesPage> {
                             Expanded(
                                 flex:1,
                                 child: Text(
-                                  item.depoDate.isNull == true || item.depoDate?.isEmpty == true?
+                                  item.depoDate == null || item.depoDate?.isEmpty == true?
                                   "-" : "${item.depoDate?.split(" ")[0]}",
                                   textAlign: TextAlign.center,
                                   style: CustomStyle.CustomFont(
@@ -468,13 +468,13 @@ class _AppBarSalesPageState extends State<AppBarSalesPage> {
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
                               Text(
-                                "시작 날짜 : ${_tempRangeStart.isNull?"-":"${_tempRangeStart?.year}년 ${_tempRangeStart?.month}월 ${_tempRangeStart?.day}일"}",
+                                "시작 날짜 : ${_tempRangeStart == null?"-":"${_tempRangeStart?.year}년 ${_tempRangeStart?.month}월 ${_tempRangeStart?.day}일"}",
                                 style: CustomStyle.CustomFont(
                                     styleFontSize16, styleWhiteCol),
                               ),
                               CustomStyle.sizedBoxHeight(5.0),
                               Text(
-                                "종료 날짜 : ${_tempRangeEnd.isNull?"-":"${_tempRangeEnd?.year}년 ${_tempRangeEnd?.month}월 ${_tempRangeEnd?.day}일"}",
+                                "종료 날짜 : ${_tempRangeEnd == null?"-":"${_tempRangeEnd?.year}년 ${_tempRangeEnd?.month}월 ${_tempRangeEnd?.day}일"}",
                                 style: CustomStyle.CustomFont(
                                     styleFontSize16, styleWhiteCol),
                               ),
@@ -620,8 +620,21 @@ class _AppBarSalesPageState extends State<AppBarSalesPage> {
                                         TextButton(
                                             onPressed: () async {
                                               int? diff_day = _tempRangeEnd?.difference(_tempRangeStart!).inDays;
-                                              if(_tempRangeStart == null || _tempRangeEnd == null) {
-                                                Util.toast("시작 날짜 또는 종료 날짜를 선택해주세요.");
+                                              if(_tempRangeStart == null || _tempRangeEnd == null){
+                                                if(_tempRangeStart == null && _tempRangeEnd != null) {
+                                                  _tempRangeStart = _tempRangeEnd?.add(const Duration(days: -30));
+                                                }else if(_tempRangeStart != null &&_tempRangeEnd == null) {
+                                                  DateTime? _tempDate = _tempRangeStart?.add(const Duration(days: 30));
+                                                  int start_diff_day = _tempDate!.difference(DateTime(DateTime.now().year,DateTime.now().month,DateTime.now().day)).inDays;
+                                                  if(start_diff_day > 0) {
+                                                    _tempRangeEnd = _tempRangeStart;
+                                                    _tempRangeStart = _tempRangeEnd?.add(const Duration(days: -30));
+                                                  }else{
+                                                    _tempRangeEnd = _tempRangeStart?.add(const Duration(days: 30));
+                                                  }
+                                                }else{
+                                                  return Util.toast("시작 날짜 또는 종료 날짜를 선택해주세요.");
+                                                }
                                               } else if(diff_day! > 30){
                                                 Util.toast(Strings.of(context)?.get("dateOver")??"Not Found");
                                               }else{
@@ -664,15 +677,17 @@ class _AppBarSalesPageState extends State<AppBarSalesPage> {
                   value: index,
                   backgroundColor: text_color_01,
                   headerBuilder: (BuildContext context, bool isExpanded) {
-                    return Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      crossAxisAlignment: CrossAxisAlignment.center,
-                      children: [
-                        Icon(Icons.calendar_today_rounded,size: 20,color: styleWhiteCol,),
-                        CustomStyle.sizedBoxWidth(5.0),
-                        Text("날짜설정",style: CustomStyle.CustomFont(styleFontSize14, styleWhiteCol))
-                      ],
-                    );
+                    return Container(
+                        padding: EdgeInsets.only(left: CustomStyle.getWidth(40.0)),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          crossAxisAlignment: CrossAxisAlignment.center,
+                          children: [
+                            Icon(Icons.calendar_today_rounded,size: 20,color: styleWhiteCol,),
+                            CustomStyle.sizedBoxWidth(5.0),
+                            Text("날짜설정",style: CustomStyle.CustomFont(styleFontSize14, styleWhiteCol))
+                          ],
+                        ));
                   },
                   body: Obx((){
                     return InkWell(
@@ -698,7 +713,7 @@ class _AppBarSalesPageState extends State<AppBarSalesPage> {
                                 Expanded(
                                     flex: 1,
                                     child: Text(
-                                      _rangeStart.value.isNull?"-":"${_rangeStart.value?.year}년 ${_rangeStart.value?.month}월 ${_rangeStart.value?.day}일",
+                                      _rangeStart.value == null ?"-":"${_rangeStart.value?.year}년 ${_rangeStart.value?.month}월 ${_rangeStart.value?.day}일",
                                       textAlign: TextAlign.center,
                                     )
                                 ),
@@ -712,7 +727,7 @@ class _AppBarSalesPageState extends State<AppBarSalesPage> {
                                 Expanded(
                                     flex: 1,
                                     child: Text(
-                                      _rangeEnd.value.isNull?"-":"${_rangeEnd.value?.year}년 ${_rangeEnd.value?.month}월 ${_rangeEnd.value?.day}일",
+                                      _rangeEnd.value  == null?"-":"${_rangeEnd.value?.year}년 ${_rangeEnd.value?.month}월 ${_rangeEnd.value?.day}일",
                                       textAlign: TextAlign.center,
                                     )
                                 )

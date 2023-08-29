@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:io';
 import 'dart:ui';
 
 import 'package:firebase_core/firebase_core.dart';
@@ -8,6 +9,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter_native_splash/flutter_native_splash.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -19,6 +21,7 @@ import 'package:logislink_driver_flutter/common/app.dart';
 import 'package:logislink_driver_flutter/common/common_util.dart';
 import 'package:logislink_driver_flutter/common/model/geofence_model.dart';
 import 'package:logislink_driver_flutter/common/model/version_model.dart';
+import 'package:logislink_driver_flutter/common/strings.dart';
 import 'package:logislink_driver_flutter/constants/const.dart';
 import 'package:logislink_driver_flutter/db/appdatabase.dart';
 import 'package:logislink_driver_flutter/page/bridge_page.dart';
@@ -49,8 +52,29 @@ AndroidNotificationChannel? channel;
 FlutterLocalNotificationsPlugin? flutterLocalNotificationsPlugin;
 late AppDataBase database;
 
-Future<void> main() async {
+void main() async {
   final binding = WidgetsFlutterBinding.ensureInitialized();
+  if (Platform.isAndroid) {
+    await AndroidInAppWebViewController.setWebContentsDebuggingEnabled(true);
+
+    var swAvailable = await AndroidWebViewFeature.isFeatureSupported(
+        AndroidWebViewFeature.SERVICE_WORKER_BASIC_USAGE);
+    var swInterceptAvailable = await AndroidWebViewFeature.isFeatureSupported(
+        AndroidWebViewFeature.SERVICE_WORKER_SHOULD_INTERCEPT_REQUEST);
+
+    if (swAvailable && swInterceptAvailable) {
+      AndroidServiceWorkerController serviceWorkerController =
+      AndroidServiceWorkerController.instance();
+
+      await serviceWorkerController
+          .setServiceWorkerClient(AndroidServiceWorkerClient(
+        shouldInterceptRequest: (request) async {
+          print(request);
+          return null;
+        },
+      ));
+    }
+  }
   FlutterNativeSplash.preserve(widgetsBinding: binding);
   await dotenv.load(fileName: 'assets/env/.env');
   AuthRepository.initialize(appKey: dotenv.env['APP_KEY'] ?? '');
@@ -133,7 +157,7 @@ class _MyAppState extends State<MyApp> {
     // If the message also contains a data property with a "type" of "chat",
     // navigate to a chat screen
     if (initialMessage != null) {
-    _openHandleMessage(initialMessage);
+      _openHandleMessage(initialMessage);
     }
     FirebaseMessaging.onMessage.listen(_messageHandle);
     FirebaseMessaging.onMessageOpenedApp.listen(_openHandleMessage);
@@ -264,8 +288,6 @@ class _MyAppState extends State<MyApp> {
               init: App(),
               builder: (_) {
                 app_util.Util.settingInfo();
-                checkFinishGeofence();
-                checkVersion();
                 //return const BridgePage();
                  return FutureBuilder(
                     future: checkPermission(),
@@ -289,106 +311,41 @@ Future<bool> checkPermission() async {
   if (await Permission.contacts.request().isGranted) {
     // Either the permission was already granted before or the user just granted it.
     print("권한 설정 완료");
+    app_util.Util.toast("권한 설정 완료");
     return true;
   }else{
     // You can request multiple permissions at once.
     Map<Permission, PermissionStatus> statuses = await [
       Permission.location,
       Permission.storage,
-      Permission.phone
+      Permission.manageExternalStorage,
+      Permission.phone,
     ].request();
 
     print("위치 => ${statuses[Permission.location]}");
     print("저장소 => ${statuses[Permission.storage]}");
+    print("저장소2 => ${statuses[Permission.manageExternalStorage]}");
     print("폰 => ${statuses[Permission.phone]}");
     print("권한 설정 미완료");
 
-    if(statuses[Permission.location] != PermissionStatus.granted){
-      await Permission.location.request();
+    //app_util.Util.toast("권한 설정 미완료 => ${statuses[Permission.location]} // ${statuses[Permission.storage]} // ${statuses[Permission.manageExternalStorage]} // ${statuses[Permission.phone]}");
+
+    /*if(statuses[Permission.location] != PermissionStatus.granted){
+      //await Permission.location.request();
+      return false;
     }else if(statuses[Permission.storage] != PermissionStatus.granted) {
-      await Permission.storage.request();
+      //await Permission.storage.request();
+      return false;
+    }else if(statuses[Permission.manageExternalStorage] != PermissionStatus.granted) {
+      //await Permission.manageExternalStorage.request();
     }else if(statuses[Permission.phone] != PermissionStatus.granted){
-      await Permission.phone.request();
-    }
-    //return false; => 원래 넘기면 안댐
-    return true;
+      //await Permission.phone.request();
+      return false;
+    }*/
+    return true; //=> 원래 넘기면 안댐
   }
 }
 
-Future<void> checkFinishGeofence() async {
-  AppDataBase db = App().getRepository();
-  List<GeofenceModel>? list = await db.getFinishGeofence();
-  if(list != null && list.length != 0) {
-    db.deleteAll(list);
-  }
-}
-
-Future<void> checkVersion() async {
-  Logger logger = Logger();
-  await DioService.dioClient(header: true).getVersion("D").then((it) async {
-    ReturnMap _response = DioService.dioResponse(it);
-    logger.d("checkVersion() _response -> ${_response.status} // ${_response.resultMap}");
-    if(_response.status == "200") {
-      var list;
-      try{
-        list = _response.resultMap?["data"] as List;
-      }catch(e) {
-        print(e);
-      }
-
-      if(list != null && list.isNotEmpty) {
-        VersionModel? codeVersion = VersionModel.fromJSON(list[1]);
-        if(SP.get(Const.CD_VERSION) != codeVersion.versionCode) {
-          SP.putString(Const.CD_VERSION, codeVersion.versionCode ?? "");
-          GetCodeTask();
-        }
-      }else{
-        //showNotDetail();
-      }
-
-
-    }
-  }).catchError((Object obj) async {
-    switch (obj.runtimeType) {
-      case DioError:
-      // Here's the sample to get the failed response error code and message
-        final res = (obj as DioError).response;
-        logger.e("main.dart checkVersion() Error Default: ${res?.statusCode} -> ${res?.statusMessage}");
-        break;
-      default:
-        logger.e("main.dart checkVersion() Error Default:");
-        break;
-    }
-  });
-}
-
-Future<void> GetCodeTask() async {
-  Logger logger = Logger();
-  List<String> codeList = Const.getCodeList();
-  for(String code in codeList){
-    await DioService.dioClient(header: true).getCodeList(code).then((it){
-      ReturnMap _response = DioService.dioResponse(it);
-      logger.d("GetCodeTask() _response -> ${_response.status} // ${_response.resultMap}");
-      if(_response.status == "200") {
-        if(_response.resultMap?["data"] != null) {
-          var jsonString = jsonEncode(it.response.data);
-          SP.putCodeList(code, jsonString);
-        }
-      }
-    }).catchError((Object obj) async {
-      switch (obj.runtimeType) {
-        case DioError:
-        // Here's the sample to get the failed response error code and message
-          final res = (obj as DioError).response;
-          logger.e("main.dart GetCodeTask() Error Default: ${res?.statusCode} -> ${res?.statusMessage}");
-          break;
-        default:
-          logger.e("main.dart GetCodeTask() Error Default:");
-          break;
-      }
-    });
-  }
-}
 
 Widget _splashLodingWidget(AsyncSnapshot<Object?> snapshot,BuildContext context) {
   if(snapshot.hasError) {
@@ -396,7 +353,16 @@ Widget _splashLodingWidget(AsyncSnapshot<Object?> snapshot,BuildContext context)
   }else if(snapshot.hasData){
     if(snapshot.data == true){
       return const BridgePage();
+    }else{
+      return openOkBox(context, "권한 설정을 모두 허용 후 사용하실 수 있습니다.", Strings.of(context)?.get("confirm")??"Error!!",() {
+        Navigator.of(context).pop(false);
+        SystemNavigator.pop();
+      });
     }
+  }else{
+    return Container(
+      alignment: Alignment.center,
+      child: Image.asset("assets/image/ic_bg_service_small.png"),
+    );
   }
-  return const BridgePage();
 }
