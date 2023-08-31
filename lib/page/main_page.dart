@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 
 import 'package:app_settings/app_settings.dart';
@@ -5,8 +6,10 @@ import 'package:fbroadcast/fbroadcast.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_background_service/flutter_background_service.dart';
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
+import 'package:geofence_service/geofence_service.dart';
 
 import 'package:get/get.dart';
 import 'package:logger/logger.dart';
@@ -33,20 +36,16 @@ import 'package:logislink_driver_flutter/page/subPage/history_page.dart';
 import 'package:logislink_driver_flutter/page/subPage/order_detail_page.dart';
 import 'package:logislink_driver_flutter/page/subPage/user_car_list_page.dart';
 import 'package:logislink_driver_flutter/provider/dio_service.dart';
-import 'package:logislink_driver_flutter/provider/geofence_receiver.dart';
-import 'package:logislink_driver_flutter/provider/order_service.dart';
-import 'package:logislink_driver_flutter/service/gps_service.dart';
 import 'package:logislink_driver_flutter/utils/sp.dart';
 import 'package:logislink_driver_flutter/utils/util.dart';
 import 'package:permission_handler/permission_handler.dart';
-import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:dio/dio.dart';
 
 class MainPage extends StatefulWidget {
   final String? allocId;
-    const MainPage({Key? key, this.allocId}):super(key:key);
-    @override
+  const MainPage({Key? key, this.allocId}):super(key:key);
+  @override
   _MainPageState createState() => _MainPageState();
 }
 
@@ -79,6 +78,193 @@ class _MainPageState extends State<MainPage> with CommonMainWidget {
   final orderList = List.empty(growable: true).obs;
   final pGpsStop = List.empty(growable: true).obs;
 
+  final _activityStreamController = StreamController<Activity>();
+  final _geofenceStreamController = StreamController<Geofence>();
+  List<Geofence> geofenceList = List.empty(growable: true);
+  final _geofenceService = GeofenceService.instance.setup(
+      interval: 5000,
+      accuracy: 100,
+      loiteringDelayMs: 30000,
+      statusChangeDelayMs: 10000,
+      useActivityRecognition: true,
+      allowMockLocations: true,
+      printDevLog: true,
+      geofenceRadiusSortType: GeofenceRadiusSortType.DESC);
+
+  Future<void> _onGeofenceStatusChanged(
+      Geofence geofence,
+      GeofenceRadius geofenceRadius,
+      GeofenceStatus geofenceStatus,
+      Location location) async {
+    print('geofence: ${geofence.toJson()}');
+    print('geofenceRadius: ${geofenceRadius.toJson()}');
+    print('geofenceStatus: ${geofenceStatus.toString()}');
+    _geofenceStreamController.sink.add(geofence);
+    AppDataBase db = App().getRepository();
+    GeofenceModel? data = await db.getGeoFence(App().getUserInfo()?.vehicId, int.parse(geofence.id));
+    print("하아아아=> ${data?.orderId} // ${data?.allocState} // ${data?.allocId} // ${data?.id} // ${data?.vehicId}");
+    if(data != null) {
+      if(data.flag == "Y") {
+        if(geofenceStatus == GeofenceStatus.ENTER) {
+          if(data.allocState == "E") {
+            if(await db.checkEndGeo(App().getUserInfo()?.vehicId, data.orderId) == 1) {
+              setOrderState(data, "05");
+            }
+          } else if(data.allocState == "EP" || data.allocState == "SP") {
+            if(data.allocState == "EP") {
+              bool? checkGeoEPoint = await db.checkEPointGeo(App().getUserInfo()?.vehicId, data.orderId, data.stopNum);
+              if(checkGeoEPoint??false) {
+                finishStopPoint(data);
+              }
+            }
+          }else{
+            setOrderState(data, "12");
+          }
+        }else if(geofenceStatus == GeofenceStatus.EXIT) {
+          if(data.allocState == "E") {
+            if(await db.checkStartGeo(App().getUserInfo()?.vehicId, data.orderId) == 0) {
+              setOrderState(data, "06");
+            }
+          }else if(data.allocState == "SP" || data.allocState == "EP"){
+            bool? checkGeoSPoint = await db.checkSPointGeo(App().getUserInfo()?.vehicId, data.orderId, data.stopNum);
+            if(checkGeoSPoint??false) {
+              beginStartPoint(data);
+            }
+          }else{
+            setOrderState(data, "04");
+          }
+        }
+      }
+    }
+  }
+
+  Future<void> finishStopPoint(GeofenceModel data) async {
+    AppDataBase db = App().getRepository();
+    String? stopSeq = data.stopNum.toString();
+
+    GeofenceModel? removeGeo = await db.getRemoveGeoSEP(data.vehicId, data.orderId, data.allocState, data.stopNum);
+    if(removeGeo != null) {
+      db.deleteGeoFence(data.vehicId, data.orderId, data.allocState, data.stopNum);
+    }
+
+    Logger logger = Logger();
+    await DioService.dioClient(header: true).finishStopPoint(App().getUserInfo()?.authorization,data.orderId,stopSeq).then((it) async {
+      ReturnMap _response = DioService.dioResponse(it);
+      logger.d("geofence_receiver finishStopPoint() _response -> ${_response.status} // ${_response.resultMap}");
+      if(_response.status == "200") {
+        if(_response.resultMap?["result"] == true) {
+          FBroadcast.instance().broadcast(Const.INTENT_DETAIL_REFRESH);
+        }
+      }
+    }).catchError((Object obj) async {
+      switch (obj.runtimeType) {
+        case DioError:
+        // Here's the sample to get the failed response error code and message
+          final res = (obj as DioError).response;
+          logger.e("geofence_receiver.dart finishStopPoint() Error Default: ${res?.statusCode} -> ${res?.statusCode} // ${res?.statusMessage} // ${res}");
+          break;
+        default:
+          logger.e("geofence_receiver.dart finishStopPoint() Error Default:");
+          break;
+      }
+    });
+
+  }
+
+  Future<void> beginStartPoint(GeofenceModel data) async {
+    AppDataBase db = App().getRepository();
+    String? stopSeq = data.stopNum.toString();
+
+    GeofenceModel? removeGeo = await db.getRemoveGeoSEP(data.vehicId, data.orderId, data.allocState, data.stopNum);
+    if(removeGeo != null) {
+      db.deleteGeoFence(data.vehicId, data.orderId, data.allocState, data.stopNum);
+    }
+
+    Logger logger = Logger();
+    await DioService.dioClient(header: true).beginStartPoint(App().getUserInfo()?.authorization,data.orderId,stopSeq).then((it) async {
+      ReturnMap _response = DioService.dioResponse(it);
+      logger.d("geofence_receiver beginStartPoint() _response -> ${_response.status} // ${_response.resultMap}");
+      if(_response.status == "200") {
+        if(_response.resultMap?["result"] == true) {
+          FBroadcast.instance().broadcast(Const.INTENT_DETAIL_REFRESH);
+        }
+      }
+    }).catchError((Object obj) async {
+      switch (obj.runtimeType) {
+        case DioError:
+        // Here's the sample to get the failed response error code and message
+          final res = (obj as DioError).response;
+          logger.e("geofence_receiver.dart beginStartPoint() Error Default: ${res?.statusCode} -> ${res?.statusCode} // ${res?.statusMessage} // ${res}");
+          break;
+        default:
+          logger.e("geofence_receiver.dart beginStartPoint() Error Default:");
+          break;
+      }
+    });
+
+  }
+
+  Future<void> setOrderState(GeofenceModel data, String code) async {
+    Logger logger = Logger();
+    await DioService.dioClient(header: true).setOrderState(App().getUserInfo()?.authorization, data?.orderId, data?.allocId, code).then((it) async {
+      ReturnMap _response = DioService.dioResponse(it);
+      logger.d("geofence_receiver setOrderState() _response -> ${_response.status} // ${_response.resultMap} // $code");
+      if(_response.status == "200") {
+        if(_response.resultMap?["result"] == true) {
+          switch(code) {
+            case "04":
+            case "06":
+              AppDataBase db = App().getRepository();
+              db.delete(data);
+              FBroadcast.instance().broadcast(Const.INTENT_GEOFENCE);
+              break;
+          }
+          FBroadcast.instance().broadcast(Const.INTENT_DETAIL_REFRESH);
+        }
+      }
+    }).catchError((Object obj) async {
+      switch (obj.runtimeType) {
+        case DioError:
+        // Here's the sample to get the failed response error code and message
+          final res = (obj as DioError).response;
+          logger.e("geofence_receiver.dart setOrderState() Error Default: ${res?.statusCode} -> ${res?.statusCode} // ${res?.statusMessage} // ${res}");
+          break;
+        default:
+          logger.e("geofence_receiver.dart setOrderState() Error Default:");
+          break;
+      }
+    });
+  }
+
+  // This function is to be called when the activity has changed.
+  void _onActivityChanged(Activity prevActivity, Activity currActivity) {
+    print('prevActivity: ${prevActivity.toJson()}');
+    print('currActivity: ${currActivity.toJson()}');
+    _activityStreamController.sink.add(currActivity);
+  }
+
+  // This function is to be called when the location has changed.
+  void _onLocationChanged(Location location) {
+    print('location: ${location.toJson()}');
+  }
+
+  // This function is to be called when a location services status change occurs
+  // since the service was started.
+  void _onLocationServicesStatusChanged(bool status) {
+    print('isLocationServicesEnabled: $status');
+  }
+
+  // This function is used to handle errors that occur in the service.
+  void _onError(error) {
+    final errorCode = getErrorCodesFromError(error);
+    if (errorCode == null) {
+      print('Undefined error: $error');
+      return;
+    }
+
+    print('ErrorCode: $errorCode');
+  }
+
   @override
   void initState() {
     super.initState();
@@ -89,6 +275,9 @@ class _MainPageState extends State<MainPage> with CommonMainWidget {
       getOrderMethod(true);
     },context: this);
     FBroadcast.instance().broadcast(Const.INTENT_ORDER_REFRESH);
+    FBroadcast.instance().register(Const.INTENT_GEOFENCE, (value, callback) async {
+      await setGeofencingClient();
+    });
     pullToRefreshController = (kIsWeb
         ? null
         : PullToRefreshController(
@@ -101,7 +290,9 @@ class _MainPageState extends State<MainPage> with CommonMainWidget {
       },
     ))!;
 
-    Future.delayed(Duration.zero, () {
+    Future.delayed(Duration.zero, () async {
+
+      await setGeofencingClient();
 
       switch (SP.getFirstScreen(context)) {
         case SCREEN_HISTORY:
@@ -117,10 +308,6 @@ class _MainPageState extends State<MainPage> with CommonMainWidget {
           break;
       }
 
-      FBroadcast.instance().register(Const.INTENT_GEOFENCE, (value, callback) {
-        setGeofencingClient();
-      });
-
       showPermissionDialog();
 
       if (SP.getBoolean(Const.KEY_GUEST_MODE)) showGuestDialog();
@@ -128,18 +315,38 @@ class _MainPageState extends State<MainPage> with CommonMainWidget {
     });
   }
 
-  void setGeofencingClient() {
-    removeGeofence();
-  }
-
-  void removeGeofence() {
-
-  }
-
   @override
   void dispose() {
     FBroadcast.instance().unregister(this);
     super.dispose();
+  }
+
+  Future<void> setGeofencingClient() async {
+
+    await removeGeofence();
+
+    AppDataBase db = App().getRepository();
+    List<GeofenceModel> list = await db.getAllGeoFenceList(App().getUserInfo()?.vehicId);
+    if(list != null && list.length != 0) {
+      if(geofenceList.isNotEmpty) geofenceList.clear();
+      for(var data in list) {
+        print("값 찍어보기0000 => ${data?.id} // ${data?.orderId} // ${data.vehicId} // ${data.allocId} // ${data.allocState}");
+        geofenceList?.add(Geofence(id: data.id.toString(),data: {"orderId": data.orderId,"vehicId":data.vehicId,"allocId":data.allocId,"allocState":data.allocState}, latitude: double.parse(data.lat), longitude: double.parse(data.lon), radius: [GeofenceRadius(id: 'radius_150', length: double.parse(Const.GEOFENCE_RADIUS_IN_METERS.toString()))]));
+      }
+    }
+    print("설마 얘가 없나? => ${geofenceList.length}");
+    for(var data in geofenceList) {
+      print("값 찍어보기 => ${data?.id} // ${data?.data}");
+    }
+    await addGeofence();
+  }
+
+  Future<void> removeGeofence() async {
+    _geofenceService.removeGeofenceList(geofenceList);
+  }
+
+  Future<void> addGeofence() async {
+    GeofenceService.instance.addGeofenceList(geofenceList);
   }
 
   void checkCarInfo() {
@@ -233,14 +440,16 @@ class _MainPageState extends State<MainPage> with CommonMainWidget {
 
   Future<void> startService() async {
     SP.putBool(Const.KEY_SETTING_WORK, true);
-    final service = FlutterBackgroundService();
-    bool isRunning = await service.isRunning();
-    print("음음 => ${isRunning}");
-    if(!isRunning) {
-      GpsService.initializeService();
-    }else{
-      await stopService();
-      GpsService.initializeService();
+    print("음음 => ${_geofenceService.isRunningService}");
+    if(!_geofenceService.isRunningService) {
+      await setGeofencingClient();
+      print("몇개 있는데? => ${geofenceList.length}");
+      _geofenceService.addGeofenceStatusChangeListener(_onGeofenceStatusChanged);
+      _geofenceService.addLocationChangeListener(_onLocationChanged);
+      _geofenceService.addLocationServicesStatusChangeListener(_onLocationServicesStatusChanged);
+      _geofenceService.addActivityChangeListener(_onActivityChanged);
+      _geofenceService.addStreamErrorListener(_onError);
+      _geofenceService.start(geofenceList).catchError(_onError);
     }
 
     if(widget.allocId != null) {
@@ -257,17 +466,17 @@ class _MainPageState extends State<MainPage> with CommonMainWidget {
   void exited(){
     Future.delayed(const Duration(milliseconds: 300), () {
       Navigator.pushNamedAndRemoveUntil(context, '/', (route) => false);
-      exit(0);
+      //exit(0);
+      SystemNavigator.pop();
     });
   }
 
   Future<void> stopService() async {
     SP.putBool(Const.KEY_SETTING_WORK, false);
-    final service = FlutterBackgroundService();
-    bool isRunning = await service.isRunning();
-    if(isRunning) {
-      service.invoke("stopService");
-    }
+   if(_geofenceService.isRunningService) {
+     _geofenceService.clearAllListeners();
+     _geofenceService.stop();
+   }
   }
 
   void goToExit() {
@@ -289,8 +498,9 @@ class _MainPageState extends State<MainPage> with CommonMainWidget {
     stopService();
     Future.delayed(const Duration(milliseconds: 300), () {
       Navigator.pushNamedAndRemoveUntil(context, '/', (route) => false);
-      exit(0);
-  });
+      //exit(0);
+      SystemNavigator.pop();
+    });
   }
 
   void goToHistory() {
@@ -353,6 +563,7 @@ class _MainPageState extends State<MainPage> with CommonMainWidget {
     geoUpdate = false;
 
     for(var data in orderList) {
+      print("지오팬스 찍어볼까? => ${data?.orderId} // ${data?.allocId} // ${data?.allocState}");
       if(!(data.allocState == "20")){
         int? sData = await db.checkGeoS(vehicId, data.orderId);
         if(sData == 0) {
@@ -388,11 +599,11 @@ class _MainPageState extends State<MainPage> with CommonMainWidget {
           }
 
           if(data.beginYn == "N") {
-           int? spData = await db.checkGeoSP(vehicId, data.orderId, data.stopSeq);
-           if(spData == 0) {
-             db.setGeofence(GeofenceModel(vehicId: vehicId, orderId: data.orderId, allocId: data.allocId, allocState: "SP", lat: data.pointLat.toString(), lon: data.pointLon.toString(),endDate: data.endDate, flag: data.autoCarTimeYn,stopNum: data.stopSeq));
-            pointUpdate = true;
-           }
+            int? spData = await db.checkGeoSP(vehicId, data.orderId, data.stopSeq);
+            if(spData == 0) {
+              db.setGeofence(GeofenceModel(vehicId: vehicId, orderId: data.orderId, allocId: data.allocId, allocState: "SP", lat: data.pointLat.toString(), lon: data.pointLon.toString(),endDate: data.endDate, flag: data.autoCarTimeYn,stopNum: data.stopSeq));
+              pointUpdate = true;
+            }
           }
         }
       }
@@ -416,21 +627,21 @@ class _MainPageState extends State<MainPage> with CommonMainWidget {
     await DioService.dioClient(header: true).getStopPointGps(App().getUserInfo()?.authorization, App().getUserInfo()?.vehicId, App().getUserInfo()?.driverId).then((it) {
       ReturnMap _response = DioService.dioResponse(it);
       logger.d("getStopPointGps() _response -> ${_response.status} // ${_response.resultMap}");
-        if (_response.status == "200") {
-          if (_response.resultMap?["data"] != null) {
-            var list = _response.resultMap?["data"] as List;
-            List<StopPointGpsModel> itemsList = list.map((i) =>
-                StopPointGpsModel.fromJSON(i)).toList();
-            if (pGpsStop.isNotEmpty == true) pGpsStop.value = List.empty(growable: true);
-            pGpsStop.value?.addAll(itemsList);
-            setStopPointList(data);
-          } else {
-            openOkBox(context, _response.resultMap?["error_message"],
-                Strings.of(context)?.get("close") ?? "Not Found", () {
-                  Navigator.of(context).pop(false);
-                });
-          }
+      if (_response.status == "200") {
+        if (_response.resultMap?["data"] != null) {
+          var list = _response.resultMap?["data"] as List;
+          List<StopPointGpsModel> itemsList = list.map((i) =>
+              StopPointGpsModel.fromJSON(i)).toList();
+          if (pGpsStop.isNotEmpty == true) pGpsStop.value = List.empty(growable: true);
+          pGpsStop.value?.addAll(itemsList);
+          setStopPointList(data);
+        } else {
+          openOkBox(context, _response.resultMap?["error_message"],
+              Strings.of(context)?.get("close") ?? "Not Found", () {
+                Navigator.of(context).pop(false);
+              });
         }
+      }
     }).catchError((Object obj){
       switch (obj.runtimeType) {
         case DioError:
@@ -447,10 +658,10 @@ class _MainPageState extends State<MainPage> with CommonMainWidget {
 
   void setAllocList() {
     List<String> allocList = List.empty(growable: true);
-      for(var data in orderList) {
-        if(!(data.allocState == "20")) allocList.add(data.allocId);
-      }
-      SP.putStringList(Const.KEY_ALLOC_ID, allocList);
+    for(var data in orderList) {
+      if(!(data.allocState == "20")) allocList.add(data.allocId);
+    }
+    SP.putStringList(Const.KEY_ALLOC_ID, allocList);
   }
 
   void showGuestDialog(){
@@ -472,41 +683,41 @@ class _MainPageState extends State<MainPage> with CommonMainWidget {
                   color: main_color,
                 ),
                 child: InkWell(
-                  onTap: () async {
-                    beforeUser.value = controller.getUserInfo()??UserModel();
-                    Map<String,int> results = await Navigator.of(context).push(MaterialPageRoute(
-                        builder: (BuildContext context) => UserCarListPage())
-                    );
+                    onTap: () async {
+                      beforeUser.value = controller.getUserInfo()??UserModel();
+                      Map<String,int> results = await Navigator.of(context).push(MaterialPageRoute(
+                          builder: (BuildContext context) => UserCarListPage())
+                      );
 
-                    print("옹애응 -> ${results["code"]}");
-                    if(results != null && results.containsKey("code")){
-                      if(results["code"] == 200) {
-                        String? vehic = beforeUser.value.vehicId;
-                        AppDataBase db = App().getRepository();
-                        List<GeofenceModel> list = await db.getAllGeoFenceList(vehic);
-                        db.deleteAll(list);
-                        getUserInfo();
-                        getOrderMethod(true);
-                        Navigator.pop(context);
+                      print("옹애응 -> ${results["code"]}");
+                      if(results != null && results.containsKey("code")){
+                        if(results["code"] == 200) {
+                          String? vehic = beforeUser.value.vehicId;
+                          AppDataBase db = App().getRepository();
+                          List<GeofenceModel> list = await db.getAllGeoFenceList(vehic);
+                          db.deleteAll(list);
+                          getUserInfo();
+                          getOrderMethod(true);
+                          Navigator.pop(context);
+                        }
                       }
-                    }
-                  },
+                    },
                     child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Obx(()=>
-                      Text(
-                        "${_nowUser.value.driverName} 차주님",
-                        style: CustomStyle.CustomFont(styleFontSize18, styleWhiteCol),
-                      )),
-                      CustomStyle.sizedBoxHeight(10.0),
-                      Obx(()=>Text(
-                        "${_nowUser.value.carNum}",
-                        style: CustomStyle.CustomFont(styleFontSize16, styleWhiteCol),
-                      )
-                      )
-                    ]
-                  )
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Obx(()=>
+                              Text(
+                                "${_nowUser.value.driverName} 차주님",
+                                style: CustomStyle.CustomFont(styleFontSize18, styleWhiteCol),
+                              )),
+                          CustomStyle.sizedBoxHeight(10.0),
+                          Obx(()=>Text(
+                            "${_nowUser.value.carNum}",
+                            style: CustomStyle.CustomFont(styleFontSize16, styleWhiteCol),
+                          )
+                          )
+                        ]
+                    )
                 )
             ),
 
@@ -517,8 +728,8 @@ class _MainPageState extends State<MainPage> with CommonMainWidget {
               ),
               onTap: (){
                 Navigator.of(context).push(MaterialPageRoute(
-                  builder: (BuildContext context) => AppBarMyPage()));
-                  },
+                    builder: (BuildContext context) => AppBarMyPage()));
+              },
             ),
             ListTile(
               title: Text(
@@ -577,7 +788,7 @@ class _MainPageState extends State<MainPage> with CommonMainWidget {
               onTap: () async {
                 var url = Uri.parse(URL_MANUAL);
                 if (await canLaunchUrl(url)) {
-                launchUrl(url);
+                  launchUrl(url);
                 }
               },
             ),ListTile(
@@ -878,102 +1089,123 @@ class _MainPageState extends State<MainPage> with CommonMainWidget {
   @override
   Widget build(BuildContext context) {
     Util.notificationDialog(context,"기본",webViewKey);
-    return mainWidget(context,
-        child: Scaffold(
-          key: _scaffoldKey,
-          backgroundColor: order_item_background,
-          appBar: AppBar(
-              title: Center(
-                child: Image.asset(
-                  "assets/image/ic_driver_header.png",
-                  width: CustomStyle.getWidth(170.0),
-                ),
-              ),
-              centerTitle: true,
-            automaticallyImplyLeading: false,
-              actions: [
-                IconButton(
-                    onPressed: () {
-                      goToExit();
-                    },
-                    icon: Image.asset("assets/image/ic_exit_hangul.png",width: CustomStyle.getWidth(32.0),height: CustomStyle.getHeight(32.0),)),
-                IconButton(
-                    onPressed: () {
-                      Navigator.of(context).push(MaterialPageRoute(
-                          builder: (context) => NotificationPage()
-                      ));
-                    },
-                    icon: const Icon(Icons.notifications, size: 24.0,color: Colors.white,)),
-              ],
-            leading: Builder(
-              builder: (context) => IconButton(
-                icon: Image.asset("assets/image/menu.png",
-                    width: CustomStyle.getWidth(20.0),
-                    height: CustomStyle.getHeight(20.0)),
-                onPressed: () => Scaffold.of(context).openDrawer(),
-                tooltip: MaterialLocalizations.of(context).openAppDrawerTooltip,
-              ),
-            ),
-            ),
-          drawer: getAppBarMenu(),
-          body: SafeArea(
-                child: Obx((){
-                  return orderList.isNotEmpty ? ListView.builder(
-                    scrollDirection: Axis.vertical,
-                    shrinkWrap: true,
-                    itemCount: orderList.length,
-                    itemBuilder: (context, index) {
-                      var item = orderList[index];
-                      return getListCardView(item);
-                    },
-                  ): Container(
-                      alignment: Alignment.center,
-                      child:Center(
-                          child:Text(
-                            Strings.of(context)?.get("empty_list")??"Not Found",
-                            style: CustomStyle.baseFont(),
-                          )
-                      )
-                  );
-                  })
-          ),
-          bottomNavigationBar:  SizedBox(
-              height: CustomStyle.getHeight(60.0),
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.center,
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Expanded(
-                      flex: 1,
-                      child: InkWell(
-                          onTap: (){
-                            goToHistory();
+    return MaterialApp(
+        // A widget used when you want to start a foreground task when trying to minimize or close the app.
+        // Declare on top of the [Scaffold] widget.
+        home: WillStartForegroundTask(
+        onWillStart: () async {
+      // You can add a foreground task start condition.
+      return _geofenceService.isRunningService;
+    },
+    androidNotificationOptions: AndroidNotificationOptions(
+    channelId: Const.LOCATION_SERVICE_CHANNEL_ID,
+    channelName: '로지스링크 차주용',
+    channelDescription: 'This notification appears when the geofence service is running in the background.',
+    channelImportance: NotificationChannelImportance.LOW,
+    priority: NotificationPriority.LOW,
+    isSticky: false,
+    ),
+    iosNotificationOptions: const IOSNotificationOptions(),
+    foregroundTaskOptions: const ForegroundTaskOptions(),
+    notificationTitle: '로지스링크에서 현재 위치를 전송중입니다.',
+    notificationText: '',
+    child: Scaffold(
+                  key: _scaffoldKey,
+                  backgroundColor: order_item_background,
+                  appBar: AppBar(
+                    backgroundColor: main_color,
+                    title: Center(
+                      child: Image.asset(
+                        "assets/image/ic_driver_header.png",
+                        width: CustomStyle.getWidth(170.0),
+                      ),
+                    ),
+                    centerTitle: true,
+                    automaticallyImplyLeading: false,
+                    actions: [
+                      IconButton(
+                          onPressed: () {
+                            goToExit();
                           },
-                          child: Container(
-                            height: CustomStyle.getHeight(60.0),
+                          icon: Image.asset("assets/image/ic_exit_hangul.png",width: CustomStyle.getWidth(32.0),height: CustomStyle.getHeight(32.0),)),
+                      IconButton(
+                          onPressed: () {
+                            Navigator.of(context).push(MaterialPageRoute(
+                                builder: (context) => NotificationPage()
+                            ));
+                          },
+                          icon: const Icon(Icons.notifications, size: 24.0,color: Colors.white,)),
+                    ],
+                    leading: Builder(
+                      builder: (context) => IconButton(
+                        icon: Image.asset("assets/image/menu.png",
+                            width: CustomStyle.getWidth(20.0),
+                            height: CustomStyle.getHeight(20.0)),
+                        onPressed: () => Scaffold.of(context).openDrawer(),
+                        tooltip: MaterialLocalizations.of(context).openAppDrawerTooltip,
+                      ),
+                    ),
+                  ),
+                  drawer: getAppBarMenu(),
+                  body: SafeArea(
+                      child: Obx((){
+                        return orderList.isNotEmpty ? ListView.builder(
+                          scrollDirection: Axis.vertical,
+                          shrinkWrap: true,
+                          itemCount: orderList.length,
+                          itemBuilder: (context, index) {
+                            var item = orderList[index];
+                            return getListCardView(item);
+                          },
+                        ): Container(
                             alignment: Alignment.center,
-                            decoration: BoxDecoration(
-                                color: main_color
-                            ),
-                            child: Row(
-                              crossAxisAlignment: CrossAxisAlignment.center,
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Icon(Icons.library_add_check,size: 20,color: styleWhiteCol),
-                                CustomStyle.sizedBoxWidth(5.0),
-                                Text(
-                              textAlign: TextAlign.center,
-                              Strings.of(context)?.get("history_title")??"Not Found",
-                              style: CustomStyle.CustomFont(styleFontSize16, styleWhiteCol),
-                            ),
-                            ])
-                          )
+                            child:Center(
+                                child:Text(
+                                  Strings.of(context)?.get("empty_list")??"Not Found",
+                                  style: CustomStyle.baseFont(),
+                                )
+                            )
+                        );
+                      })
+                  ),
+                  bottomNavigationBar:  SizedBox(
+                      height: CustomStyle.getHeight(60.0),
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Expanded(
+                              flex: 1,
+                              child: InkWell(
+                                  onTap: (){
+                                    goToHistory();
+                                  },
+                                  child: Container(
+                                      height: CustomStyle.getHeight(60.0),
+                                      alignment: Alignment.center,
+                                      decoration: BoxDecoration(
+                                          color: main_color
+                                      ),
+                                      child: Row(
+                                          crossAxisAlignment: CrossAxisAlignment.center,
+                                          mainAxisAlignment: MainAxisAlignment.center,
+                                          children: [
+                                            Icon(Icons.library_add_check,size: 20,color: styleWhiteCol),
+                                            CustomStyle.sizedBoxWidth(5.0),
+                                            Text(
+                                              textAlign: TextAlign.center,
+                                              Strings.of(context)?.get("history_title")??"Not Found",
+                                              style: CustomStyle.CustomFont(styleFontSize16, styleWhiteCol),
+                                            ),
+                                          ])
+                                  )
+                              )
+                          ),
+                        ],
                       )
                   ),
-                ],
-              )
-          ),
-        )
+                )
+          )
     );
   }
 }

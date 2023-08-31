@@ -1113,7 +1113,6 @@ class _AppBarSalesDetailPageState extends State<AppBarSalesDetailPage> {
       showGuestDialog();
       return;
     }
-    print("응애응애? => ${mTempData.value.startDate} // ${mTempData.value.orderComp}");
     if(mTempData.value.startDate?.isEmpty == true || mTempData.value.startDate == null) {
       Util.toast("운행일자를 입력해주세요");
       return;
@@ -1127,7 +1126,6 @@ class _AppBarSalesDetailPageState extends State<AppBarSalesDetailPage> {
 
   Future<void> insertRegisterAPI() async {
     Logger logger = Logger();
-    print("응애옹애  => ${mTempData.value.startDate} // ${mTempData.value.endDate}");
     await pr?.show();
     await DioService.dioClient(header: true).insertSalesManage(
         controller.getUserInfo()?.authorization,

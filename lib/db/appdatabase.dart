@@ -43,7 +43,7 @@ class AppDataBase {
         final List<Map<String, Object?>>? maps = await db?.query(
             '$geofenceTable', where: "$geo_id = ?", whereArgs: [geo.id]);
         if (maps == null || maps.length <= 0) {
-          await db?.insert(geofenceTable, geo.toMap());
+          var result = await db?.insert(geofenceTable, geo.toMap());
         } else {
           await db?.update('$geofenceTable', <String, dynamic>{
             "$geo_vehicId": "${geo.vehicId}",
@@ -230,7 +230,7 @@ class AppDataBase {
 
   Future<int?> checkStartGeo(String? vehicId, String? orderId) async {
     final db = await geoFenceDb;
-    var result = await db?.query("select exists ( select * from $geofenceTable where $geo_vehicId = ($vehicId) and $geo_orderId = ($orderId) and $geo_allocState = S )");
+    var result = await db?.rawQuery("SELECT EXISTS ( SELECT * FROM $geofenceTable where $geo_vehicId = ? and $geo_orderId = ? and $geo_allocState = ? )",[vehicId,orderId,"S"]);
     if(result == null || result.length <= 0) {
       return 0;
     }else{
@@ -240,7 +240,7 @@ class AppDataBase {
 
   Future<int?> checkEndGeo(String? vehicId, String? orderId) async {
     final db = await geoFenceDb;
-    var result = await db?.query("select exists ( select * from $geofenceTable where $geo_vehicId = ($vehicId) and $geo_orderId = ($orderId) and $geo_allocState = E )");
+    var result = await db?.rawQuery("SELECT EXISTS ( SELECT * FROM $geofenceTable where $geo_vehicId = ? and $geo_orderId = ? and $geo_allocState = ? )",[vehicId,orderId,"E"]);
     if(result!.length > 0) {
      return 1;
     }else {

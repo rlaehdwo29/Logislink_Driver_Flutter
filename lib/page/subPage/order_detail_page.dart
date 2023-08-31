@@ -863,15 +863,11 @@ class _OrderDetailPageState extends State<OrderDetailPage>{
   void setCalcView() {
     tvReceipt.value = !(widget.item?.receiptYn == "N");
 
-    print("뭔디아? =>${widget.item?.taxinvYn} // ${widget.item?.loadStatus}");
-    print("뭔디아33333? =>${widget.item?.taxinvYn == "N"} // ${!(widget.item?.taxinvYn == "N")}");
-    print("뭔디아4444? =>${widget.item?.loadStatus == "0"} // ${!(widget.item?.loadStatus == "0")}");
     if(!(widget.item?.taxinvYn == "N")) {
       tvTax.value = true;
     }else{
       tvTax.value = !(widget.item?.loadStatus == "0");
     }
-    print("뭔디아2222? =>${tvTax.value}");
     if(widget.item?.finishYn == "Y"){
       tvPay.value = true;
     }else{
@@ -1609,7 +1605,7 @@ class _OrderDetailPageState extends State<OrderDetailPage>{
     List<String>? allocList = SP.getStringList(Const.KEY_ALLOC_ID);
     allocList?.add(widget.item?.allocId??"");
     SP.putStringList(Const.KEY_ALLOC_ID, allocList);
-    //locationUpdate(mData.getAllocId());
+    locationUpdate(widget.allocId);
   }
 
   Future<void> getOrderList2() async {
@@ -1712,7 +1708,7 @@ class _OrderDetailPageState extends State<OrderDetailPage>{
               await setDriverClick(code,widget.item?.eAddr,"N");
               setState(() {});
             }
-            //removeGeofence(code);
+            removeGeofence(code);
             await getOrderDetail(widget.item?.allocId);
             setState(() {});
             app_util.Util.toast(msg);
@@ -1738,12 +1734,54 @@ class _OrderDetailPageState extends State<OrderDetailPage>{
       });
   }
 
+  Future<void> removeGeofence(String code) async {
+    AppDataBase db = App().getRepository();
+    String? vehicId = App().getUserInfo().vehicId;
+    if(code == "04") {
+      GeofenceModel? removeGeo = await db.getRemoveGeo(vehicId, widget.orderId, "S");
+      if(removeGeo != null) {
+        db.delete(removeGeo);
+      }
+    }else if(code == "05"){
+      GeofenceModel? removeGeo = await db.getRemoveGeo(vehicId, widget.orderId, "E");
+      if(removeGeo != null) {
+        db.delete(removeGeo);
+      }
+    }else if(code == "20"){
+      db.deleteAll(await db.getRemoveGeoList(App().getUserInfo().vehicId, widget.orderId));
+    }
+    FBroadcast.instance().broadcast(Const.INTENT_GEOFENCE);
+  }
+
   void removeAllocList() {
-    //locationUpdate(mData.getAllocId());
+    locationUpdate(widget.allocId);
 
     List<String>? allocList = SP.getStringList(Const.KEY_ALLOC_ID);
     allocList?.remove(widget.item?.allocId);
     SP.putStringList(Const.KEY_ALLOC_ID, allocList);
+  }
+
+  Future<void> locationUpdate(String? allocId) async {
+    Logger logger = Logger();
+    await DioService.dioClient(header: true).locationUpdate(App().getUserInfo().authorization, SP.getString(Const.KEY_LAT, ""),SP.getString(Const.KEY_LON, ""),allocId).then((it) {
+      ReturnMap _response = DioService.dioResponse(it);
+      logger.d("locationUpdate() _response -> ${_response.status} // ${_response.resultMap}");
+      if(_response.status == "200") {
+        if (_response.resultMap?["data"] != null) {
+        }
+      }
+    }).catchError((Object obj){
+      switch (obj.runtimeType) {
+        case DioError:
+        // Here's the sample to get the failed response error code and message
+          final res = (obj as DioError).response;
+          print("locationUpdate() Error => ${res?.statusCode} // ${res?.statusMessage}");
+          break;
+        default:
+          print("locationUpdate() Error Default => ");
+          break;
+      }
+    });
   }
 
   @override

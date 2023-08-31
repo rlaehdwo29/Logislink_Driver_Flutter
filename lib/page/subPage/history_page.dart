@@ -3,7 +3,6 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
-import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 import 'package:logger/logger.dart';
 import 'package:logislink_driver_flutter/common/app.dart';
@@ -900,7 +899,12 @@ class _HistoryPageState extends State<HistoryPage> {
   Widget build(BuildContext context) {
     pr = Util.networkProgress(context);
     Util.notificationDialog(context,"운송실적",webViewKey);
-    return Scaffold(
+    return WillPopScope(
+        onWillPop: () async {
+          fbroad.FBroadcast.instance().broadcast(Const.INTENT_ORDER_REFRESH);
+          return true;
+        },
+        child: Scaffold(
       backgroundColor: order_item_background,
       appBar: PreferredSize(
           preferredSize: Size.fromHeight(CustomStyle.getHeight(50.0)),
@@ -932,6 +936,7 @@ class _HistoryPageState extends State<HistoryPage> {
         );
       })
       ),
+    )
     );
   }
 

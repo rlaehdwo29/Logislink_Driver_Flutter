@@ -97,10 +97,10 @@ abstract class Rest {
    */
   @FormUrlEncoded()
   @POST(URL_LOCATION_UPDATE)
-  Future<HttpResponse> locationUpdate(@Header("Authorization") String Authorization,
-      @Field("lat") String lat,
-      @Field("lon") String lon,
-      @Field("allocId") String allocId);
+  Future<HttpResponse> locationUpdate(@Header("Authorization") String? Authorization,
+      @Field("lat") String? lat,
+      @Field("lon") String? lon,
+      @Field("allocId") String? allocId);
 
   /**
    * 오더 목록

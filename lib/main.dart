@@ -316,13 +316,13 @@ Future<bool> checkPermission() async {
   }else{
     // You can request multiple permissions at once.
     Map<Permission, PermissionStatus> statuses = await [
-      Permission.location,
       Permission.storage,
       Permission.manageExternalStorage,
       Permission.phone,
+      Permission.locationAlways
     ].request();
 
-    print("위치 => ${statuses[Permission.location]}");
+    print("위치 => ${statuses[Permission.locationAlways]}");
     print("저장소 => ${statuses[Permission.storage]}");
     print("저장소2 => ${statuses[Permission.manageExternalStorage]}");
     print("폰 => ${statuses[Permission.phone]}");

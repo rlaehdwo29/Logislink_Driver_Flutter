@@ -124,14 +124,14 @@ class _LoginPageState extends State<LoginPage> with CommonMainWidget {
             child: TextField(
               style: CustomStyle.baseFont(),
               textAlign: TextAlign.start,
-              keyboardType: TextInputType.number,
+              keyboardType: TextInputType.text,
               onChanged: (value){
                 userName.value = value;
               },
               maxLength: 50,
               decoration: InputDecoration(
                   counterText: '',
-                  hintText: "성명을 입력해주세요.",
+                  hintText: "성함을 입력해주세요.",
                   hintStyle:CustomStyle.greyDefFont(),
                   contentPadding: EdgeInsets.symmetric(horizontal: CustomStyle.getWidth(15.0)),
                   enabledBorder: UnderlineInputBorder(
@@ -147,7 +147,7 @@ class _LoginPageState extends State<LoginPage> with CommonMainWidget {
               ),
             )
         ),
-        CustomStyle.sizedBoxHeight(20.0),
+        CustomStyle.sizedBoxHeight(5.0),
         SizedBox(
             height: CustomStyle.getHeight(70.0),
             child: TextField(
