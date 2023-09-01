@@ -750,29 +750,31 @@ class _AppBarCarBookPageState extends State<AppBarCarBookPage> with TickerProvid
       logger.d("getCar() _response -> ${_response.status} // ${_response.resultMap}");
       if(_response.status == "200") {
         if (_response.resultMap?["data"] != null) {
-          var list = _response.resultMap?["data"] as List;
-          List<CarModel> itemsList = list.map((i) => CarModel.fromJSON(i)).toList();
-          if(mCarList.value.isNotEmpty) mCarList.clear();
-          mCarList.value?.addAll(itemsList);
-          if(mCarList.isNotEmpty) {
-            var count = 0;
-            for (var carItem in mCarList.value) {
-              if(carItem.mainYn == "Y") {
-                count++;
-                mCar.value = carItem;
+            var list = _response.resultMap?["data"] as List;
+            List<CarModel> itemsList = list.map((i) => CarModel.fromJSON(i)).toList();
+            if (mCarList.value.isNotEmpty) mCarList.clear();
+            mCarList.value?.addAll(itemsList);
+            if (mCarList.isNotEmpty) {
+              var count = 0;
+              for (var carItem in mCarList.value) {
+                if (carItem.mainYn == "Y") {
+                  count++;
+                  mCar.value = carItem;
+                }
               }
+              if (count == 0) {
+                mCar.value = mCarList.value[0];
+              }
+              controller.setCar(mCar.value);
+            } else {
+              WidgetsBinding.instance.addPostFrameCallback((timeStamp) async {
+                showCarReg();
+              });
             }
-            if(count == 0) {
-              mCar.value = mCarList.value[0];
-            }
-            controller.setCar(mCar.value);
-          }else{
-            showCarReg();
-          }
+            setState(() {});
         }else{
           mCarList.value = List.empty(growable: true);
         }
-        setState(() {});
       }else{
         openOkBox(context,_response.message??"",Strings.of(context)?.get("confirm")??"Error!!",() {Navigator.of(context).pop(false);});
       }
@@ -881,8 +883,6 @@ class _AppBarCarBookPageState extends State<AppBarCarBookPage> with TickerProvid
                 mCar.value = mCarList.value[0];
               }
               controller.setCar(mCar.value);
-            }else{
-              showCarReg();
             }
             return carServiceWidget();
           }else if(snapshot.hasError) {
@@ -933,6 +933,7 @@ class _AppBarCarBookPageState extends State<AppBarCarBookPage> with TickerProvid
         }else{
           Util.toast(_response.message);
         }
+        setState(() {});
       }else{
         openOkBox(context,_response.message??"",Strings.of(context)?.get("confirm")??"Error!!",() {Navigator.of(context).pop(false);});
       }

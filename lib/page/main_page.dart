@@ -684,7 +684,7 @@ class _MainPageState extends State<MainPage> with CommonMainWidget {
                 ),
                 child: InkWell(
                     onTap: () async {
-                      beforeUser.value = controller.getUserInfo()??UserModel();
+                      beforeUser.value = controller.getUserInfo();
                       Map<String,int> results = await Navigator.of(context).push(MaterialPageRoute(
                           builder: (BuildContext context) => UserCarListPage())
                       );

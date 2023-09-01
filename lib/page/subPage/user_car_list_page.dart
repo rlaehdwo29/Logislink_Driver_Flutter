@@ -22,10 +22,9 @@ class _UserCarListPageState extends State<UserCarListPage> {
   final userCarList = List.empty(growable: true).obs;
 
   Widget getUserCarInfoFuture() {
-    UserModel user = controller.getUserInfo()!;
     final userCarService = Provider.of<UserCarInfoService>(context);
     return FutureBuilder(
-        future: userCarService.getUserCarInfo(user?.authorization),
+        future: userCarService.getUserCarInfo(App().getUserInfo()?.authorization),
         builder: (context, snapshot) {
           if(snapshot.hasData){
             if(userCarList.isNotEmpty) userCarList.value = List.empty(growable: true);
