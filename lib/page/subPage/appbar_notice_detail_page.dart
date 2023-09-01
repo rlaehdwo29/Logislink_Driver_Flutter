@@ -163,7 +163,7 @@ class _AppBarNoticeDetailPageState extends State<AppBarNoticeDetailPage> {
                     ),
                     onCloseWindow: (controller) async{
                       if (Navigator.canPop(context)) {
-                        Navigator.pop(context);
+                        Navigator.of(context).pop();
                       }
                     },
                   ),

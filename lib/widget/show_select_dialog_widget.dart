@@ -40,7 +40,7 @@ class ShowSelectDialogWidget {
             actions: [
               IconButton(
                   onPressed: () {
-                    Navigator.pop(context);
+                    Navigator.of(context).pop();
                   },
                   icon: const Icon(Icons.close, size: 30)
               )
@@ -59,7 +59,7 @@ class ShowSelectDialogWidget {
                 return InkWell(
                     onTap: () {
                       callback(mList![index],codeType: codeType, value: value??0);
-                      Navigator.pop(context);
+                      Navigator.of(context).pop();
                     },
                     child: Container(
                         height: CustomStyle.getHeight(70.0),

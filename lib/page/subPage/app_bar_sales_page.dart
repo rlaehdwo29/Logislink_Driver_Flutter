@@ -1,3 +1,4 @@
+import 'package:fbroadcast/fbroadcast.dart' as fbroad;
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
@@ -35,13 +36,255 @@ class _AppBarSalesPageState extends State<AppBarSalesPage> {
   final _rangeStart = DateTime.now().add(const Duration(days: -30)).obs;
   final _rangeEnd = DateTime.now().obs;
 
+  DateTime _depoFocusedDay = DateTime.now();
+  final _depoSelectDay = "".obs;
+
   CalendarFormat _calendarFormat = CalendarFormat.month;
   RangeSelectionMode _rangeSelectionMode = RangeSelectionMode.toggledOn;
 
+  String? depo_workId = "";
+  String? depo_deposit = "";
+
+
+  @override
+  void initState(){
+    super.initState();
+    _depoSelectDay.value = Util.getDateCalToStr(DateTime.now(), "yyyyMMdd");
+    fbroad.FBroadcast.instance().register(Const.INTENT_DEPOSIT, (value, callback) async {
+      if(depo_deposit == "Y") {
+        showDepositDateDialog();
+      }else{
+        showDepoDisDialog();
+      }
+    });
+    Util.toast("최대 30일까지 조회 가능합니다.");
+  }
+
   Future<void> onCallback(bool? reload) async {
+    print("안타나? =>${reload}");
     if(reload == true){
-      setState(() {});
+      await getWork();
     }
+    setState(() {});
+  }
+
+  Future openCalendarDialog() {
+    _focusedDay = DateTime.now();
+    DateTime? _tempSelectedDay = null;
+    DateTime? _tempRangeStart = _rangeStart.value;
+    DateTime? _tempRangeEnd = _rangeEnd.value;
+    return showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (BuildContext context) {
+          return StatefulBuilder(
+              builder: (BuildContext context, StateSetter setState) {
+                return AlertDialog(
+                    contentPadding: EdgeInsets.all(CustomStyle.getWidth(0.0)),
+                    titlePadding: EdgeInsets.all(CustomStyle.getWidth(0.0)),
+                    shape: const RoundedRectangleBorder(
+                        borderRadius: BorderRadius.all(Radius.circular(0.0))
+                    ),
+                    title: Container(
+                        width: MediaQuery.of(context).size.width,
+                        padding: EdgeInsets.symmetric(vertical: CustomStyle.getHeight(15.0),horizontal: CustomStyle.getWidth(15.0)),
+                        color: main_color,
+                        child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Text(
+                                "시작 날짜 : ${_tempRangeStart.isNull?"-":"${_tempRangeStart?.year}년 ${_tempRangeStart?.month}월 ${_tempRangeStart?.day}일"}",
+                                style: CustomStyle.CustomFont(
+                                    styleFontSize16, styleWhiteCol),
+                              ),
+                              CustomStyle.sizedBoxHeight(5.0),
+                              Text(
+                                "종료 날짜 : ${_tempRangeEnd.isNull?"-":"${_tempRangeEnd?.year}년 ${_tempRangeEnd?.month}월 ${_tempRangeEnd?.day}일"}",
+                                style: CustomStyle.CustomFont(
+                                    styleFontSize16, styleWhiteCol),
+                              ),
+                            ]
+                        )
+                    ),
+                    content: SingleChildScrollView(
+                        child: SizedBox(
+                            width: MediaQuery.of(context).size.width,
+                            child: Column(
+                                children: [
+                                  TableCalendar(
+                                    firstDay: DateTime.utc(2010, 1, 1),
+                                    lastDay: DateTime.utc(DateTime.now().year, DateTime.now().month, DateTime.now().day),
+                                    headerStyle: const HeaderStyle(
+                                      // default로 설정 돼 있는 2 weeks 버튼을 없애줌 (아마 2주단위로 보기 버튼인듯?)
+                                      formatButtonVisible: false,
+                                      // 달력 타이틀을 센터로
+                                      titleCentered: true,
+                                      // 말 그대로 타이틀 텍스트 스타일링
+                                      titleTextStyle: TextStyle(
+                                        fontWeight: FontWeight.w700,
+                                        fontSize: 16.0,
+                                      ),
+                                    ),
+                                    calendarStyle: CalendarStyle(
+                                      // 오늘 날짜에 하이라이팅의 유무
+                                      isTodayHighlighted: false,
+                                      // 캘린더의 평일 배경 스타일링(default면 평일을 의미)
+                                      defaultDecoration: BoxDecoration(
+                                        color: order_item_background,
+                                        shape: BoxShape.rectangle,
+                                      ),
+                                      // 캘린더의 주말 배경 스타일링
+                                      weekendDecoration:  BoxDecoration(
+                                        color: order_item_background,
+                                        shape: BoxShape.rectangle,
+                                      ),
+                                      // 선택한 날짜 배경 스타일링
+                                      selectedDecoration: BoxDecoration(
+                                          color: styleWhiteCol,
+                                          shape: BoxShape.rectangle,
+                                          border: Border.all(color: sub_color)
+                                      ),
+                                      defaultTextStyle: CustomStyle.CustomFont(
+                                          styleFontSize14, Colors.black),
+                                      weekendTextStyle:
+                                      CustomStyle.CustomFont(styleFontSize14, Colors.red),
+                                      selectedTextStyle: CustomStyle.CustomFont(
+                                          styleFontSize14, Colors.black),
+                                      // range 크기 조절
+                                      rangeHighlightScale: 1.0,
+
+                                      // range 색상 조정
+                                      rangeHighlightColor: const Color(0xFFBBDDFF),
+
+                                      // rangeStartDay 글자 조정
+                                      rangeStartTextStyle: CustomStyle.CustomFont(
+                                          styleFontSize14, Colors.black),
+
+                                      // rangeStartDay 모양 조정
+                                      rangeStartDecoration: BoxDecoration(
+                                          color: styleWhiteCol,
+                                          shape: BoxShape.rectangle,
+                                          border: Border.all(color: sub_color)
+                                      ),
+
+                                      // rangeEndDay 글자 조정
+                                      rangeEndTextStyle: CustomStyle.CustomFont(
+                                          styleFontSize14, Colors.black),
+
+                                      // rangeEndDay 모양 조정
+                                      rangeEndDecoration: BoxDecoration(
+                                          color: styleWhiteCol,
+                                          shape: BoxShape.rectangle,
+                                          border: Border.all(color: sub_color)
+                                      ),
+
+                                      // startDay, endDay 사이의 글자 조정
+                                      withinRangeTextStyle: const TextStyle(),
+
+                                      // startDay, endDay 사이의 모양 조정
+                                      withinRangeDecoration:
+                                      const BoxDecoration(),
+                                    ),
+                                    //locale: 'ko_KR',
+                                    focusedDay: _focusedDay,
+                                    selectedDayPredicate: (day) {
+                                      return isSameDay(_tempSelectedDay, day);
+                                    },
+                                    rangeStartDay: _tempRangeStart,
+                                    rangeEndDay: _tempRangeEnd,
+                                    calendarFormat: _calendarFormat,
+                                    rangeSelectionMode: _rangeSelectionMode,
+                                    onDaySelected: (selectedDay, focusedDay) {
+                                      if (!isSameDay(_tempSelectedDay, selectedDay)) {
+                                        setState(() {
+                                          _tempSelectedDay = selectedDay;
+                                          _focusedDay = focusedDay;
+                                          _rangeSelectionMode = RangeSelectionMode.toggledOff;
+                                        });
+                                      }
+                                    },
+                                    onRangeSelected: (start, end, focusedDay) {
+                                      print(
+                                          "onRangeSelected => ${start} // $end // ${focusedDay}");
+                                      setState(() {
+                                        _tempSelectedDay = start;
+                                        _focusedDay = focusedDay;
+                                        _tempRangeStart = start;
+                                        _tempRangeEnd = end;
+                                        _rangeSelectionMode = RangeSelectionMode.toggledOn;
+                                      });
+                                    },
+
+                                    onFormatChanged: (format) {
+                                      if (_calendarFormat != format) {
+                                        setState(() {
+                                          _calendarFormat = format;
+                                        });
+                                      }
+                                    },
+                                    onPageChanged: (focusedDay) {
+                                      _focusedDay = focusedDay;
+                                    },
+                                  ),
+                                  Container(
+                                    margin: EdgeInsets.symmetric(vertical: CustomStyle.getHeight(10.0)),
+                                    child: Row(
+                                      crossAxisAlignment: CrossAxisAlignment.center,
+                                      mainAxisAlignment: MainAxisAlignment.end,
+                                      children: [
+                                        TextButton(
+                                            onPressed: (){
+                                              Navigator.of(context).pop();
+                                            },
+                                            child: Text(
+                                              Strings.of(context)?.get("cancel")??"Not Found",
+                                              style: CustomStyle.CustomFont(styleFontSize14, styleBlackCol1),
+                                            )
+                                        ),
+                                        CustomStyle.sizedBoxWidth(CustomStyle.getWidth(15.0)),
+                                        TextButton(
+                                            onPressed: () async {
+                                              int? diff_day = _tempRangeEnd?.difference(_tempRangeStart!).inDays;
+                                              if(_tempRangeStart == null || _tempRangeEnd == null){
+                                                if(_tempRangeStart == null && _tempRangeEnd != null) {
+                                                  _tempRangeStart = _tempRangeEnd?.add(const Duration(days: -30));
+                                                }else if(_tempRangeStart != null &&_tempRangeEnd == null) {
+                                                  DateTime? _tempDate = _tempRangeStart?.add(const Duration(days: 30));
+                                                  int start_diff_day = _tempDate!.difference(DateTime(DateTime.now().year,DateTime.now().month,DateTime.now().day)).inDays;
+                                                  if(start_diff_day > 0) {
+                                                    _tempRangeEnd = _tempRangeStart;
+                                                    _tempRangeStart = _tempRangeEnd?.add(const Duration(days: -30));
+                                                  }else{
+                                                    _tempRangeEnd = _tempRangeStart?.add(const Duration(days: 30));
+                                                  }
+                                                }else{
+                                                  return Util.toast("시작 날짜 또는 종료 날짜를 선택해주세요.");
+                                                }
+                                              } else if(diff_day! > 30){
+                                                Util.toast(Strings.of(context)?.get("dateOver")??"Not Found");
+                                              }else{
+                                                _rangeStart.value = _tempRangeStart!;
+                                                _rangeEnd.value = _tempRangeEnd!;
+                                                Navigator.of(context).pop(false);
+                                                //await getWork();
+                                              }
+                                            },
+                                            child: Text(
+                                              Strings.of(context)?.get("confirm")??"Not Found",
+                                              style: CustomStyle.CustomFont(styleFontSize14, styleBlackCol1),
+                                            )
+                                        )
+                                      ],
+                                    ),
+                                  )
+                                ]
+                            )
+                        )
+                    )
+                );
+              });
+        });
   }
 
   Widget getListCardView(SalesManageModel item) {
@@ -108,7 +351,17 @@ class _AppBarSalesPageState extends State<AppBarSalesPage> {
                                       alignment: Alignment.centerRight,
                                       padding: const EdgeInsets.all(10.0),
                                       color: styleWhiteCol,
-                                      child: Container(
+                                      child: InkWell(
+                                        onTap: (){
+                                          depo_workId = item.workId;
+                                          if(item.deposit == "N") {
+                                            depo_deposit = "Y";
+                                          }else{
+                                            depo_deposit = "N";
+                                          }
+                                          fbroad.FBroadcast.instance().broadcast(Const.INTENT_DEPOSIT);
+                                        },
+                                        child: Container(
                                           padding: EdgeInsets.symmetric(vertical: CustomStyle.getHeight(5.0),horizontal: CustomStyle.getWidth(10.0)),
                                           decoration: CustomStyle.customBoxDeco(order_item_background),
                                           child: Text(
@@ -117,6 +370,7 @@ class _AppBarSalesPageState extends State<AppBarSalesPage> {
                                                 styleFontSize12,
                                                 item.deposit == "N" ? const Color(0xFFFF5050) : const Color(0xFF5050FF)),
                                           )
+                                        )
                                       ),
                                     ))
                               ],
@@ -372,16 +626,16 @@ class _AppBarSalesPageState extends State<AppBarSalesPage> {
     );
   }
 
-  Future<void> getSlaesManage() async {
+  Future<void> getWork() async {
     Logger logger = Logger();
     await DioService.dioClient(header: true).getSalesManageList(
         controller.getUserInfo()?.authorization,
       Util.getDateCalToStr(_rangeStart.value,'yyyy-MM-dd'),
       Util.getDateCalToStr(_rangeEnd.value,'yyyy-MM-dd')).then((it) {
-      if (mList.isNotEmpty == true) mList.value = List.empty(growable: true);
       ReturnMap _response = DioService.dioResponse(it);
-      logger.d("getSalesManage() _response -> ${_response.status} // ${_response.resultMap}");
+      logger.d("getWork() _response -> ${_response.status} // ${_response.resultMap}");
       if(_response.status == "200") {
+        if (mList.isNotEmpty == true) mList.value = List.empty(growable: true);
         if (_response.resultMap?["data"] != null) {
           try {
             var list = _response.resultMap?["data"] as List;
@@ -400,10 +654,10 @@ class _AppBarSalesPageState extends State<AppBarSalesPage> {
         case DioError:
         // Here's the sample to get the failed response error code and message
           final res = (obj as DioError).response;
-          print("getSalesManage() Error => ${res?.statusCode} // ${res?.statusMessage}");
+          print("getWork() Error => ${res?.statusCode} // ${res?.statusMessage}");
           break;
         default:
-          print("getSalesManage() Error Default => ");
+          print("getWork() Error Default => ");
           break;
       }
     });
@@ -442,11 +696,68 @@ class _AppBarSalesPageState extends State<AppBarSalesPage> {
     );
   }
 
-  Future openCalendarDialog() {
-    _focusedDay = DateTime.now();
-    DateTime? _tempSelectedDay = null;
-    DateTime? _tempRangeStart = _rangeStart.value;
-    DateTime? _tempRangeEnd = _rangeEnd.value;
+  void showDepoDisDialog(){
+    openCommonConfirmBox(
+        context,
+        "입금처리를 취소겠습니까?",
+        Strings.of(context)?.get("cancel")??"Not Found",
+        Strings.of(context)?.get("confirm")??"Not Found",
+            () => Navigator.of(context).pop(false),
+            () async {
+          Navigator.of(context).pop(false);
+          _depoSelectDay.value = "";
+          await depositDataAPI();
+        });
+  }
+
+  void showDepositDialog(){
+    openCommonConfirmBox(
+        context,
+        "입금처리를 하시겠습니까?",
+        Strings.of(context)?.get("cancel")??"Not Found",
+        Strings.of(context)?.get("confirm")??"Not Found",
+            () => Navigator.of(context).pop(false),
+            () async {
+          Navigator.of(context).pop(false);
+          await depositDataAPI();
+        });
+  }
+
+  Future<void> depositDataAPI() async {
+
+    Logger logger = Logger();
+    await DioService.dioClient(header: true).depositSalesManage(
+        App().getUserInfo().authorization,
+        depo_workId,
+        depo_deposit,
+        _depoSelectDay.value).then((it) async {
+      ReturnMap _response = DioService.dioResponse(it);
+      logger.d("depositDataAPI() _response -> ${_response.status} // ${_response.resultMap}");
+      if(_response.status == "200") {
+        if (_response.resultMap?["result"] == true) {
+          _depoSelectDay.value = "";
+          await getWork();
+        }
+      }
+      setState(() {});
+    }).catchError((Object obj){
+      switch (obj.runtimeType) {
+        case DioError:
+        // Here's the sample to get the failed response error code and message
+          final res = (obj as DioError).response;
+          print("depositDataAPI() Error => ${res?.statusCode} // ${res?.statusMessage}");
+          break;
+        default:
+          print("depositDataAPI() Error Default => ");
+          break;
+      }
+    });
+
+  }
+
+  Future showDepositDateDialog() {
+    _depoFocusedDay = DateTime.now();
+    DateTime? _tempSelectedDay = DateTime.now();
     return showDialog(
         context: context,
         barrierDismissible: false,
@@ -460,205 +771,160 @@ class _AppBarSalesPageState extends State<AppBarSalesPage> {
                         borderRadius: BorderRadius.all(Radius.circular(0.0))
                     ),
                     title: Container(
-                        width: MediaQuery.of(context).size.width,
-                        padding: EdgeInsets.symmetric(vertical: CustomStyle.getHeight(15.0),horizontal: CustomStyle.getWidth(15.0)),
-                        color: main_color,
-                        child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Text(
-                                "시작 날짜 : ${_tempRangeStart == null?"-":"${_tempRangeStart?.year}년 ${_tempRangeStart?.month}월 ${_tempRangeStart?.day}일"}",
-                                style: CustomStyle.CustomFont(
-                                    styleFontSize16, styleWhiteCol),
-                              ),
-                              CustomStyle.sizedBoxHeight(5.0),
-                              Text(
-                                "종료 날짜 : ${_tempRangeEnd == null?"-":"${_tempRangeEnd?.year}년 ${_tempRangeEnd?.month}월 ${_tempRangeEnd?.day}일"}",
-                                style: CustomStyle.CustomFont(
-                                    styleFontSize16, styleWhiteCol),
-                              ),
-                            ]
-                        )
+                      width: MediaQuery.of(context).size.width,
+                      padding: EdgeInsets.symmetric(vertical: CustomStyle.getHeight(15.0),horizontal: CustomStyle.getWidth(15.0)),
+                      color: main_color,
+                      child: Text(
+                        "선택 날짜 : ${_tempSelectedDay == null?"-":"${_tempSelectedDay?.year}년 ${_tempSelectedDay?.month}월 ${_tempSelectedDay?.day}일"}",
+                        style: CustomStyle.CustomFont(
+                            styleFontSize16, styleWhiteCol),
+                      ),
                     ),
                     content: SingleChildScrollView(
-                        child: SizedBox(
-                            width: MediaQuery.of(context).size.width,
-                            child: Column(
-                                children: [
-                                  TableCalendar(
-                                    firstDay: DateTime.utc(2010, 1, 1),
-                                    lastDay: DateTime.utc(DateTime.now().year, DateTime.now().month, DateTime.now().day),
-                                    headerStyle: const HeaderStyle(
-                                      // default로 설정 돼 있는 2 weeks 버튼을 없애줌 (아마 2주단위로 보기 버튼인듯?)
-                                      formatButtonVisible: false,
-                                      // 달력 타이틀을 센터로
-                                      titleCentered: true,
-                                      // 말 그대로 타이틀 텍스트 스타일링
-                                      titleTextStyle: TextStyle(
-                                        fontWeight: FontWeight.w700,
-                                        fontSize: 16.0,
-                                      ),
+                      child: SizedBox(
+                          width: MediaQuery.of(context).size.width,
+                          child: Column(
+                              children: [
+                                TableCalendar(
+                                  focusedDay: _depoFocusedDay,
+                                  firstDay:  DateTime.utc(2010, 1, 1),
+                                  lastDay: DateTime.utc(DateTime.now().year, DateTime.now().month, DateTime.now().day),
+                                  headerStyle: const HeaderStyle(
+                                    // default로 설정 돼 있는 2 weeks 버튼을 없애줌 (아마 2주단위로 보기 버튼인듯?)
+                                    formatButtonVisible: false,
+                                    // 달력 타이틀을 센터로
+                                    titleCentered: true,
+                                    // 말 그대로 타이틀 텍스트 스타일링
+                                    titleTextStyle: TextStyle(
+                                      fontWeight: FontWeight.w700,
+                                      fontSize: 16.0,
                                     ),
-                                    calendarStyle: CalendarStyle(
-                                      // 오늘 날짜에 하이라이팅의 유무
-                                      isTodayHighlighted: false,
-                                      // 캘린더의 평일 배경 스타일링(default면 평일을 의미)
-                                      defaultDecoration: BoxDecoration(
-                                        color: order_item_background,
-                                        shape: BoxShape.rectangle,
-                                      ),
-                                      // 캘린더의 주말 배경 스타일링
-                                      weekendDecoration:  BoxDecoration(
-                                        color: order_item_background,
-                                        shape: BoxShape.rectangle,
-                                      ),
-                                      // 선택한 날짜 배경 스타일링
-                                      selectedDecoration: BoxDecoration(
-                                          color: styleWhiteCol,
-                                          shape: BoxShape.rectangle,
-                                          border: Border.all(color: sub_color)
-                                      ),
-                                      defaultTextStyle: CustomStyle.CustomFont(
-                                          styleFontSize14, Colors.black),
-                                      weekendTextStyle:
-                                      CustomStyle.CustomFont(styleFontSize14, Colors.red),
-                                      selectedTextStyle: CustomStyle.CustomFont(
-                                          styleFontSize14, Colors.black),
-                                      // range 크기 조절
-                                      rangeHighlightScale: 1.0,
-
-                                      // range 색상 조정
-                                      rangeHighlightColor: const Color(0xFFBBDDFF),
-
-                                      // rangeStartDay 글자 조정
-                                      rangeStartTextStyle: CustomStyle.CustomFont(
-                                          styleFontSize14, Colors.black),
-
-                                      // rangeStartDay 모양 조정
-                                      rangeStartDecoration: BoxDecoration(
-                                          color: styleWhiteCol,
-                                          shape: BoxShape.rectangle,
-                                          border: Border.all(color: sub_color)
-                                      ),
-
-                                      // rangeEndDay 글자 조정
-                                      rangeEndTextStyle: CustomStyle.CustomFont(
-                                          styleFontSize14, Colors.black),
-
-                                      // rangeEndDay 모양 조정
-                                      rangeEndDecoration: BoxDecoration(
-                                          color: styleWhiteCol,
-                                          shape: BoxShape.rectangle,
-                                          border: Border.all(color: sub_color)
-                                      ),
-
-                                      // startDay, endDay 사이의 글자 조정
-                                      withinRangeTextStyle: const TextStyle(),
-
-                                      // startDay, endDay 사이의 모양 조정
-                                      withinRangeDecoration:
-                                      const BoxDecoration(),
-                                    ),
-                                    //locale: 'ko_KR',
-                                    focusedDay: _focusedDay,
-                                    selectedDayPredicate: (day) {
-                                      return isSameDay(_tempSelectedDay, day);
-                                    },
-                                    rangeStartDay: _tempRangeStart,
-                                    rangeEndDay: _tempRangeEnd,
-                                    calendarFormat: _calendarFormat,
-                                    rangeSelectionMode: _rangeSelectionMode,
-                                    onDaySelected: (selectedDay, focusedDay) {
-                                      if (!isSameDay(_tempSelectedDay, selectedDay)) {
-                                        setState(() {
-                                          _tempSelectedDay = selectedDay;
-                                          _focusedDay = focusedDay;
-                                          _rangeSelectionMode = RangeSelectionMode.toggledOff;
-                                        });
-                                      }
-                                    },
-                                    onRangeSelected: (start, end, focusedDay) {
-                                      print(
-                                          "onRangeSelected => ${start} // $end // ${focusedDay}");
-                                      setState(() {
-                                        _tempSelectedDay = start;
-                                        _focusedDay = focusedDay;
-                                        _tempRangeStart = start;
-                                        _tempRangeEnd = end;
-                                        _rangeSelectionMode = RangeSelectionMode.toggledOn;
-                                      });
-                                    },
-
-                                    onFormatChanged: (format) {
-                                      if (_calendarFormat != format) {
-                                        setState(() {
-                                          _calendarFormat = format;
-                                        });
-                                      }
-                                    },
-                                    onPageChanged: (focusedDay) {
-                                      _focusedDay = focusedDay;
-                                    },
                                   ),
-                                  Container(
-                                    margin: EdgeInsets.symmetric(vertical: CustomStyle.getHeight(10.0)),
-                                    child: Row(
-                                      crossAxisAlignment: CrossAxisAlignment.center,
-                                      mainAxisAlignment: MainAxisAlignment.end,
-                                      children: [
-                                        TextButton(
-                                            onPressed: (){
-                                              Navigator.of(context).pop();
-                                            },
-                                            child: Text(
-                                              Strings.of(context)?.get("cancel")??"Not Found",
-                                              style: CustomStyle.CustomFont(styleFontSize14, styleBlackCol1),
-                                            )
-                                        ),
-                                        CustomStyle.sizedBoxWidth(CustomStyle.getWidth(15.0)),
-                                        TextButton(
-                                            onPressed: () async {
-                                              int? diff_day = _tempRangeEnd?.difference(_tempRangeStart!).inDays;
-                                              if(_tempRangeStart == null || _tempRangeEnd == null){
-                                                if(_tempRangeStart == null && _tempRangeEnd != null) {
-                                                  _tempRangeStart = _tempRangeEnd?.add(const Duration(days: -30));
-                                                }else if(_tempRangeStart != null &&_tempRangeEnd == null) {
-                                                  DateTime? _tempDate = _tempRangeStart?.add(const Duration(days: 30));
-                                                  int start_diff_day = _tempDate!.difference(DateTime(DateTime.now().year,DateTime.now().month,DateTime.now().day)).inDays;
-                                                  if(start_diff_day > 0) {
-                                                    _tempRangeEnd = _tempRangeStart;
-                                                    _tempRangeStart = _tempRangeEnd?.add(const Duration(days: -30));
-                                                  }else{
-                                                    _tempRangeEnd = _tempRangeStart?.add(const Duration(days: 30));
-                                                  }
-                                                }else{
-                                                  return Util.toast("시작 날짜 또는 종료 날짜를 선택해주세요.");
-                                                }
-                                              } else if(diff_day! > 30){
-                                                Util.toast(Strings.of(context)?.get("dateOver")??"Not Found");
-                                              }else{
-                                                _rangeStart.value = _tempRangeStart!;
-                                                _rangeEnd.value = _tempRangeEnd!;
-                                                Navigator.of(context).pop(false);
-                                                //await getWork();
-                                              }
-                                            },
-                                            child: Text(
-                                              Strings.of(context)?.get("confirm")??"Not Found",
-                                              style: CustomStyle.CustomFont(styleFontSize14, styleBlackCol1),
-                                            )
-                                        )
-                                      ],
+                                  calendarStyle: CalendarStyle(
+                                    // 오늘 날짜에 하이라이팅의 유무
+                                    isTodayHighlighted: false,
+                                    // 캘린더의 평일 배경 스타일링(default면 평일을 의미)
+                                    defaultDecoration: BoxDecoration(
+                                      color: order_item_background,
+                                      shape: BoxShape.rectangle,
                                     ),
-                                  )
-                                ]
-                            )
-                        )
+                                    // 캘린더의 주말 배경 스타일링
+                                    weekendDecoration:  BoxDecoration(
+                                      color: order_item_background,
+                                      shape: BoxShape.rectangle,
+                                    ),
+                                    // 선택한 날짜 배경 스타일링
+                                    selectedDecoration: BoxDecoration(
+                                        color: styleWhiteCol,
+                                        shape: BoxShape.rectangle,
+                                        border: Border.all(color: sub_color)
+                                    ),
+                                    defaultTextStyle: CustomStyle.CustomFont(
+                                        styleFontSize14, Colors.black),
+                                    weekendTextStyle:
+                                    CustomStyle.CustomFont(styleFontSize14, Colors.red),
+                                    selectedTextStyle: CustomStyle.CustomFont(
+                                        styleFontSize14, Colors.black),
+                                    // range 크기 조절
+                                    rangeHighlightScale: 1.0,
+
+                                    // range 색상 조정
+                                    rangeHighlightColor: const Color(0xFFBBDDFF),
+
+                                    // rangeStartDay 글자 조정
+                                    rangeStartTextStyle: CustomStyle.CustomFont(
+                                        styleFontSize14, Colors.black),
+
+                                    // rangeStartDay 모양 조정
+                                    rangeStartDecoration: BoxDecoration(
+                                        color: styleWhiteCol,
+                                        shape: BoxShape.rectangle,
+                                        border: Border.all(color: sub_color)
+                                    ),
+
+                                    // rangeEndDay 글자 조정
+                                    rangeEndTextStyle: CustomStyle.CustomFont(
+                                        styleFontSize14, Colors.black),
+
+                                    // rangeEndDay 모양 조정
+                                    rangeEndDecoration: BoxDecoration(
+                                        color: styleWhiteCol,
+                                        shape: BoxShape.rectangle,
+                                        border: Border.all(color: sub_color)
+                                    ),
+
+                                    // startDay, endDay 사이의 글자 조정
+                                    withinRangeTextStyle: const TextStyle(),
+
+                                    // startDay, endDay 사이의 모양 조정
+                                    withinRangeDecoration:
+                                    const BoxDecoration(),
+                                  ),
+                                  selectedDayPredicate: (day) {
+                                    return isSameDay(_tempSelectedDay, day);
+                                  },
+                                  calendarFormat: _calendarFormat,
+                                  onDaySelected: (selectedDay, focusedDay) {
+                                    print("onDaySelected => ${selectedDay} // ${focusedDay}");
+                                    if (!isSameDay(_tempSelectedDay, selectedDay)) {
+                                      setState(() {
+                                        _tempSelectedDay = selectedDay;
+                                        _depoFocusedDay = focusedDay;
+                                      });
+                                    }
+                                  },
+                                  onFormatChanged: (format) {
+                                    print("onFormatChanged => ${format}");
+                                    if (_calendarFormat != format) {
+                                      setState(() {
+                                        _calendarFormat = format;
+                                      });
+                                    }
+                                  },
+                                  onPageChanged: (focusedDay) {
+                                    print("onPageChanged => ${focusedDay}");
+                                    _depoFocusedDay = focusedDay;
+                                  },
+                                ),
+                                Container(
+                                  margin: EdgeInsets.symmetric(vertical: CustomStyle.getHeight(10.0)),
+                                  child: Row(
+                                    crossAxisAlignment: CrossAxisAlignment.center,
+                                    mainAxisAlignment: MainAxisAlignment.end,
+                                    children: [
+                                      TextButton(
+                                          onPressed: (){
+                                            Navigator.of(context).pop();
+                                          },
+                                          child: Text(
+                                            Strings.of(context)?.get("cancel")??"Not Found",
+                                            style: CustomStyle.CustomFont(styleFontSize14, styleBlackCol1),
+                                          )
+                                      ),
+                                      CustomStyle.sizedBoxWidth(CustomStyle.getWidth(15.0)),
+                                      TextButton(
+                                          onPressed: () async {
+                                            _depoSelectDay.value = Util.getDateCalToStr(_tempSelectedDay, Const.dateFormat4);
+                                            Navigator.of(context).pop(false);
+                                            showDepositDialog();
+                                          },
+                                          child: Text(
+                                            Strings.of(context)?.get("confirm")??"Not Found",
+                                            style: CustomStyle.CustomFont(styleFontSize14, styleBlackCol1),
+                                          )
+                                      )
+                                    ],
+                                  ),
+                                )
+                              ]
+                          )
+                      ),
                     )
                 );
-              });
-        });
+              }
+          );
+        }
+    );
   }
 
   Widget calendarPanelWidget() {

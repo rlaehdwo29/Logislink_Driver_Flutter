@@ -311,10 +311,12 @@ class _HistoryPageState extends State<HistoryPage> {
         if (response.resultMap?["data"] != null) {
           var list = response.resultMap?["data"] as List;
           List<OrderModel> itemsList = list.map((i) => OrderModel.fromJSON(i)).toList();
+          if(_historyList.isNotEmpty) _historyList.clear();
           _historyList.value?.addAll(itemsList);
         }else{
           _historyList.value = List.empty(growable: true);
         }
+        setState(() {});
       }
     }).catchError((Object obj) async {
       await pr?.hide();
@@ -373,8 +375,15 @@ class _HistoryPageState extends State<HistoryPage> {
     return Container(
         padding: const EdgeInsets.all(10.0),
         child: InkWell(
-            onTap: () {
-              Navigator.push(context, MaterialPageRoute(builder: (context) => OrderDetailPage(item: item)));
+            onTap: () async {
+              Map<String,int> results = await Navigator.push(context, MaterialPageRoute(builder: (context) => OrderDetailPage(item: item)));
+              print("값을 볼까? => ${results["code"]}");
+              if(results != null && results.containsKey("code")){
+                if(results["code"] == 200) {
+                  await getHistory();
+                }
+              }
+
             },
             child: Card(
                 elevation: 4.0,

@@ -170,9 +170,9 @@ class _AppBarMyPageState extends State<AppBarMyPage> {
         Strings.of(context)?.get("cancel")??"Not Found",
         Strings.of(context)?.get("confirm")??"Not Found",
             () {Navigator.of(context).pop(false);},
-            () {
+            () async {
           Navigator.of(context).pop(false);
-          updateUser();
+          await updateUser();
         }
     );
   }
@@ -229,6 +229,7 @@ class _AppBarMyPageState extends State<AppBarMyPage> {
       }else{
         Util.toast(_response.message);
       }
+      setState(() {});
     }).catchError((Object obj) async {
       await pr?.hide();
       switch (obj.runtimeType) {
@@ -1528,7 +1529,7 @@ class _AppBarMyPageState extends State<AppBarMyPage> {
                 if(controller.getUserInfo() != tempData.value) {
                   await showCanceled();
                 }else{
-                  Navigator.pop(context);
+                  Navigator.of(context).pop();
                 }
 
                   },

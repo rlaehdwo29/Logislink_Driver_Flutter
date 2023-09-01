@@ -596,11 +596,11 @@ class _OrderDetailPageState extends State<OrderDetailPage>{
                     goToTax();
                   },
                   child: Container(
-                      decoration: !tvTax.value ? CustomStyle.customBoxDeco(sub_color) : CustomStyle.customBoxDeco(styleWhiteCol,border_color: text_color_02),
+                      decoration: tvTax.value ? CustomStyle.customBoxDeco(styleWhiteCol,border_color: text_color_02) : CustomStyle.customBoxDeco(sub_color),
                       padding: EdgeInsets.symmetric(vertical: CustomStyle.getHeight(5.0),horizontal: CustomStyle.getWidth(10.0)),
                       child:Text(
                           Strings.of(context)?.get("tax_title")??"Not Found",
-                        style: CustomStyle.CustomFont(styleFontSize10, !tvTax.value ? styleWhiteCol : text_color_02),
+                        style: CustomStyle.CustomFont(styleFontSize10, tvTax.value ? text_color_02 : styleWhiteCol),
                       )
                   ),
                 ):const SizedBox(),
@@ -792,7 +792,7 @@ class _OrderDetailPageState extends State<OrderDetailPage>{
                           ),
                         ),
                         onPressed: () {
-                          if(widget.item?.allocState != "04" && widget.item?.allocState != "05" && widget.item?.allocState != "20") showStartOrder();
+                          if(widget.item?.allocState != "04" && widget.item?.allocState != "05" && widget.item?.allocState != "20") showEnterOrder();
                         },
                         child: Text(
                           widget.item?.allocState == "04"? "입차 ${widget.item?.enterDate?.isNotEmpty == true && widget.item?.enterDate !=null ?"(${app_util.Util.getDateStrToStr(widget.item?.enterDate, "MM.dd HH:mm")})":""}"
@@ -1319,7 +1319,7 @@ class _OrderDetailPageState extends State<OrderDetailPage>{
                                 flex: 2,
                                 child: InkWell(
                                     onTap: (){
-                                        Navigator.pop(context);
+                                      Navigator.of(context).pop();
                                     },
                                   child: Container(
                                      decoration: CustomStyle.customBoxDeco(cancel_btn,radius: 0),
@@ -1364,7 +1364,7 @@ class _OrderDetailPageState extends State<OrderDetailPage>{
   void confirm(Function(String?) _showPayCallback) {
     if(_isChecked.value){
       _showPayCallback("200");
-      Navigator.pop(context);
+      Navigator.of(context).pop();
     }else{
       app_util.Util.toast("빠른지급신청에 동의해주세요.");
     }
@@ -1376,7 +1376,7 @@ class _OrderDetailPageState extends State<OrderDetailPage>{
       return;
     }
 
-    Map results = await Navigator.of(context).push(MaterialPageRoute(
+    Map<String,int> results = await Navigator.of(context).push(MaterialPageRoute(
         builder: (BuildContext context) => ReceiptPage(item: widget.item))
     );
 
@@ -1539,13 +1539,13 @@ class _OrderDetailPageState extends State<OrderDetailPage>{
     if(widget.item?.allocState == "01") {
       openCommonConfirmBox(
           context,
-          "상차지에서 출발하시겠습니까?",
+          "상차지에서 입차처리하시겠습니까?",
           Strings.of(context)?.get("cancel") ?? "Not Found",
           Strings.of(context)?.get("confirm") ?? "Not Found",
               () => Navigator.of(context).pop(false),
               () async {
             Navigator.of(context).pop(false);
-            await setOrderState("04", "상차지에서 출발했습니다.");
+            await setOrderState("12", "상차지 입차 처리했습니다.");
           });
     }else{
       app_util.Util.toast("출발 및 도착 진행중에는 입차처리가 불가능합니다.");
@@ -1791,7 +1791,8 @@ class _OrderDetailPageState extends State<OrderDetailPage>{
     return WillPopScope(
       onWillPop: () async {
         FBroadcast.instance().broadcast(Const.INTENT_ORDER_REFRESH);
-        return true;
+        Navigator.of(context).pop({'code':200});
+        return false;
       },
         child: Scaffold(
         backgroundColor: Theme.of(context).backgroundColor,
@@ -1806,7 +1807,7 @@ class _OrderDetailPageState extends State<OrderDetailPage>{
             leading: IconButton(
               onPressed: (){
                 FBroadcast.instance().broadcast(Const.INTENT_ORDER_REFRESH);
-                Navigator.pop(context);
+                Navigator.of(context).pop({'code':200});
               },
               color: styleWhiteCol,
               icon: const Icon(Icons.arrow_back),

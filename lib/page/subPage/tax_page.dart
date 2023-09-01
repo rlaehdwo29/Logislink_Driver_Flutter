@@ -58,7 +58,12 @@ class _TaxPageState extends State<TaxPage> {
   @override
   Widget build(BuildContext context) {
     pr = Util.networkProgress(context);
-    return Scaffold(
+    return WillPopScope(
+        onWillPop: () async {
+          Navigator.of(context).pop({'code':200});
+          return false;
+        } ,
+        child: Scaffold(
         backgroundColor: Theme
             .of(context)
             .backgroundColor,
@@ -71,7 +76,7 @@ class _TaxPageState extends State<TaxPage> {
                       styleFontSize18, styleWhiteCol)),
               leading: IconButton(
                 onPressed: () {
-                  Navigator.pop(context);
+                  Navigator.of(context).pop({'code':200});
                 },
                 color: styleWhiteCol,
                 icon: const Icon(Icons.arrow_back),
@@ -117,7 +122,7 @@ class _TaxPageState extends State<TaxPage> {
               style: CustomStyle.CustomFont(styleFontSize16, Colors.white),
             ),
           ),
-        ));
+        )));
   }
 
   void initView() {
@@ -189,16 +194,16 @@ class _TaxPageState extends State<TaxPage> {
             () {
           Navigator.of(context).pop(false);
         },
-            () {
-          Navigator.of(context).pop(false);
+            () async {
+              Navigator.of(context).pop(false);
           if(widget.item?.invId?.isNotEmpty == true) {
             if(widget.item?.loadStatus == "0") {
-              issueTax();
+              await issueTax();
             }else if(widget.item?.loadStatus == "1") {
               Util.toast("전자세금계산서 발행 요청중입니다.");
             }
           }else{
-            writeTax();
+            await writeTax();
           }
         }
     );
@@ -345,7 +350,7 @@ class _TaxPageState extends State<TaxPage> {
   void confirm(Function(String?) _showPayCallback) {
     if(_isChecked.value){
       _showPayCallback("200");
-      Navigator.pop(context);
+      Navigator.of(context).pop();
     }else{
       Util.toast("빠른지급신청에 동의해주세요.");
     }

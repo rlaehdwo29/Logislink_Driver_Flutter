@@ -466,8 +466,8 @@ class _MainPageState extends State<MainPage> with CommonMainWidget {
   void exited(){
     Future.delayed(const Duration(milliseconds: 300), () {
       Navigator.pushNamedAndRemoveUntil(context, '/', (route) => false);
-      //exit(0);
-      SystemNavigator.pop();
+      exit(0);
+      //SystemNavigator.pop();
     });
   }
 
@@ -498,8 +498,8 @@ class _MainPageState extends State<MainPage> with CommonMainWidget {
     stopService();
     Future.delayed(const Duration(milliseconds: 300), () {
       Navigator.pushNamedAndRemoveUntil(context, '/', (route) => false);
-      //exit(0);
-      SystemNavigator.pop();
+      exit(0);
+      //SystemNavigator.pop();
     });
   }
 
@@ -698,7 +698,8 @@ class _MainPageState extends State<MainPage> with CommonMainWidget {
                           db.deleteAll(list);
                           getUserInfo();
                           getOrderMethod(true);
-                          Navigator.pop(context);
+                          //Navigator.pop(context);
+                          _scaffoldKey.currentState!.closeDrawer();
                         }
                       }
                     },

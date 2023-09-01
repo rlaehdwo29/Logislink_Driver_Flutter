@@ -31,7 +31,7 @@ class _CarBookRegPageState extends State<CarBookRegPage>{
   CalendarFormat _calendarFormat = CalendarFormat.month;
   final mData = CarBookModel().obs;
   final _selectDay = "".obs;
-  CarModel? mCar;
+  CarModel mCar = CarModel();
 
   String? regTitle;
   String? editTitle;
@@ -1780,26 +1780,30 @@ class _CarBookRegPageState extends State<CarBookRegPage>{
         mData.value.mileage,
         mData.value.refuelAmt,
         mData.value.unitPrice,
-        mData.value.memo == null?"":mData.value.memo
+        mData.value.memo ?? ""
       ).then((it) async {
         await pr?.hide();
         ReturnMap response = DioService.dioResponse(it);
         logger.d("carBookReg() _response -> ${response.status} // ${response.resultMap}");
           if (response.status == "200") {
-            if (mCar!.accMileage! < mData.value.mileage!) {
-              carUpdate();
-            } else {
-              Util.toast("$regTitle${Strings.of(context)?.get("reg_success") ??
-                  "Not Found"}");
-              Navigator.of(context).pop(false);
-              widget.onCallback(true, widget.mCode);
+            try {
+              int accMileage = mCar.accMileage??0;
+              int mileage = mData.value.mileage??0;
+              if(accMileage < mileage) {
+                carUpdate();
+              } else {
+                Util.toast(
+                    "$regTitle${Strings.of(context)?.get("reg_success") ??
+                        "Not Found"}");
+                Navigator.of(context).pop(false);
+                widget.onCallback(true, widget.mCode);
+              }
+            }catch(e) {
+              print("ㅇㅇㅇㅇ=>$e");
             }
             setState(() {});
           } else {
-            openOkBox(context, response.message ?? "",
-                Strings.of(context)?.get("confirm") ?? "Error!!", () {
-                  Navigator.of(context).pop(false);
-                });
+            Util.toast("${response.message}");
           }
       }).catchError((Object obj) async {
         await pr?.hide();
@@ -1881,7 +1885,7 @@ class _CarBookRegPageState extends State<CarBookRegPage>{
               ),
               leading: IconButton(
                 onPressed: () async {
-                  Navigator.pop(context);
+                  Navigator.of(context).pop();
                 },
                 color: styleWhiteCol,
                 icon: Icon(Icons.keyboard_arrow_left_outlined,size: 32,color: styleWhiteCol),

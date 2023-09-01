@@ -504,7 +504,7 @@ class _CarRegPageState extends State<CarRegPage> {
               ),
               leading: IconButton(
                 onPressed: () async {
-                  Navigator.pop(context);
+                  Navigator.of(context).pop();
                 },
                 color: styleWhiteCol,
                 icon: Icon(Icons.close,size: 28,color: styleWhiteCol),

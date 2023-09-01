@@ -272,7 +272,7 @@ class _CarListPageState extends State<CarListPage> {
     pr = Util.networkProgress(context);
     return WillPopScope(
         onWillPop: () async {
-          Navigator.pop(context);
+          Navigator.of(context).pop();
           widget.onCallback(true, null);
           return false;
         } ,
@@ -288,7 +288,7 @@ class _CarListPageState extends State<CarListPage> {
               ),
               leading: IconButton(
                 onPressed: () async {
-                  Navigator.pop(context);
+                  Navigator.of(context).pop();
                   widget.onCallback(true, null);
                 },
                 color: styleWhiteCol,

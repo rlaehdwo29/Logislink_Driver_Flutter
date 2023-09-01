@@ -31,7 +31,7 @@ class _ReceiptDetailPageState extends State<ReceiptDetailPage>{
               ),
               leading: IconButton(
                 onPressed: (){
-                  Navigator.pop(context);
+                  Navigator.of(context).pop();
                 },
                 color: styleWhiteCol,
                 icon: const Icon(Icons.arrow_back),
