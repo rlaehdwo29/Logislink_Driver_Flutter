@@ -308,7 +308,7 @@ class _ReceiptPageState extends State<ReceiptPage>{
             ),
             leading: IconButton(
               onPressed: (){
-                Navigator.pop(context);
+                Navigator.of(context).pop({'code':200});
               },
               color: styleWhiteCol,
               icon: const Icon(Icons.arrow_back),

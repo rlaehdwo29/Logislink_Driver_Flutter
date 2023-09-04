@@ -612,10 +612,10 @@ abstract class Rest {
   @FormUrlEncoded()
   @POST(URL_SALES_DEPOSIT)
   Future<HttpResponse> depositSalesManage(
-      @Header("Authorization") String Authorization,
-      @Field("workId") String WorkId,
-      @Field("deposit") String Deposit,
-      @Field("depoDate") String depoDate
+      @Header("Authorization") String? Authorization,
+      @Field("workId") String? WorkId,
+      @Field("deposit") String? Deposit,
+      @Field("depoDate") String? depoDate
       );
 
   /*

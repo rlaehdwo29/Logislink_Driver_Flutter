@@ -11,7 +11,7 @@ class ShowSelectDialogWidget {
   final String mTitle;
   final String codeType;
   final int? value;
-  final void Function(CodeModel,{String codeType,int value}) callback;
+  final void Function(CodeModel?,{String codeType,int value}) callback;
 
   ShowSelectDialogWidget({required this.context, required this.mTitle, required this.codeType,this.value, required this.callback});
 
@@ -40,7 +40,7 @@ class ShowSelectDialogWidget {
             actions: [
               IconButton(
                   onPressed: () {
-                    Navigator.pop(context);
+                    Navigator.of(context).pop();
                   },
                   icon: const Icon(Icons.close, size: 30)
               )
@@ -58,8 +58,8 @@ class ShowSelectDialogWidget {
               itemBuilder: (BuildContext context, int index) {
                 return InkWell(
                     onTap: () {
-                      callback(mList![index],codeType: codeType, value: value??0);
-                      Navigator.pop(context);
+                      callback(mList?[index],codeType: codeType, value: value??0);
+                      Navigator.of(context).pop();
                     },
                     child: Container(
                         height: CustomStyle.getHeight(70.0),

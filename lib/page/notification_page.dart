@@ -88,7 +88,7 @@ class _NotificationPageState extends State<NotificationPage> {
                       styleFontSize18, styleWhiteCol)),
               leading: IconButton(
                 onPressed: () {
-                  Navigator.pop(context);
+                  Navigator.of(context).pop();
                 },
                 color: styleWhiteCol,
                 icon: const Icon(Icons.arrow_back),

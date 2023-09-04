@@ -55,12 +55,12 @@ class _AddrSearchPageState extends State<AddrSearchPage> {
 
   void selectJibun(String? zipNo ,String? roadAddr) {
     widget.callback(zipNo,roadAddr);
-    Navigator.pop(context);
+    Navigator.of(context).pop();
   }
 
   void selectRoad(String? zipNo ,String? roadAddr) {
     widget.callback(zipNo,roadAddr);
-    Navigator.pop(context);
+    Navigator.of(context).pop();
   }
 
   Widget getAddrListWidget() {
@@ -262,7 +262,7 @@ class _AddrSearchPageState extends State<AddrSearchPage> {
               ),
               leading: IconButton(
                 onPressed: () async {
-                  Navigator.pop(context);
+                  Navigator.of(context).pop();
                 },
                 color: styleWhiteCol,
                 icon: Icon(

@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:io';
 import 'dart:ui';
 
+import 'package:device_info_plus/device_info_plus.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
@@ -315,49 +316,128 @@ Future<bool> checkPermission() async {
     return true;
   }else{
     // You can request multiple permissions at once.
-    Map<Permission, PermissionStatus> statuses = await [
-      Permission.storage,
-      Permission.manageExternalStorage,
-      Permission.phone,
-      Permission.locationAlways
-    ].request();
+    DeviceInfoPlugin deviceInfo = DeviceInfoPlugin();
+    if(Platform.isAndroid) {
+      AndroidDeviceInfo info  = await deviceInfo.androidInfo;
+      // Android 13 버전 이상.
+      if(info.version.sdkInt >= 33) {
+        Map<Permission, PermissionStatus> statuses = await [
+          Permission.photos,
+          Permission.phone,
+          Permission.location,
+          Permission.activityRecognition,
+        ].request();
 
-    print("위치 => ${statuses[Permission.locationAlways]}");
-    print("저장소 => ${statuses[Permission.storage]}");
-    print("저장소2 => ${statuses[Permission.manageExternalStorage]}");
-    print("폰 => ${statuses[Permission.phone]}");
-    print("권한 설정 미완료");
+        print("Notification => ${statuses[Permission.notification]}");
+        print("위치 => ${statuses[Permission.location]}");
+        print("저장소 => ${statuses[Permission.photos]}");
+        print("폰 => ${statuses[Permission.phone]}");
+        print("신체활동 => ${statuses[Permission.activityRecognition]}");
 
-    //app_util.Util.toast("권한 설정 미완료 => ${statuses[Permission.location]} // ${statuses[Permission.storage]} // ${statuses[Permission.manageExternalStorage]} // ${statuses[Permission.phone]}");
+        if (statuses[Permission.photos] == PermissionStatus.permanentlyDenied) {
+          await openAppSettings();
+        } else
+        if (statuses[Permission.phone] == PermissionStatus.permanentlyDenied) {
+          await openAppSettings();
+        } else if (statuses[Permission.location] ==
+            PermissionStatus.permanentlyDenied) {
+          await openAppSettings();
+        } else if (statuses[Permission.activityRecognition] ==
+            PermissionStatus.permanentlyDenied) {
+          await openAppSettings();
+        }
 
-    /*if(statuses[Permission.location] != PermissionStatus.granted){
-      //await Permission.location.request();
-      return false;
-    }else if(statuses[Permission.storage] != PermissionStatus.granted) {
-      //await Permission.storage.request();
-      return false;
-    }else if(statuses[Permission.manageExternalStorage] != PermissionStatus.granted) {
-      //await Permission.manageExternalStorage.request();
-    }else if(statuses[Permission.phone] != PermissionStatus.granted){
-      //await Permission.phone.request();
-      return false;
-    }*/
-    return true; //=> 원래 넘기면 안댐
+        if (statuses[Permission.location] != PermissionStatus.granted) {
+          return false;
+        } else if (statuses[Permission.photos] != PermissionStatus.granted) {
+          return false;
+        } else if (statuses[Permission.phone] != PermissionStatus.granted) {
+          return false;
+        } else if (statuses[Permission.activityRecognition] !=
+            PermissionStatus.granted) {
+          return false;
+        }
+      }else {
+        Map<Permission, PermissionStatus> statuses = await [
+          Permission.phone,
+          Permission.storage,
+          Permission.location,
+          Permission.activityRecognition,
+        ].request();
+
+        print("Notification => ${statuses[Permission.notification]}");
+        print("위치 => ${statuses[Permission.location]}");
+        print("저장소 => ${statuses[Permission.storage]}");
+        print("폰 => ${statuses[Permission.phone]}");
+        print("신체활동 => ${statuses[Permission.activityRecognition]}");
+
+        if (statuses[Permission.storage] == PermissionStatus.permanentlyDenied) {
+          await openAppSettings();
+        } else
+        if (statuses[Permission.phone] == PermissionStatus.permanentlyDenied) {
+          await openAppSettings();
+        } else if (statuses[Permission.location] ==
+            PermissionStatus.permanentlyDenied) {
+          await openAppSettings();
+        } else if (statuses[Permission.activityRecognition] ==
+            PermissionStatus.permanentlyDenied) {
+          await openAppSettings();
+        }
+
+        if (statuses[Permission.location] != PermissionStatus.granted) {
+          return false;
+        } else if (statuses[Permission.storage] != PermissionStatus.granted) {
+          return false;
+        } else if (statuses[Permission.phone] != PermissionStatus.granted) {
+          return false;
+        } else if (statuses[Permission.activityRecognition] != PermissionStatus.granted) {
+          return false;
+        }
+      }
+    }else{
+
+    }
+    return true;
   }
 }
 
 
 Widget _splashLodingWidget(AsyncSnapshot<Object?> snapshot,BuildContext context) {
   if(snapshot.hasError) {
-    return const Text("Error!!");
+    return Container(
+        child:Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            Text("권한 처리 중 에러가 발생하였습니다.\n 앱을 재시작해주세요.",
+              style: CustomStyle.CustomFont(styleFontSize16, Colors.white),),
+            CustomStyle.sizedBoxHeight(10.0),
+            ElevatedButton(onPressed: (){
+              Navigator.of(context).pop(false);
+              SystemNavigator.pop();
+            }, child: Text("앱 종료",style: CustomStyle.CustomFont(styleFontSize14, Colors.black),))
+          ],
+        )
+    );
   }else if(snapshot.hasData){
     if(snapshot.data == true){
       return const BridgePage();
     }else{
-      return openOkBox(context, "권한 설정을 모두 허용 후 사용하실 수 있습니다.", Strings.of(context)?.get("confirm")??"Error!!",() {
-        Navigator.of(context).pop(false);
-        SystemNavigator.pop();
-      });
+      return Container(
+        child:Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            Text("권한 설정을 모두 허용 후\n사용하실 수 있습니다.",
+            style: CustomStyle.CustomFont(styleFontSize16, Colors.white),),
+            CustomStyle.sizedBoxHeight(10.0),
+            ElevatedButton(onPressed: (){
+              Navigator.of(context).pop(false);
+              SystemNavigator.pop();
+            }, child: Text("앱 종료",style: CustomStyle.CustomFont(styleFontSize14, Colors.black),))
+          ],
+        )
+      );
     }
   }else{
     return Container(

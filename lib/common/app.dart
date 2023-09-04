@@ -58,7 +58,7 @@ class App extends GetxController{
     update();
   }
 
-  CarModel? getCarInfo() {
+  CarModel getCarInfo() {
     if (car == null) {
       car.value = CarModel();
     } else {
