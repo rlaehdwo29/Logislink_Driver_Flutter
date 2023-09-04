@@ -102,7 +102,6 @@ class _MainPageState extends State<MainPage> with CommonMainWidget {
     _geofenceStreamController.sink.add(geofence);
     AppDataBase db = App().getRepository();
     GeofenceModel? data = await db.getGeoFence(App().getUserInfo()?.vehicId, int.parse(geofence.id));
-    print("하아아아=> ${data?.orderId} // ${data?.allocState} // ${data?.allocId} // ${data?.id} // ${data?.vehicId}");
     if(data != null) {
       if(data.flag == "Y") {
         if(geofenceStatus == GeofenceStatus.ENTER) {
@@ -271,7 +270,6 @@ class _MainPageState extends State<MainPage> with CommonMainWidget {
     isRunning = true;
     _nowUser.value = controller.getUserInfo();
     FBroadcast.instance().register(Const.INTENT_ORDER_REFRESH, (value, callback) {
-      print("나 탔어??");
       getOrderMethod(true);
     },context: this);
     FBroadcast.instance().broadcast(Const.INTENT_ORDER_REFRESH);

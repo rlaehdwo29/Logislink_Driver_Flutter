@@ -223,9 +223,13 @@ class _AppBarMyPageState extends State<AppBarMyPage> {
       ReturnMap _response = DioService.dioResponse(it);
       logger.d("updateUser() _response -> ${_response.status} // ${_response.resultMap}");
       if(_response.status == "200") {
-        editMode.value = false;
-        controller.setUserInfo(tempData.value);
-        Util.toast("정보가 수정되었습니다.");
+        if(_response.resultMap?["result"] == true) {
+          editMode.value = false;
+          controller.setUserInfo(tempData.value);
+          Util.toast("정보가 수정되었습니다.");
+        }else{
+          Util.toast(_response.resultMap?["msg"]);
+        }
       }else{
         Util.toast(_response.message);
       }

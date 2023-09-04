@@ -377,7 +377,6 @@ class _HistoryPageState extends State<HistoryPage> {
         child: InkWell(
             onTap: () async {
               Map<String,int> results = await Navigator.push(context, MaterialPageRoute(builder: (context) => OrderDetailPage(item: item)));
-              print("값을 볼까? => ${results["code"]}");
               if(results != null && results.containsKey("code")){
                 if(results["code"] == 200) {
                   await getHistory();

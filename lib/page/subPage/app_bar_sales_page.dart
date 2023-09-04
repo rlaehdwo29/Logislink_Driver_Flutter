@@ -61,7 +61,6 @@ class _AppBarSalesPageState extends State<AppBarSalesPage> {
   }
 
   Future<void> onCallback(bool? reload) async {
-    print("안타나? =>${reload}");
     if(reload == true){
       await getWork();
     }

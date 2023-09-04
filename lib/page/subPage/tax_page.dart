@@ -372,6 +372,7 @@ class _TaxPageState extends State<TaxPage> {
       if(_response.status == "200") {
         widget.item?.reqPayYN = "Y";
         Util.toast("빠른지급 신청이 완료되었습니다.");
+        Navigator.of(context).pop();
       }else{
         Util.toast(_response.message);
       }

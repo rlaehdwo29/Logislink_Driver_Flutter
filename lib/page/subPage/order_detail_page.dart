@@ -64,6 +64,10 @@ class _OrderDetailPageState extends State<OrderDetailPage>{
 
   @override
   void initState() {
+    FBroadcast.instance().register(Const.INTENT_DETAIL_REFRESH, (value, callback) {
+      setState(() {});
+    },context: this);
+
     if(widget.item != null) {
       initView();
     }else{
@@ -882,7 +886,7 @@ class _OrderDetailPageState extends State<OrderDetailPage>{
   Future<void> goToPay() async {
     Logger logger = Logger();
 
-    if(SP.getBoolean(Const.KEY_GUEST_MODE)??false){
+    if(SP.getBoolean(Const.KEY_GUEST_MODE)){
       showGuestDialog();
       return;
     }
@@ -1013,8 +1017,62 @@ class _OrderDetailPageState extends State<OrderDetailPage>{
     );
   }
 
-  void checkAccNm() {
+  Future<void> checkAccNm() async {
+    Logger logger = Logger();
+    await pr?.show();
+    await DioService.dioClient(header: true).checkAccNm(App().getUserInfo()?.authorization, App().getUserInfo()?.vehicId, App().getUserInfo().bankCode, App().getUserInfo().bankAccount,App().getUserInfo().bankCnnm).then((it) async {
+    await pr?.hide();
+    ReturnMap _response = DioService.dioResponse(it);
+      if(_response.status == "200") {
+        updateBank();
+      }else{
+        app_util.Util.toast(_response.message);
+      }
+    }).catchError((Object obj) async {
+    await pr?.hide();
+    switch (obj.runtimeType) {
+    case DioError:
+    // Here's the sample to get the failed response error code and message
+    final res = (obj as DioError).response;
+    logger.e("order_detail_page.dart checkAccNm() Error Default: ${res?.statusCode} -> ${res?.statusMessage}");
+    openOkBox(context,"${res?.statusCode} / ${res?.statusMessage}",Strings.of(context)?.get("confirm")??"Error!!",() {Navigator.of(context).pop(false);});
+    break;
+    default:
+    logger.e("order_detail_page.dart checkAccNm() Error Default:");
+    break;
+    }
+    });
+  }
 
+  Future<void> updateBank() async {
+    Logger logger = Logger();
+    await pr?.show();
+    await DioService.dioClient(header: true).checkAccNm(App().getUserInfo()?.authorization, App().getUserInfo()?.vehicId, App().getUserInfo().bankCode,App().getUserInfo().bankCnnm, App().getUserInfo().bankAccount).then((it) async {
+    await pr?.hide();
+    ReturnMap _response = DioService.dioResponse(it);
+    if(_response.status == "200") {
+      UserModel user = App().getUserInfo();
+      user.bankchkDate = app_util.Util.getDateCalToStr(DateTime.now(), "yyyy-MM-dd HH:mm:ss");
+        App().setUserInfo(user);
+        sendPay();
+        setState(() {});
+      }else{
+        app_util.Util.toast(_response.message);
+      }
+    }).catchError((Object obj) async {
+    await pr?.hide();
+    switch (obj.runtimeType) {
+    case DioError:
+    // Here's the sample to get the failed response error code and message
+    final res = (obj as DioError).response;
+      logger.e("order_detail_page.dart updateBank() Error Default: ${res?.statusCode} -> ${res?.statusMessage}");
+      openOkBox(context,"${res?.statusCode} / ${res?.statusMessage}",Strings.of(context)?.get("confirm")??"Error!!",() {Navigator.of(context).pop(false);});
+    break;
+    default:
+      logger.e("order_detail_page.dart updateBank() Error Default:");
+    break;
+    }
+    });
   }
 
   bool? checkBankDate() {
@@ -1473,12 +1531,7 @@ class _OrderDetailPageState extends State<OrderDetailPage>{
         case DioError:
           // Here's the sample to get the failed response error code and message
           final res = (obj as DioError).response;
-          logger.e(
-              "order_detail_page.dart getCheckOrderYn() Error Default: ${res?.statusCode} -> ${res?.statusMessage}");
-          openOkBox(context, "${res?.statusCode} / ${res?.statusMessage}",
-              Strings.of(context)?.get("confirm") ?? "Error!!", () {
-            Navigator.of(context).pop(false);
-          });
+          logger.e("order_detail_page.dart getCheckOrderYn() Error Default: ${res?.statusCode} -> ${res?.statusMessage}");
           break;
         default:
           logger.e("order_detail_page.dart getCheckOrderYn() Error Default:");
