@@ -12,7 +12,7 @@ import 'package:path/path.dart';
 class OrderService with ChangeNotifier {
 
   final orderList = List.empty(growable: true).obs;
-  List<StopPointModel>? stopPointList;
+  List<StopPointModel> stopPointList = List.empty(growable: true);
   List<OrderModel> historyList = List.empty(growable: true);
 
   OrderService() {
@@ -59,7 +59,6 @@ class OrderService with ChangeNotifier {
 
   Future getStopPoint(BuildContext? context, String? auth, String? orderId) async {
     Logger logger = Logger();
-    stopPointList = List.empty(growable: true);
     await DioService.dioClient(header: true).getStopPoint(auth, orderId).then((it) {
       ReturnMap _response = DioService.dioResponse(it);
       logger.d("getStopPoint() _response -> ${_response.status} // ${_response.resultMap}");
@@ -69,6 +68,7 @@ class OrderService with ChangeNotifier {
           try{
             var list = _response.resultMap?["data"] as List;
             List<StopPointModel> itemsList = list.map((i) => StopPointModel.fromJSON(i)).toList();
+            if(stopPointList.isNotEmpty) stopPointList.clear();
             stopPointList?.addAll(itemsList);
           }catch(e) {
             print(e);
@@ -129,11 +129,11 @@ class OrderService with ChangeNotifier {
   }
 
 
-  Future getOrder2(context, String? auth, String? allocId, String? orderId) async {
+  Future getOrderList2(context, String? auth, String? allocId, String? orderId) async {
     Logger logger = Logger();
     await DioService.dioClient(header: true).getOrderList2(auth, allocId, orderId).then((it) {
       ReturnMap _response = DioService.dioResponse(it);
-      logger.d("getOrder2() _response -> ${_response.status} // ${_response.resultMap}");
+      logger.d("getOrderList2() _response -> ${_response.status} // ${_response.resultMap}");
       //openOkBox(context,_response.resultMap!["data"].toString(),Strings.of(context)?.get("confirm")??"Error!!",() {Navigator.of(context).pop(false);});
       if(_response.status == "200") {
         if(_response.resultMap?["data"] != null) {
@@ -153,10 +153,10 @@ class OrderService with ChangeNotifier {
         case DioError:
         // Here's the sample to get the failed response error code and message
           final res = (obj as DioError).response;
-          print("getOrder2() Error => ${res?.statusCode} // ${res?.statusMessage}");
+          print("getOrderList2() Error => ${res?.statusCode} // ${res?.statusMessage}");
           break;
         default:
-          print("getOrder2() getOrder Default => ");
+          print("getOrderList2() getOrder Default => ");
           break;
       }
     });

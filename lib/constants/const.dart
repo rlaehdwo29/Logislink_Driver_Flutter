@@ -24,20 +24,28 @@ class Const {
  /**
   * GPS SERVICE CHANNEL, SETTING
   */
- static final int LOCATION_INTERVAL = 5000; //30000; //20000;
- static final int LOCATION_FAST_INTERVAL = 4000; //20000; // 10000;
- static final int LOCATION_SMALLEST_DISPLACEMENT = 150;
- static final LOCATION_SERVICE_CHANNEL_ID = "LOCATION_SERVICE";
- static final LOCATION_SERVICE_CHANNEL_NAME = "위치 전송 서비스";
- static final int LOCATION_SERVICE_ID = 9999;
+ static const int LOCATION_INTERVAL = 5000; //30000; //20000;
+ static const int LOCATION_FAST_INTERVAL = 4000; //20000; // 10000;
+ static const int LOCATION_SMALLEST_DISPLACEMENT = 150;
+ static const LOCATION_SERVICE_CHANNEL_ID = "LOCATION_SERVICE";
+ static const LOCATION_SERVICE_CHANNEL_NAME = "위치 전송 서비스";
+ static const int LOCATION_SERVICE_ID = 9999;
 
  // GPS 주기 반영 Const
  static final int gpsLapTime = 6;
 
  /**
+  * Deep Link OR Dynamic Link
+  */
+ static const String DEEP_LINK_ORDER = "order";
+ static const String DEEP_LINK_TAX = "tax";
+ static const String DEEP_LINK_RECEIPT = "receipt";
+
+
+ /**
   * Geofence
   */
- static final int GEOFENCE_RADIUS_IN_METERS = 150;
+ static const int GEOFENCE_RADIUS_IN_METERS = 150;
 
  /**
   * Intent key

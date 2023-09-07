@@ -3,6 +3,7 @@ import 'dart:io';
 
 import 'package:app_settings/app_settings.dart';
 import 'package:fbroadcast/fbroadcast.dart';
+import 'package:firebase_dynamic_links/firebase_dynamic_links.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -49,7 +50,7 @@ class MainPage extends StatefulWidget {
   _MainPageState createState() => _MainPageState();
 }
 
-class _MainPageState extends State<MainPage> with CommonMainWidget {
+class _MainPageState extends State<MainPage> with CommonMainWidget,WidgetsBindingObserver {
 
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey();
   final controller = Get.find<App>();
@@ -152,7 +153,7 @@ class _MainPageState extends State<MainPage> with CommonMainWidget {
       logger.d("geofence_receiver finishStopPoint() _response -> ${_response.status} // ${_response.resultMap}");
       if(_response.status == "200") {
         if(_response.resultMap?["result"] == true) {
-          FBroadcast.instance().broadcast(Const.INTENT_DETAIL_REFRESH);
+          FBroadcast.instance().broadcast(Const.INTENT_DETAIL_REFRESH,value: 0);
         }
       }
     }).catchError((Object obj) async {
@@ -185,7 +186,7 @@ class _MainPageState extends State<MainPage> with CommonMainWidget {
       logger.d("geofence_receiver beginStartPoint() _response -> ${_response.status} // ${_response.resultMap}");
       if(_response.status == "200") {
         if(_response.resultMap?["result"] == true) {
-          FBroadcast.instance().broadcast(Const.INTENT_DETAIL_REFRESH);
+          FBroadcast.instance().broadcast(Const.INTENT_DETAIL_REFRESH,value: 1);
         }
       }
     }).catchError((Object obj) async {
@@ -218,7 +219,7 @@ class _MainPageState extends State<MainPage> with CommonMainWidget {
               FBroadcast.instance().broadcast(Const.INTENT_GEOFENCE);
               break;
           }
-          FBroadcast.instance().broadcast(Const.INTENT_DETAIL_REFRESH);
+          FBroadcast.instance().broadcast(Const.INTENT_DETAIL_REFRESH,value: 3);
         }
       }
     }).catchError((Object obj) async {
@@ -267,10 +268,11 @@ class _MainPageState extends State<MainPage> with CommonMainWidget {
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     isRunning = true;
     _nowUser.value = controller.getUserInfo();
-    FBroadcast.instance().register(Const.INTENT_ORDER_REFRESH, (value, callback) {
-      getOrderMethod(true);
+    FBroadcast.instance().register(Const.INTENT_ORDER_REFRESH, (value, callback) async {
+      await getOrderMethod(true);
     },context: this);
     FBroadcast.instance().broadcast(Const.INTENT_ORDER_REFRESH);
     FBroadcast.instance().register(Const.INTENT_GEOFENCE, (value, callback) async {
@@ -309,14 +311,77 @@ class _MainPageState extends State<MainPage> with CommonMainWidget {
       showPermissionDialog();
 
       if (SP.getBoolean(Const.KEY_GUEST_MODE)) showGuestDialog();
-
     });
+  }
+
+  Future<void> handleDeepLink() async {
+
+    FirebaseDynamicLinks.instance.onLink.listen(
+          (pendingDynamicLinkData) async {
+        // Set up the `onLink` event listener next as it may be received here
+        if (pendingDynamicLinkData != null) {
+          final Uri deepLink = pendingDynamicLinkData.link;
+          String? code = deepLink.pathSegments.last;
+          String? allocId = deepLink.queryParameters["allocId"];
+          String? orderId = deepLink.queryParameters["orderId"];
+          if(allocId == null) return;
+
+          switch(code) {
+            case Const.DEEP_LINK_ORDER:
+              await Navigator.of(context).push(MaterialPageRoute(
+                  builder: (BuildContext context) => OrderDetailPage(allocId: allocId,orderId: orderId)));
+              break;
+            case Const.DEEP_LINK_TAX:
+            case Const.DEEP_LINK_RECEIPT:
+              await Navigator.of(context).push(MaterialPageRoute(
+                  builder: (BuildContext context) => OrderDetailPage(allocId: allocId,orderId: orderId,code: code)));
+          }
+        }
+      },
+    );
+
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    print("하아앙-=>$state");
+    switch(state){
+      case AppLifecycleState.resumed:
+      // 앱이 표시되고 사용자 입력에 응답합니다.
+      // 주의! 최초 앱 실행때는 해당 이벤트가 발생하지 않습니다.
+        handleDeepLink();
+      print("resumed");
+      break;
+      case AppLifecycleState.inactive:
+      // 앱이 비활성화 상태이고 사용자의 입력을 받지 않습니다.
+      // ios에서는 포 그라운드 비활성 상태에서 실행되는 앱 또는 Flutter 호스트 뷰에 해당합니다.
+      // 안드로이드에서는 화면 분할 앱, 전화 통화, PIP 앱, 시스템 대화 상자 또는 다른 창과 같은 다른 활동이 집중되면 앱이이 상태로 전환됩니다.
+      // inactive가 발생되고 얼마후 pasued가 발생합니다.
+      print("inactive");
+      break;
+      case AppLifecycleState.paused:
+      // 앱이 현재 사용자에게 보이지 않고, 사용자의 입력을 받지 않으며, 백그라운드에서 동작 중입니다.
+      // 안드로이드의 onPause()와 동일합니다.
+      // 응용 프로그램이 이 상태에 있으면 엔진은 Window.onBeginFrame 및 Window.onDrawFrame 콜백을 호출하지 않습니다.
+      print("paused");
+      break;
+      case AppLifecycleState.detached:
+      // 응용 프로그램은 여전히 flutter 엔진에서 호스팅되지만 "호스트 View"에서 분리됩니다.
+      // 앱이 이 상태에 있으면 엔진이 "View"없이 실행됩니다.
+      // 엔진이 처음 초기화 될 때 "View" 연결 진행 중이거나 네비게이터 팝으로 인해 "View"가 파괴 된 후 일 수 있습니다.
+      print("detached");
+      break;
+      case AppLifecycleState.hidden:
+        // TODO: Handle this case.
+    }
+
   }
 
   @override
   void dispose() {
-    FBroadcast.instance().unregister(this);
     super.dispose();
+    FBroadcast.instance().unregister(this);
+    WidgetsBinding.instance.removeObserver(this);
   }
 
   Future<void> setGeofencingClient() async {
@@ -507,9 +572,9 @@ class _MainPageState extends State<MainPage> with CommonMainWidget {
     ));
   }
 
-  void getOrderMethod(bool flag) {
+  Future<void> getOrderMethod(bool flag) async {
     bool data = flag;
-    getOrder(data);
+    await getOrder(data);
   }
 
   Future<void> getOrder(bool flag) async {

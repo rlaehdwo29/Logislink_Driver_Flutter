@@ -22,8 +22,10 @@ import 'package:dio/dio.dart';
 
 class AppBarMyPage extends StatefulWidget {
   final void Function(bool?)? onCallback;
+  String? code;
 
-  AppBarMyPage({Key? key,this.onCallback}):super(key: key);
+
+  AppBarMyPage({Key? key,this.code,this.onCallback}):super(key: key);
 
   _AppBarMyPageState createState() => _AppBarMyPageState();
 }
@@ -33,6 +35,9 @@ class _AppBarMyPageState extends State<AppBarMyPage> {
   final editMode = false.obs;
   final mData = UserModel().obs;
   final tempData = UserModel().obs;
+
+  static const String EDIT_BIZ = "edit_biz";
+  final bizFocus = false.obs;
 
   ProgressDialog? pr;
 
@@ -64,6 +69,14 @@ class _AppBarMyPageState extends State<AppBarMyPage> {
   void initState() {
     super.initState();
     mData.value = controller.getUserInfo()!;
+
+
+    if(widget.code != null) {
+      if(widget.code == EDIT_BIZ) {
+        editMode.value = true;
+        bizFocus.value = true;
+      }
+    }
 
     tempData.value =  UserModel(
         authorization:mData.value.authorization,
@@ -495,11 +508,6 @@ class _AppBarMyPageState extends State<AppBarMyPage> {
                       flex: 2,
                       child: Container(
                           padding: const EdgeInsets.all(10.0),
-                          decoration: BoxDecoration(
-                              border: Border(
-                                  right: BorderSide(
-                                      color: line,
-                                      width: CustomStyle.getWidth(0.5)))),
                           child: Text(
                             Strings.of(context)?.get("biz_num") ?? "Not Found",
                             textAlign: TextAlign.center,
@@ -509,18 +517,23 @@ class _AppBarMyPageState extends State<AppBarMyPage> {
                   Expanded(
                       flex: 4,
                       child: Container(
-                          padding: EdgeInsets.symmetric(horizontal: CustomStyle.getWidth(10.0)),
+                        padding: const EdgeInsets.symmetric(horizontal: 5.0),
                           decoration: BoxDecoration(
                               border: Border(
                                   right: BorderSide(
                                       color: line,
-                                      width: CustomStyle.getWidth(0.5)))),
+                                      width: CustomStyle.getWidth(0.5)),
+                                  left: BorderSide(
+                                      color: line,
+                                      width: CustomStyle.getWidth(0.5))
+                              )
+                          ),
                           child: TextField(
                         maxLines: 1,
                         maxLength: 12,
                         controller: bizNumController,
-                        style: CustomStyle.CustomFont(styleFontSize12, text_color_01),
-                        autofocus: false,
+                        style: CustomStyle.CustomFont(styleFontSize10, text_color_01),
+                        autofocus: bizFocus.value,
                         enabled: editMode.value,
                         maxLengthEnforcement: MaxLengthEnforcement.enforced,
                         keyboardType: TextInputType.number,
@@ -555,11 +568,6 @@ class _AppBarMyPageState extends State<AppBarMyPage> {
                       flex: 2,
                       child: Container(
                           padding: const EdgeInsets.all(10.0),
-                          decoration: BoxDecoration(
-                              border: Border(
-                                  right: BorderSide(
-                                      color: line,
-                                      width: CustomStyle.getWidth(0.5)))),
                           child: Text(
                             Strings.of(context)?.get("sub_biz_num") ??
                                 "Not Found",
@@ -570,12 +578,17 @@ class _AppBarMyPageState extends State<AppBarMyPage> {
                   Expanded(
                       flex: 2,
                       child: Container(
-                          //margin: EdgeInsets.symmetric(horizontal: CustomStyle.getWidth(10.0)),
+                        padding: const EdgeInsets.symmetric(horizontal: 5.0),
+                          decoration: BoxDecoration(
+                              border: Border(
+                                  left: BorderSide(
+                                      color: line,
+                                      width: CustomStyle.getWidth(0.5)))),
                           child: TextField(
                             maxLines: 1,
                             maxLength: 12,
                             controller: subBizNumController,
-                            style: CustomStyle.CustomFont(styleFontSize12, text_color_01),
+                            style: CustomStyle.CustomFont(styleFontSize10, text_color_01),
                             autofocus: false,
                             enabled: editMode.value,
                             maxLengthEnforcement: MaxLengthEnforcement.enforced,
@@ -616,11 +629,6 @@ class _AppBarMyPageState extends State<AppBarMyPage> {
                       flex: 1,
                       child: Container(
                           padding: const EdgeInsets.all(10.0),
-                          decoration: BoxDecoration(
-                              border: Border(
-                                  right: BorderSide(
-                                      color: line,
-                                      width: CustomStyle.getWidth(0.5)))),
                           child: Text(
                             Strings.of(context)?.get("biz_name") ?? "Not Found",
                             textAlign: TextAlign.center,
@@ -630,7 +638,12 @@ class _AppBarMyPageState extends State<AppBarMyPage> {
                   Expanded(
                       flex: 4,
                       child: Container(
-                          padding: const EdgeInsets.all(10.0),
+                          padding: const EdgeInsets.symmetric(horizontal: 5.0),
+                          decoration: BoxDecoration(
+                              border: Border(
+                                  left: BorderSide(
+                                      color: line,
+                                      width: CustomStyle.getWidth(0.5)))),
                           child: TextField(
                         maxLines: 1,
                         maxLength: 12,
@@ -679,11 +692,6 @@ class _AppBarMyPageState extends State<AppBarMyPage> {
                       flex: 1,
                       child: Container(
                           padding: const EdgeInsets.all(10.0),
-                          decoration: BoxDecoration(
-                              border: Border(
-                                  right: BorderSide(
-                                      color: line,
-                                      width: CustomStyle.getWidth(0.5)))),
                           child: Text(
                             Strings.of(context)?.get("ceo") ?? "Not Found",
                             textAlign: TextAlign.center,
@@ -693,7 +701,12 @@ class _AppBarMyPageState extends State<AppBarMyPage> {
                   Expanded(
                       flex: 4,
                       child: Container(
-                          padding: const EdgeInsets.all(10.0),
+                          padding: const EdgeInsets.symmetric(horizontal: 5.0),
+                          decoration: BoxDecoration(
+                              border: Border(
+                                  left: BorderSide(
+                                      color: line,
+                                      width: CustomStyle.getWidth(0.5)))),
                           child: TextField(
                             maxLines: 1,
                             maxLength: 12,
@@ -745,7 +758,7 @@ class _AppBarMyPageState extends State<AppBarMyPage> {
                           padding: const EdgeInsets.all(10.0),
                           decoration: BoxDecoration(
                               border: Border(
-                                  right: BorderSide(
+                                    right: BorderSide(
                                       color: line,
                                       width: CustomStyle.getWidth(0.5)))),
                           child: Text(
@@ -773,7 +786,7 @@ class _AppBarMyPageState extends State<AppBarMyPage> {
                                 Expanded(
                                   flex: 7,
                                 child: Container(
-                                  padding: const EdgeInsets.all(10.0),
+                                  padding: const EdgeInsets.symmetric(horizontal: 5.0),
                                   child: Text(
                                     "${tempData.value.bizAddr}",
                                     style: CustomStyle.CustomFont(
@@ -805,11 +818,6 @@ class _AppBarMyPageState extends State<AppBarMyPage> {
                       flex: 1,
                       child: Container(
                           padding: const EdgeInsets.all(10.0),
-                          decoration: BoxDecoration(
-                              border: Border(
-                                  right: BorderSide(
-                                      color: line,
-                                      width: CustomStyle.getWidth(0.5)))),
                           child: Text(
                             Strings.of(context)?.get("addr_detail") ??
                                 "Not Found",
@@ -820,7 +828,12 @@ class _AppBarMyPageState extends State<AppBarMyPage> {
                   Expanded(
                       flex: 4,
                       child: Container(
-                          padding: const EdgeInsets.all(10.0),
+                          padding: const EdgeInsets.symmetric(horizontal: 5.0),
+                          decoration: BoxDecoration(
+                              border: Border(
+                                  left: BorderSide(
+                                      color: line,
+                                      width: CustomStyle.getWidth(0.5)))),
                           child: TextField(
                         maxLines: 1,
                         maxLength: 12,
@@ -867,14 +880,9 @@ class _AppBarMyPageState extends State<AppBarMyPage> {
               child: Row(
                 children: [
                   Expanded(
-                      flex: 1,
+                      flex: 2,
                       child: Container(
                           padding: const EdgeInsets.all(10.0),
-                          decoration: BoxDecoration(
-                              border: Border(
-                                  right: BorderSide(
-                                      color: line,
-                                      width: CustomStyle.getWidth(0.5)))),
                           child: Text(
                             Strings.of(context)?.get("biz_cond") ?? "Not Found",
                             textAlign: TextAlign.center,
@@ -882,14 +890,18 @@ class _AppBarMyPageState extends State<AppBarMyPage> {
                                 styleFontSize12, text_color_01),
                           ))),
                   Expanded(
-                      flex: 2,
+                      flex: 3,
                       child: Container(
-                          padding: const EdgeInsets.all(10.0),
+                          padding: const EdgeInsets.symmetric(horizontal: 5.0),
                           decoration: BoxDecoration(
                               border: Border(
                                   right: BorderSide(
                                       color: line,
-                                      width: CustomStyle.getWidth(0.5)))),
+                                      width: CustomStyle.getWidth(0.5)),
+                                left: BorderSide(
+                                    color: line,
+                                    width: CustomStyle.getWidth(0.5)),
+                              )),
                           child: TextField(
                             maxLines: 1,
                             maxLength: 12,
@@ -925,14 +937,9 @@ class _AppBarMyPageState extends State<AppBarMyPage> {
                             ),
                           ))),
                   Expanded(
-                      flex: 1,
+                      flex: 2,
                       child: Container(
                           padding: const EdgeInsets.all(10.0),
-                          decoration: BoxDecoration(
-                              border: Border(
-                                  right: BorderSide(
-                                      color: line,
-                                      width: CustomStyle.getWidth(0.5)))),
                           child: Text(
                             Strings.of(context)?.get("biz_kind") ?? "Not Found",
                             textAlign: TextAlign.center,
@@ -940,9 +947,14 @@ class _AppBarMyPageState extends State<AppBarMyPage> {
                                 styleFontSize12, text_color_01),
                           ))),
                   Expanded(
-                      flex: 2,
+                      flex: 3,
                       child: Container(
-                          padding: const EdgeInsets.all(10.0),
+                          padding: const EdgeInsets.symmetric(horizontal: 5.0),
+                          decoration: BoxDecoration(
+                              border: Border(
+                                  left: BorderSide(
+                                      color: line,
+                                      width: CustomStyle.getWidth(0.5)))),
                           child: TextField(
                             maxLines: 1,
                             maxLength: 12,
@@ -992,11 +1004,6 @@ class _AppBarMyPageState extends State<AppBarMyPage> {
                       flex: 1,
                       child: Container(
                           padding: const EdgeInsets.all(10.0),
-                          decoration: BoxDecoration(
-                              border: Border(
-                                  right: BorderSide(
-                                      color: line,
-                                      width: CustomStyle.getWidth(0.5)))),
                           child: Text(
                             Strings.of(context)?.get("driver_email") ??
                                 "Not Found",
@@ -1007,7 +1014,12 @@ class _AppBarMyPageState extends State<AppBarMyPage> {
                   Expanded(
                       flex: 4,
                       child: Container(
-                          padding: const EdgeInsets.all(10.0),
+                          padding: const EdgeInsets.symmetric(horizontal: 5.0),
+                        decoration: BoxDecoration(
+                            border: Border(
+                                left: BorderSide(
+                                    color: line,
+                                    width: CustomStyle.getWidth(0.5)))),
                           child: TextField(
                             maxLines: 1,
                             maxLength: 12,
@@ -1347,14 +1359,6 @@ class _AppBarMyPageState extends State<AppBarMyPage> {
                           },
                             child: Container(
                               padding: const EdgeInsets.all(10.0),
-                              decoration: BoxDecoration(
-                                  border: Border(
-                                      right: BorderSide(
-                                          width: CustomStyle.getWidth(0.5),
-                                          color: line
-                                      )
-                                  )
-                              ),
                               child: Text("${tempData.value?.carTypeName}",style: CustomStyle.CustomFont(styleFontSize12, text_color_01))
                           )
                         )
@@ -1368,7 +1372,11 @@ class _AppBarMyPageState extends State<AppBarMyPage> {
                                     right: BorderSide(
                                         width: CustomStyle.getWidth(0.5),
                                         color: line
-                                    )
+                                    ),
+                                  left: BorderSide(
+                                      width: CustomStyle.getWidth(0.5),
+                                      color: line
+                                  )
                                 )
                             ),
                             child: Text("${Strings.of(context)?.get("car_ton")}",textAlign: TextAlign.center, style: CustomStyle.CustomFont(styleFontSize12, text_color_01))
@@ -1402,24 +1410,24 @@ class _AppBarMyPageState extends State<AppBarMyPage> {
                 child: Row(
                   children: [
                     Expanded(
-                        flex: 1,
+                        flex: 2,
                         child: Container(
                             padding: const EdgeInsets.all(10.0),
+                            child: Text(Strings.of(context)?.get("car_width")??"Not Found",textAlign: TextAlign.center, style: CustomStyle.CustomFont(styleFontSize12, text_color_01))
+                        )
+                    ),
+                    Expanded(
+                        flex: 5,
+                        child: Container(
+                            padding: EdgeInsets.symmetric(horizontal: CustomStyle.getWidth(10.0)),
                             decoration: BoxDecoration(
                                 border: Border(
-                                    right: BorderSide(
+                                    left: BorderSide(
                                         width: CustomStyle.getWidth(0.5),
                                         color: line
                                     )
                                 )
                             ),
-                            child: Text(Strings.of(context)?.get("car_width")??"Not Found",textAlign: TextAlign.center, style: CustomStyle.CustomFont(styleFontSize12, text_color_01))
-                        )
-                    ),
-                    Expanded(
-                        flex: 3,
-                        child: Container(
-                            padding: EdgeInsets.symmetric(horizontal: CustomStyle.getWidth(10.0)),
                             child: TextField(
                               maxLines: 1,
                               maxLength: 12,

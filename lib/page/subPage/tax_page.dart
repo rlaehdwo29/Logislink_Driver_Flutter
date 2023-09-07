@@ -9,6 +9,7 @@ import 'package:logislink_driver_flutter/common/model/user_model.dart';
 import 'package:logislink_driver_flutter/common/strings.dart';
 import 'package:logislink_driver_flutter/common/style_theme.dart';
 import 'package:logislink_driver_flutter/constants/const.dart';
+import 'package:logislink_driver_flutter/page/subPage/appbar_mypage.dart';
 import 'package:logislink_driver_flutter/provider/dio_service.dart';
 import 'package:logislink_driver_flutter/utils/sp.dart';
 import 'package:logislink_driver_flutter/utils/util.dart';
@@ -60,7 +61,7 @@ class _TaxPageState extends State<TaxPage> {
     pr = Util.networkProgress(context);
     return WillPopScope(
         onWillPop: () async {
-          Navigator.of(context).pop({'code':200});
+          Navigator.of(context).pop({'code':100});
           return false;
         } ,
         child: Scaffold(
@@ -76,7 +77,7 @@ class _TaxPageState extends State<TaxPage> {
                       styleFontSize18, styleWhiteCol)),
               leading: IconButton(
                 onPressed: () {
-                  Navigator.of(context).pop({'code':200});
+                  Navigator.of(context).pop({'code':100});
                 },
                 color: styleWhiteCol,
                 icon: const Icon(Icons.arrow_back),
@@ -1610,7 +1611,7 @@ class _TaxPageState extends State<TaxPage> {
                   ),
                 ),
                 onPressed: (){
-
+                  Navigator.push(context, MaterialPageRoute(builder: (context) => AppBarMyPage(code:"edit_biz")));
                 },
                 child: Text(
                   Strings.of(context)?.get("tax_biz_edit")??"Not Fount",
