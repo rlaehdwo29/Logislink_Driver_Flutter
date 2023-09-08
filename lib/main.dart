@@ -13,6 +13,7 @@ import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter_native_splash/flutter_native_splash.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:geolocator/geolocator.dart';
 import 'package:get/get.dart';
 import 'package:kakao_flutter_sdk_navi/kakao_flutter_sdk_navi.dart';
 import 'package:kakao_map_plugin/kakao_map_plugin.dart';
@@ -28,7 +29,6 @@ import 'package:logislink_driver_flutter/provider/receipt_service.dart';
 import 'package:logislink_driver_flutter/provider/user_car_service.dart';
 import 'package:logislink_driver_flutter/utils/util.dart' as app_util;
 import 'package:permission_handler/permission_handler.dart';
-import 'package:app_settings/app_settings.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'common/string_locale_delegate.dart';
@@ -323,8 +323,10 @@ Future<bool> checkPermission() async {
           Permission.activityRecognition,
         ].request();
 
+        var locationPermission = await Geolocator.checkPermission();
         print("Notification => ${statuses[Permission.notification]}");
         print("위치 => ${statuses[Permission.location]}");
+        print("위치 => ${await Geolocator.checkPermission()}");
         print("저장소 => ${statuses[Permission.photos]}");
         print("폰 => ${statuses[Permission.phone]}");
         print("신체활동 => ${statuses[Permission.activityRecognition]}");
@@ -335,7 +337,9 @@ Future<bool> checkPermission() async {
           await openAppSettings();
         } else if (statuses[Permission.location] == PermissionStatus.denied || statuses[Permission.location] == PermissionStatus.permanentlyDenied) {
           await openAppSettings();
-        } else if (statuses[Permission.activityRecognition] == PermissionStatus.denied || statuses[Permission.activityRecognition] == PermissionStatus.permanentlyDenied) {
+        } else if(locationPermission != LocationPermission.always){
+          await Geolocator.openAppSettings();
+        }else if (statuses[Permission.activityRecognition] == PermissionStatus.denied || statuses[Permission.activityRecognition] == PermissionStatus.permanentlyDenied) {
           await openAppSettings();
         }
 
