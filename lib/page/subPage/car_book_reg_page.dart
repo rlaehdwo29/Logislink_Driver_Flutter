@@ -1786,7 +1786,6 @@ class _CarBookRegPageState extends State<CarBookRegPage>{
         ReturnMap response = DioService.dioResponse(it);
         logger.d("carBookReg() _response -> ${response.status} // ${response.resultMap}");
           if (response.status == "200") {
-            try {
               int accMileage = mCar.accMileage??0;
               int mileage = mData.value.mileage??0;
               if(accMileage < mileage) {
@@ -1798,9 +1797,6 @@ class _CarBookRegPageState extends State<CarBookRegPage>{
                 Navigator.of(context).pop(false);
                 widget.onCallback(true, widget.mCode);
               }
-            }catch(e) {
-              print("ㅇㅇㅇㅇ=>$e");
-            }
             setState(() {});
           } else {
             Util.toast("${response.message}");

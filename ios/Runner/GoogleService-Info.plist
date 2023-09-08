@@ -3,21 +3,23 @@
 <plist version="1.0">
 <dict>
 	<key>CLIENT_ID</key>
-	<string>843222466718-dlpr07u3lhflljb7ooktaul11sp2pnnb.apps.googleusercontent.com</string>
+	<string>121491918510-1beimms6hpt8fabd66hapgjbaen3u0fa.apps.googleusercontent.com</string>
 	<key>REVERSED_CLIENT_ID</key>
-	<string>com.googleusercontent.apps.843222466718-dlpr07u3lhflljb7ooktaul11sp2pnnb</string>
+	<string>com.googleusercontent.apps.121491918510-1beimms6hpt8fabd66hapgjbaen3u0fa</string>
+	<key>ANDROID_CLIENT_ID</key>
+	<string>121491918510-cpqcm8olc7e12i5eaup25m41fftl6ems.apps.googleusercontent.com</string>
 	<key>API_KEY</key>
-	<string>AIzaSyCJLsG1os71SDt_mWBogWEIoaRN5bDgkew</string>
+	<string>AIzaSyCtleTBtcW-ZAo1lsxDAvcY3esmpbPMXjw</string>
 	<key>GCM_SENDER_ID</key>
-	<string>843222466718</string>
+	<string>121491918510</string>
 	<key>PLIST_VERSION</key>
 	<string>1</string>
 	<key>BUNDLE_ID</key>
 	<string>com.logislink.driver.logislinkDriverFlutter</string>
 	<key>PROJECT_ID</key>
-	<string>logislinkflutter-9f180</string>
+	<string>logislink-75d49</string>
 	<key>STORAGE_BUCKET</key>
-	<string>logislinkflutter-9f180.appspot.com</string>
+	<string>logislink-75d49.appspot.com</string>
 	<key>IS_ADS_ENABLED</key>
 	<false></false>
 	<key>IS_ANALYTICS_ENABLED</key>
@@ -29,6 +31,6 @@
 	<key>IS_SIGNIN_ENABLED</key>
 	<true></true>
 	<key>GOOGLE_APP_ID</key>
-	<string>1:843222466718:ios:bbc18414c643f41de9bb8f</string>
+	<string>1:121491918510:ios:dcac35eb44e53f6f46e73f</string>
 </dict>
 </plist>

@@ -82,6 +82,9 @@ dependencies:
   firebase_messaging: ^14.6.5
   geofence_service: ^4.0.0
   flutter_background_service: ^4.0.0
+  firebase_dynamic_links: ^5.3.5
+  geolocator: ^8.0.1
+
 
 dev_dependencies:
   flutter_test:

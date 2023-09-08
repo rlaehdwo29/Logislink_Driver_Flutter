@@ -307,6 +307,7 @@ class _Rest implements Rest {
   ) async {
     const _extra = <String, dynamic>{};
     final queryParameters = <String, dynamic>{};
+    queryParameters.removeWhere((k, v) => v == null);
     final _headers = <String, dynamic>{r'Authorization': Authorization};
     _headers.removeWhere((k, v) => v == null);
     final _data = {
@@ -314,6 +315,7 @@ class _Rest implements Rest {
       'lon': lon,
       'allocId': allocId,
     };
+    _data.removeWhere((k, v) => v == null);
     final _result =
         await _dio.fetch(_setStreamType<HttpResponse<dynamic>>(Options(
       method: 'POST',
@@ -2013,6 +2015,7 @@ class _Rest implements Rest {
   ) async {
     const _extra = <String, dynamic>{};
     final queryParameters = <String, dynamic>{};
+    queryParameters.removeWhere((k, v) => v == null);
     final _headers = <String, dynamic>{r'Authorization': Authorization};
     _headers.removeWhere((k, v) => v == null);
     final _data = {
@@ -2020,6 +2023,7 @@ class _Rest implements Rest {
       'deposit': Deposit,
       'depoDate': depoDate,
     };
+    _data.removeWhere((k, v) => v == null);
     final _result =
         await _dio.fetch(_setStreamType<HttpResponse<dynamic>>(Options(
       method: 'POST',

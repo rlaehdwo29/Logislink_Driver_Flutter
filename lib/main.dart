@@ -1,4 +1,3 @@
-import 'dart:convert';
 import 'dart:io';
 import 'dart:ui';
 
@@ -14,25 +13,20 @@ import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter_native_splash/flutter_native_splash.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:geolocator/geolocator.dart';
 import 'package:get/get.dart';
 import 'package:kakao_flutter_sdk_navi/kakao_flutter_sdk_navi.dart';
 import 'package:kakao_map_plugin/kakao_map_plugin.dart';
-import 'package:logger/logger.dart';
 import 'package:logislink_driver_flutter/common/app.dart';
-import 'package:logislink_driver_flutter/common/common_util.dart';
-import 'package:logislink_driver_flutter/common/model/geofence_model.dart';
-import 'package:logislink_driver_flutter/common/model/version_model.dart';
-import 'package:logislink_driver_flutter/common/strings.dart';
 import 'package:logislink_driver_flutter/constants/const.dart';
 import 'package:logislink_driver_flutter/db/appdatabase.dart';
+import 'package:logislink_driver_flutter/firebase_options.dart';
 import 'package:logislink_driver_flutter/page/bridge_page.dart';
 import 'package:logislink_driver_flutter/provider/appbar_service.dart';
-import 'package:logislink_driver_flutter/provider/dio_service.dart';
 import 'package:logislink_driver_flutter/provider/notification_service.dart';
 import 'package:logislink_driver_flutter/provider/order_service.dart';
 import 'package:logislink_driver_flutter/provider/receipt_service.dart';
 import 'package:logislink_driver_flutter/provider/user_car_service.dart';
-import 'package:logislink_driver_flutter/utils/sp.dart';
 import 'package:logislink_driver_flutter/utils/util.dart' as app_util;
 import 'package:permission_handler/permission_handler.dart';
 import 'package:provider/provider.dart';
@@ -40,7 +34,6 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'common/string_locale_delegate.dart';
 import 'common/style_theme.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
-import 'package:dio/dio.dart';
 
 @pragma('vm:entry-point')
 Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
@@ -49,11 +42,12 @@ Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
   await Firebase.initializeApp();
   print("Handling a background message: ${message.messageId}");
 }
+
 AndroidNotificationChannel? channel;
 FlutterLocalNotificationsPlugin? flutterLocalNotificationsPlugin;
 late AppDataBase database;
 
-void main() async {
+Future<void> main() async {
   final binding = WidgetsFlutterBinding.ensureInitialized();
   if (Platform.isAndroid) {
     await AndroidInAppWebViewController.setWebContentsDebuggingEnabled(true);
@@ -116,9 +110,10 @@ void main() async {
       provisional: false,
       sound: true,
     );
-
     print('User granted permission: ${settings.authorizationStatus}');
   }
+
+  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
 
   FlutterError.onError = (errorDetails) {
     FirebaseCrashlytics.instance.recordFlutterFatalError(errorDetails);
@@ -328,22 +323,23 @@ Future<bool> checkPermission() async {
           Permission.activityRecognition,
         ].request();
 
+        var locationPermission = await Geolocator.checkPermission();
         print("Notification => ${statuses[Permission.notification]}");
         print("위치 => ${statuses[Permission.location]}");
+        print("위치 => ${await Geolocator.checkPermission()}");
         print("저장소 => ${statuses[Permission.photos]}");
         print("폰 => ${statuses[Permission.phone]}");
         print("신체활동 => ${statuses[Permission.activityRecognition]}");
 
-        if (statuses[Permission.photos] == PermissionStatus.permanentlyDenied) {
+        if (statuses[Permission.photos] == PermissionStatus.denied || statuses[Permission.photos] == PermissionStatus.permanentlyDenied) {
           await openAppSettings();
-        } else
-        if (statuses[Permission.phone] == PermissionStatus.permanentlyDenied) {
+        } else if (statuses[Permission.phone] == PermissionStatus.denied || statuses[Permission.phone] == PermissionStatus.permanentlyDenied) {
           await openAppSettings();
-        } else if (statuses[Permission.location] ==
-            PermissionStatus.permanentlyDenied) {
+        } else if (statuses[Permission.location] == PermissionStatus.denied || statuses[Permission.location] == PermissionStatus.permanentlyDenied) {
           await openAppSettings();
-        } else if (statuses[Permission.activityRecognition] ==
-            PermissionStatus.permanentlyDenied) {
+        } else if(locationPermission != LocationPermission.always){
+          await Geolocator.openAppSettings();
+        }else if (statuses[Permission.activityRecognition] == PermissionStatus.denied || statuses[Permission.activityRecognition] == PermissionStatus.permanentlyDenied) {
           await openAppSettings();
         }
 
@@ -353,8 +349,7 @@ Future<bool> checkPermission() async {
           return false;
         } else if (statuses[Permission.phone] != PermissionStatus.granted) {
           return false;
-        } else if (statuses[Permission.activityRecognition] !=
-            PermissionStatus.granted) {
+        } else if (statuses[Permission.activityRecognition] != PermissionStatus.granted) {
           return false;
         }
       }else {

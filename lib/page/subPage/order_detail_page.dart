@@ -62,13 +62,17 @@ class _OrderDetailPageState extends State<OrderDetailPage>{
   final platform = const MethodChannel("testing.flutter.android");
   Set<Marker> markers = {};
 
+  final orderItem = OrderModel().obs;
+  final stopPointList = List.empty(growable: true).obs;
+
   @override
   void initState() {
     FBroadcast.instance().register(Const.INTENT_DETAIL_REFRESH, (value, callback) {
-      setState(() {});
-    },context: this);
+      getOrderDetail(widget.allocId);
+    });
 
     if(widget.item != null) {
+      orderItem.value = widget.item!;
       initView();
     }else{
       if(widget.allocId != null) {
@@ -91,14 +95,14 @@ class _OrderDetailPageState extends State<OrderDetailPage>{
 
   void naviCheck(String? type) {
     if(type == "S") {
-      if(widget.item?.sDong?.isNotEmpty == true) {
-        initNavi(widget.item?.sComName, widget.item?.sLat, widget.item?.sLon);
+      if(orderItem.value?.sDong?.isNotEmpty == true) {
+        initNavi(orderItem.value?.sComName, orderItem.value?.sLat, orderItem.value?.sLon);
       }else{
         app_util.Util.toast("상차지가 불분명하여 길안내를 할 수 없습니다.");
       }
     }else if(type == "E"){
-      if(widget.item?.eDong?.isNotEmpty == true) {
-        initNavi(widget.item?.eComName, widget.item?.eLat, widget.item?.eLon);
+      if(orderItem.value?.eDong?.isNotEmpty == true) {
+        initNavi(orderItem.value?.eComName, orderItem.value?.eLat, orderItem.value?.eLon);
       }else{
         app_util.Util.toast("하차지가 불분명하여 길안내를 할 수 없습니다.");
       }
@@ -135,15 +139,17 @@ class _OrderDetailPageState extends State<OrderDetailPage>{
     }
   }
 
-  Widget setStopPointPanel(AsyncSnapshot? snapshot) {
+  Widget setStopPointPanel(AsyncSnapshot snapshot) {
+    if(stopPointList.isNotEmpty) stopPointList.clear();
+    stopPointList.value.addAll(snapshot.data);
     isExpanded.value = List.empty(growable: true);
-    isExpanded.value = List.filled(snapshot?.data.length, false);
+    isExpanded.value = List.filled(stopPointList.length, false);
 
     return SingleChildScrollView(
       child: Flex(
         direction: Axis.vertical,
-        children: List.generate(snapshot?.data.length, (index) {
-          var iData = snapshot?.data[index];
+        children: List.generate(stopPointList.length, (index) {
+          var iData = stopPointList[index];
           return ExpansionPanelList.radio(
             animationDuration: const Duration(milliseconds: 500),
             dividerColor: const Color(0xfffafafa),
@@ -276,7 +282,7 @@ class _OrderDetailPageState extends State<OrderDetailPage>{
                               flex: 1,
                               child: InkWell(
                                 onTap: (){
-                                  if(!app_util.Util.ynToBoolean(iData.finishYn)) onFinishStopPoint(iData);;
+                                  if(!app_util.Util.ynToBoolean(iData.finishYn)) onFinishStopPoint(iData);
                                 },
                                 child: Container(
                                   decoration: CustomStyle.customBoxDeco(!app_util.Util.ynToBoolean(iData.finishYn) ?sub_color:text_color_02,radius: styleRadius5),
@@ -329,7 +335,7 @@ class _OrderDetailPageState extends State<OrderDetailPage>{
   }
 
   void onFinishStopPoint(StopPointModel iData) {
-    if(widget.item?.allocState == "04") {
+    if(orderItem.value?.allocState == "04") {
       openCommonConfirmBox(
           context,
           "경유지에 도착하셨습니까?",
@@ -346,7 +352,7 @@ class _OrderDetailPageState extends State<OrderDetailPage>{
   }
 
   void onBeginStartPoint(StopPointModel iData) {
-    if(widget.item?.allocState == "04") {
+    if(orderItem.value?.allocState == "04") {
       openCommonConfirmBox(
           context,
           "경유지에서 출발 하겠습니까?",
@@ -373,10 +379,9 @@ class _OrderDetailPageState extends State<OrderDetailPage>{
           "finishStopPoint() _response -> ${_response.status} // ${_response.resultMap}");
       if (_response.status == "200") {
         if (_response.resultMap?["result"] == true) {
-          getOrderDetail(widget.item?.allocId);
+          getOrderDetail(orderItem.value?.allocId);
           await setDriverClick("85", data.eAddr,"N");
           app_util.Util.toast("경유지에 도착했습니다.");
-          setState(() {});
         } else {
           app_util.Util.toast(_response.resultMap?["msg"]);
         }
@@ -413,10 +418,9 @@ class _OrderDetailPageState extends State<OrderDetailPage>{
           "beginStartPoint() _response -> ${_response.status} // ${_response.resultMap}");
       if (_response.status == "200") {
         if (_response.resultMap?["result"] == true) {
-          await getOrderDetail(widget.item?.allocId);
+          await getOrderDetail(orderItem.value?.allocId);
           await setDriverClick("84", data.eAddr,"N");
           if(data.finishYn == "N") app_util.Util.toast("경유지에서 출발합니다.");
-          setState(() {});
         } else {
           app_util.Util.toast(_response.resultMap?["msg"]);
         }
@@ -445,7 +449,7 @@ class _OrderDetailPageState extends State<OrderDetailPage>{
     AppDataBase db = App().getRepository();
     String? vehicId = App().getUserInfo()?.vehicId;
 
-    GeofenceModel? removeGeo = await db.getRemoveGeo(vehicId, widget.item?.orderId, code);
+    GeofenceModel? removeGeo = await db.getRemoveGeo(vehicId, orderItem.value?.orderId, code);
     if(removeGeo != null) {
       await db.delete(removeGeo);
     }
@@ -455,7 +459,7 @@ class _OrderDetailPageState extends State<OrderDetailPage>{
     final orderService = Provider.of<OrderService>(context);
     UserModel? user = controller.getUserInfo();
     return FutureBuilder(
-        future: orderService.getStopPoint(context, user?.authorization,widget.item?.orderId),
+        future: orderService.getStopPoint(context, user?.authorization,orderItem.value?.orderId),
         builder: (context, snapshot) {
           if(snapshot.hasData) {
             _setState();
@@ -541,14 +545,14 @@ class _OrderDetailPageState extends State<OrderDetailPage>{
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             Text(
-              widget.item?.allocStateName??"-",
-              style: CustomStyle.CustomFont(styleFontSize14, app_util.Util.getOrderStateColor(widget.item?.allocState)),
+              orderItem.value?.allocStateName??"-",
+              style: CustomStyle.CustomFont(styleFontSize14, app_util.Util.getOrderStateColor(orderItem.value?.allocState)),
             ),
             InkWell(
               onTap: (){
                   goToPay();
               },
-              child: widget.item?.allocState == "05" && app_util.Util.ynToBoolean(widget.item?.payType)?
+              child: orderItem.value?.allocState == "05" && app_util.Util.ynToBoolean(orderItem.value?.payType)?
                Container(
                 padding: EdgeInsets.symmetric(vertical: CustomStyle.getHeight(5.0),horizontal: CustomStyle.getWidth(10.0)),
                 decoration: tvPay.value ? CustomStyle.customBoxDeco(styleWhiteCol,border_color: text_color_02) : CustomStyle.customBoxDeco(sub_color),
@@ -572,10 +576,10 @@ class _OrderDetailPageState extends State<OrderDetailPage>{
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children:[
             Text(
-              "${widget.item?.returnYn == "Y"?"왕복":"편도"}  /  ${widget.item?.mixYn == "Y"?"혼적":"독차"}",
+              "${orderItem.value?.returnYn == "Y"?"왕복":"편도"}  /  ${orderItem.value?.mixYn == "Y"?"혼적":"독차"}",
               style: CustomStyle.CustomFont(styleFontSize12, text_color_02),
             ),
-            widget.item?.allocState == "05"?
+            orderItem.value?.allocState == "05"?
             Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisAlignment: MainAxisAlignment.center,
@@ -594,7 +598,7 @@ class _OrderDetailPageState extends State<OrderDetailPage>{
                     )
                   ),
                 ),
-                widget.item?.chargeType == "01" ?
+                orderItem.value?.chargeType == "01" ?
                 InkWell(
                   onTap: (){
                     goToTax();
@@ -616,7 +620,7 @@ class _OrderDetailPageState extends State<OrderDetailPage>{
   }
 
   Widget getPayType(){
-    return app_util.Util.ynToBoolean(widget.item?.payType)? Container(
+    return app_util.Util.ynToBoolean(orderItem.value?.payType)? Container(
       margin: EdgeInsets.only(bottom: CustomStyle.getHeight(10.0)),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.center,
@@ -662,7 +666,7 @@ class _OrderDetailPageState extends State<OrderDetailPage>{
                     Container(
                       padding: const EdgeInsets.all(10.0),
                       child: Text(
-                        widget.item?.goodsName??"",
+                        orderItem.value?.goodsName??"",
                         style: CustomStyle.CustomFont(styleFontSize12, text_color_02),
                       ),
                     )
@@ -693,7 +697,7 @@ class _OrderDetailPageState extends State<OrderDetailPage>{
                     Container(
                       padding: const EdgeInsets.all(10.0),
                       child: Text(
-                        widget.item?.driverMemo?.isEmpty != true? widget.item?.driverMemo??"-" :"-",
+                        orderItem.value?.driverMemo?.isEmpty != true? orderItem.value?.driverMemo??"-" :"-",
                         style: CustomStyle.CustomFont(styleFontSize12, text_color_02),
                       ),
                     )
@@ -711,16 +715,16 @@ class _OrderDetailPageState extends State<OrderDetailPage>{
       child: Row(
         children: [
           Container(
-              decoration: CustomStyle.customBoxDeco(styleWhiteCol,border_color:  widget.item?.allocState == "04"|| widget.item?.allocState == "05" || widget.item?.allocState == "20"? text_color_01:sub_color),
+              decoration: CustomStyle.customBoxDeco(styleWhiteCol,border_color:  orderItem.value?.allocState == "04"|| orderItem.value?.allocState == "05" || orderItem.value?.allocState == "20"? text_color_01:sub_color),
               padding:EdgeInsets.symmetric(vertical: CustomStyle.getHeight(5.0),horizontal: CustomStyle.getWidth(10.0)),
               margin: EdgeInsets.symmetric(horizontal: CustomStyle.getWidth(10.0)),
               child: Text(
-                widget.item != null ? _type == "wayon" ? Strings.of(context)?.get("order_way_on")??"Not Found":Strings.of(context)?.get("order_way_off")??"Not Found" : "-",
-                style: CustomStyle.CustomFont(styleFontSize10, widget.item?.allocState == "04"|| widget.item?.allocState == "05" || widget.item?.allocState == "20" ? text_color_01 : sub_color),
+                orderItem.value != null ? _type == "wayon" ? Strings.of(context)?.get("order_way_on")??"Not Found":Strings.of(context)?.get("order_way_off")??"Not Found" : "-",
+                style: CustomStyle.CustomFont(styleFontSize10, orderItem.value?.allocState == "04"|| orderItem.value?.allocState == "05" || orderItem.value?.allocState == "20" ? text_color_01 : sub_color),
               )
           ),
           Text(
-            widget.item != null ? app_util.Util.splitSDate(_type == "wayon"?widget.item?.sDate:widget.item?.eDate)??"":"-",
+            orderItem.value != null ? app_util.Util.splitSDate(_type == "wayon"?orderItem.value?.sDate:orderItem.value?.eDate)??"":"-",
             style: CustomStyle.CustomFont(styleFontSize14, text_color_01),
           )
         ],
@@ -740,25 +744,25 @@ class _OrderDetailPageState extends State<OrderDetailPage>{
                   spacing: 5,
                   runSpacing: 1,
                   children: [
-                    (_type == "wayon"?widget.item?.sComName:widget.item?.eComName)?.isEmpty == false?
+                    (_type == "wayon"?orderItem.value?.sComName:orderItem.value?.eComName)?.isEmpty == false?
                     Text(
-                        "${_type == "wayon"?widget.item?.sComName:widget.item?.eComName}  ",
+                        "${_type == "wayon"?orderItem.value?.sComName:orderItem.value?.eComName}  ",
                         style: CustomStyle.CustomFont(styleFontSize12, text_color_01),
                       overflow: TextOverflow.ellipsis,
                     ):const SizedBox(),
-                    (_type == "wayon"?widget.item?.sStaff:widget.item?.eStaff)?.isEmpty == false?
+                    (_type == "wayon"?orderItem.value?.sStaff:orderItem.value?.eStaff)?.isEmpty == false?
                     Text(
-                        "/  ${_type == "wayon" ? widget.item?.sStaff : widget.item?.eStaff}  ",
+                        "/  ${_type == "wayon" ? orderItem.value?.sStaff : orderItem.value?.eStaff}  ",
                         style: CustomStyle.CustomFont(styleFontSize12, text_color_01),
                       overflow: TextOverflow.ellipsis,
                     ): const SizedBox(),
-                    (_type == "wayon" ? widget.item?.sTel : widget.item?.eTel)?.isEmpty == false?
+                    (_type == "wayon" ? orderItem.value?.sTel : orderItem.value?.eTel)?.isEmpty == false?
                     InkWell(
                         onTap: (){
-                          launch("tel://${_type == "wayon" ? widget.item?.sTel : widget.item?.eTel}");
+                          launch("tel://${_type == "wayon" ? orderItem.value?.sTel : orderItem.value?.eTel}");
                         },
                         child: Text(
-                          "/  ${_type == "wayon" ? widget.item?.sTel : widget.item?.eTel}",
+                          "/  ${_type == "wayon" ? orderItem.value?.sTel : orderItem.value?.eTel}",
                           style: CustomStyle.CustomFont(styleFontSize12, sub_color),
                         )
                     ): const SizedBox()
@@ -769,15 +773,15 @@ class _OrderDetailPageState extends State<OrderDetailPage>{
           Container(
               padding:EdgeInsets.only(top: CustomStyle.getHeight(5.0),left: CustomStyle.getWidth(20.0)),
               child: Text(
-                  "${_type == "wayon" ? widget.item?.sAddr : widget.item?.eAddr}",
+                  "${_type == "wayon" ? orderItem.value?.sAddr : orderItem.value?.eAddr}",
                   style: CustomStyle.CustomFont(styleFontSize12, text_color_01)
               )
           ),
 
-          (_type == "wayon" ? widget.item?.sAddrDetail : widget.item?.eAddrDetail)?.isEmpty == false? Container(
+          (_type == "wayon" ? orderItem.value?.sAddrDetail : orderItem.value?.eAddrDetail)?.isEmpty == false? Container(
               padding:EdgeInsets.only(top: CustomStyle.getHeight(5.0),left: CustomStyle.getWidth(20.0)),
               child: Text(
-                  "${_type == "wayon" ? widget.item?.sAddrDetail : widget.item?.eAddrDetail}",
+                  "${_type == "wayon" ? orderItem.value?.sAddrDetail : orderItem.value?.eAddrDetail}",
                   style: CustomStyle.CustomFont(styleFontSize12, text_color_01)
               )
           ): const SizedBox(),
@@ -788,21 +792,21 @@ class _OrderDetailPageState extends State<OrderDetailPage>{
                     flex: 1,
                     child:ElevatedButton(
                         style: ElevatedButton.styleFrom(
-                          primary: widget.item?.allocState != "04" && widget.item?.allocState != "05" && widget.item?.allocState != "20" && widget.item?.allocState != "12"? sub_color : text_color_02,
-                          onPrimary: widget.item?.allocState != "04" && widget.item?.allocState != "05" && widget.item?.allocState != "20" && widget.item?.allocState != "12"? sub_color : text_color_02,
+                          primary: orderItem.value?.allocState != "04" && orderItem.value?.allocState != "05" && orderItem.value?.allocState != "20" && orderItem.value?.allocState != "12"? sub_color : text_color_02,
+                          onPrimary: orderItem.value?.allocState != "04" && orderItem.value?.allocState != "05" && orderItem.value?.allocState != "20" && orderItem.value?.allocState != "12"? sub_color : text_color_02,
                           padding: EdgeInsets.symmetric(vertical: CustomStyle.getHeight(5.0)),
                           shape: const RoundedRectangleBorder(
                               borderRadius: BorderRadius.all(Radius.circular(5.0))
                           ),
                         ),
                         onPressed: () {
-                          if(widget.item?.allocState != "04" && widget.item?.allocState != "05" && widget.item?.allocState != "20") showEnterOrder();
+                          if(orderItem.value?.allocState != "04" && orderItem.value?.allocState != "05" && orderItem.value?.allocState != "20") showEnterOrder();
                         },
                         child: Text(
-                          widget.item?.allocState == "04"? "입차 ${widget.item?.enterDate?.isNotEmpty == true && widget.item?.enterDate !=null ?"(${app_util.Util.getDateStrToStr(widget.item?.enterDate, "MM.dd HH:mm")})":""}"
-                              : widget.item?.allocState == "05"? "입차 ${widget.item?.enterDate?.isNotEmpty == true && widget.item?.enterDate !=null ?"(${app_util.Util.getDateStrToStr(widget.item?.enterDate, "MM.dd HH:mm")})":""}"
-                              : widget.item?.allocState == "12"? "입차 ${widget.item?.enterDate?.isNotEmpty == true && widget.item?.enterDate !=null ?"(${app_util.Util.getDateStrToStr(widget.item?.enterDate, "MM.dd HH:mm")})":""}"
-                              : "${Strings.of(context)?.get("order_enter")??"Not Found"}",
+                          orderItem.value?.allocState == "04"? "입차 ${orderItem.value?.enterDate?.isNotEmpty == true && orderItem.value?.enterDate !=null ?"(${app_util.Util.getDateStrToStr(orderItem.value?.enterDate, "MM.dd HH:mm")})":""}"
+                              : orderItem.value?.allocState == "05"? "입차 ${orderItem.value?.enterDate?.isNotEmpty == true && orderItem.value?.enterDate !=null ?"(${app_util.Util.getDateStrToStr(orderItem.value?.enterDate, "MM.dd HH:mm")})":""}"
+                              : orderItem.value?.allocState == "12"? "입차 ${orderItem.value?.enterDate?.isNotEmpty == true && orderItem.value?.enterDate !=null ?"(${app_util.Util.getDateStrToStr(orderItem.value?.enterDate, "MM.dd HH:mm")})":""}"
+                              : Strings.of(context)?.get("order_enter")??"Not Found",
                           style: CustomStyle.loginTitleFont(),
                         )
                     )
@@ -812,44 +816,44 @@ class _OrderDetailPageState extends State<OrderDetailPage>{
                   flex: 1,
                    child:ElevatedButton(
                     style: ElevatedButton.styleFrom(
-                        primary: widget.item?.allocState != "04" && widget.item?.allocState != "05" && widget.item?.allocState != "20"? sub_color : text_color_02,
-                        onPrimary: widget.item?.allocState != "04" && widget.item?.allocState != "05" && widget.item?.allocState != "20"? sub_color : text_color_02,
+                        primary: orderItem.value?.allocState != "04" && orderItem.value?.allocState != "05" && orderItem.value?.allocState != "20"? sub_color : text_color_02,
+                        onPrimary: orderItem.value?.allocState != "04" && orderItem.value?.allocState != "05" && orderItem.value?.allocState != "20"? sub_color : text_color_02,
                         padding: EdgeInsets.symmetric(vertical: CustomStyle.getHeight(5.0)),
                       shape: const RoundedRectangleBorder(
                           borderRadius: BorderRadius.all(Radius.circular(5.0))
                       ),
                     ),
                     onPressed: () {
-                      if(widget.item?.allocState != "04" && widget.item?.allocState != "05" && widget.item?.allocState != "20") showStartOrder();
+                      if(orderItem.value?.allocState != "04" && orderItem.value?.allocState != "05" && orderItem.value?.allocState != "20") showStartOrder();
                     },
                     child: Text(
-                      widget.item?.allocState == "04"? "출발 (${app_util.Util.getDateStrToStr(widget.item?.startDate, "MM.dd HH:mm")})"
-                      : widget.item?.allocState == "05"? "출발 (${app_util.Util.getDateStrToStr(widget.item?.startDate, "MM.dd HH:mm")})"
-                      : "${Strings.of(context)?.get("order_start")??"Not Found"}",
+                      orderItem.value?.allocState == "04"? "출발 (${app_util.Util.getDateStrToStr(orderItem.value?.startDate, "MM.dd HH:mm")})"
+                      : orderItem.value?.allocState == "05"? "출발 (${app_util.Util.getDateStrToStr(orderItem.value?.startDate, "MM.dd HH:mm")})"
+                      : Strings.of(context)?.get("order_start")??"Not Found",
                       style: CustomStyle.loginTitleFont(),
                     )
                 )
                 )
               ]) : ElevatedButton(
               style: ElevatedButton.styleFrom(
-                  primary: widget.item?.allocState != "05" ? sub_color : text_color_02,
-                  onPrimary: widget.item?.allocState != "05" ? sub_color : text_color_02,
+                  primary: orderItem.value?.allocState != "05" ? sub_color : text_color_02,
+                  onPrimary: orderItem.value?.allocState != "05" ? sub_color : text_color_02,
                   padding: EdgeInsets.symmetric(vertical: CustomStyle.getHeight(5.0)),
                 shape: const RoundedRectangleBorder(
                     borderRadius: BorderRadius.all(Radius.circular(5.0))
                 ),
               ),
               onPressed: () {
-                if(widget.item?.allocState == "04"){
+                if(orderItem.value?.allocState == "04"){
                   showEndOrder();
                 }else{
                   app_util.Util.toast("상차 진행중에는 도착처리가 불가능합니다.");
                 }
               },
               child: Text(
-              widget.item?.allocState == "05"?
-              "도착 (${app_util.Util.getDateStrToStr(widget.item?.finishDate, "MM.dd HH:mm")})"
-                  : Strings.of(context)?.get("order_end")??"Not Found",
+              orderItem.value?.allocState == "05"?
+              "도착 (${app_util.Util.getDateStrToStr(orderItem.value?.finishDate, "MM.dd HH:mm")})"
+                  :Strings.of(context)?.get("order_end")??"Not Found",
                 style: CustomStyle.loginTitleFont(),
               )
           ),
@@ -865,20 +869,20 @@ class _OrderDetailPageState extends State<OrderDetailPage>{
 
 
   void setCalcView() {
-    tvReceipt.value = !(widget.item?.receiptYn == "N");
+    tvReceipt.value = !(orderItem.value?.receiptYn == "N");
 
-    if(!(widget.item?.taxinvYn == "N")) {
+    if(!(orderItem.value?.taxinvYn == "N")) {
       tvTax.value = true;
     }else{
-      tvTax.value = !(widget.item?.loadStatus == "0");
+      tvTax.value = !(orderItem.value?.loadStatus == "0");
     }
-    if(widget.item?.finishYn == "Y"){
+    if(orderItem.value?.finishYn == "Y"){
       tvPay.value = true;
     }else{
-      if(app_util.Util.ynToBoolean(widget.item?.reqPayYN)) {
+      if(app_util.Util.ynToBoolean(orderItem.value?.reqPayYN)) {
         tvPay.value = true;
       }else{
-        tvPay.value = !(widget.item?.loadStatus == "0");
+        tvPay.value = !(orderItem.value?.loadStatus == "0");
       }
     }
   }
@@ -891,7 +895,7 @@ class _OrderDetailPageState extends State<OrderDetailPage>{
       return;
     }
     await pr?.show();
-    await DioService.dioClient(header: true).getOrderList2(controller.getUserInfo()?.authorization, widget.item?.allocId, widget.item?.orderId).then((it) async {
+    await DioService.dioClient(header: true).getOrderList2(controller.getUserInfo()?.authorization, orderItem.value?.allocId, orderItem.value?.orderId).then((it) async {
     ReturnMap _response = DioService.dioResponse(it);
     await pr?.hide();
         logger.d("goToPay() _response -> ${_response.status} // ${_response.resultMap}");
@@ -971,15 +975,15 @@ class _OrderDetailPageState extends State<OrderDetailPage>{
   Future<void> sendPay() async {
     Logger logger = Logger();
     await pr?.show();
-    await DioService.dioClient(header: true).sendPay(controller.getUserInfo()?.authorization, controller.getUserInfo()?.vehicId, widget.item?.orderId, widget.item?.allocId).then((it) async {
+    await DioService.dioClient(header: true).sendPay(controller.getUserInfo()?.authorization, controller.getUserInfo()?.vehicId, orderItem.value?.orderId, orderItem.value?.allocId).then((it) async {
     await pr?.hide();
     ReturnMap _response = DioService.dioResponse(it);
     if(_response.status == "200") {
       Navigator.of(context).pop(false);
-      widget.item?.reqPayYN = "Y";
+      orderItem.value?.reqPayYN = "Y";
       setCalcView();
       app_util.Util.toast("빠른지급 신청이 완료되었습니다.");
-      if(widget.item?.receiptYn == "N") {
+      if(orderItem.value?.receiptYn == "N") {
         showNextReceiptDialog();
       }
     }else{
@@ -1089,8 +1093,8 @@ class _OrderDetailPageState extends State<OrderDetailPage>{
         barrierDismissible: false,
         builder: (BuildContext context) {
 
-          String fee = app_util.Util.getPayFee(widget.item?.sellCharge, widget.item?.reqPayFee);
-          String charge = app_util.Util.getInCodeCommaWon(app_util.Util.getPayCharge(widget.item?.sellCharge, fee));
+          String fee = app_util.Util.getPayFee(orderItem.value?.sellCharge, orderItem.value?.reqPayFee);
+          String charge = app_util.Util.getInCodeCommaWon(app_util.Util.getPayCharge(orderItem.value?.sellCharge, fee));
 
           return AlertDialog(
               contentPadding: EdgeInsets.all(CustomStyle.getWidth(0.0)),
@@ -1129,7 +1133,7 @@ class _OrderDetailPageState extends State<OrderDetailPage>{
                                         style: CustomStyle.CustomFont(styleFontSize12, addr_zip_no),
                                       ),
                                       Text(
-                                        "(사용료 ${app_util.Util.getInCodeCommaWon(app_util.Util.getPayFee(widget.item?.sellCharge, widget.item?.reqPayFee))}원 제외)",
+                                        "(사용료 ${app_util.Util.getInCodeCommaWon(app_util.Util.getPayFee(orderItem.value?.sellCharge, orderItem.value?.reqPayFee))}원 제외)",
                                         style: CustomStyle.CustomFont(styleFontSize12, addr_zip_no),
                                       ),
                                     ],
@@ -1146,7 +1150,7 @@ class _OrderDetailPageState extends State<OrderDetailPage>{
                                 Expanded(
                                   flex: 3,
                                   child: Text(
-                                    "일반운임 : ${app_util.Util.getInCodeCommaWon(widget.item?.sellCharge)}원",
+                                    "일반운임 : ${app_util.Util.getInCodeCommaWon(orderItem.value?.sellCharge)}원",
                                     style: CustomStyle.CustomFont(styleFontSize12, text_color_01),
                                   ),
                                 )
@@ -1435,13 +1439,13 @@ class _OrderDetailPageState extends State<OrderDetailPage>{
     }
 
     Map<String,int> results = await Navigator.of(context).push(MaterialPageRoute(
-        builder: (BuildContext context) => ReceiptPage(item: widget.item))
+        builder: (BuildContext context) => ReceiptPage(item: orderItem.value))
     );
 
     if(results != null && results.containsKey("code")){
       if(results["code"] == 200) {
-        await getOrderDetail(widget.item?.allocId);
-        if (widget.item?.taxinvYn == "N" && widget.item?.loadStatus == "0") {
+        await getOrderDetail(orderItem.value?.allocId);
+        if (orderItem.value?.taxinvYn == "N" && orderItem.value?.loadStatus == "0") {
           showNextTaxDialog();
         }
         setState(() {});
@@ -1468,21 +1472,21 @@ class _OrderDetailPageState extends State<OrderDetailPage>{
       showGuestDialog();
       return;
     }
-    getCheckOrderYn(widget.item?.allocId);
+    getCheckOrderYn(orderItem.value?.allocId);
   }
 
   Future<void> IntentTax() async {
     var results = await Navigator.of(context).push(MaterialPageRoute(
-        builder: (BuildContext context) => TaxPage(item: widget.item))
+        builder: (BuildContext context) => TaxPage(item: orderItem.value))
     );
 
     if(results != null && results.containsKey("code")){
       print("IntentTax CallBack!! => ${results["code"]}");
       if(results["code"] == 200) {
-        await getOrderDetail(widget.item?.allocId);
-        setState(() {});
         app_util.Util.toast("전자세금계산서 발행 신청이 완료되었습니다.");
       }
+      await getOrderDetail(orderItem.value?.allocId);
+      setState(() {});
     }
   }
 
@@ -1542,18 +1546,18 @@ class _OrderDetailPageState extends State<OrderDetailPage>{
 
   void _setState() {
     List<String>? allocList = SP.getStringList(Const.KEY_ALLOC_ID);
-    if(widget.item?.allocState == "04") {
+    if(orderItem.value?.allocState == "04") {
       finished.value = false;
-    }else if(widget.item?.allocState == "05") {
+    }else if(orderItem.value?.allocState == "05") {
       finished.value = true;
       if (allocList != null && allocList.isNotEmpty) {
-        allocList.remove(widget.item?.allocId);
+        allocList.remove(orderItem.value?.allocId);
         SP.putStringList(Const.KEY_ALLOC_ID, allocList);
       }
-    }else if(widget.item?.allocState == "20") {
+    }else if(orderItem.value?.allocState == "20") {
       finished.value = true;
       if (allocList != null && allocList.isNotEmpty) {
-        allocList.remove(widget.item?.allocId);
+        allocList.remove(orderItem.value?.allocId);
         SP.putStringList(Const.KEY_ALLOC_ID, allocList);
       }
     }else{
@@ -1589,7 +1593,7 @@ class _OrderDetailPageState extends State<OrderDetailPage>{
   }
 
   void showEnterOrder() {
-    if(widget.item?.allocState == "01") {
+    if(orderItem.value?.allocState == "01") {
       openCommonConfirmBox(
           context,
           "상차지에서 입차처리하시겠습니까?",
@@ -1633,7 +1637,7 @@ class _OrderDetailPageState extends State<OrderDetailPage>{
 
   Future<void> setDriverClick(String? code, String? addr, String? auto) async {
     Logger logger = Logger();
-    await DioService.dioClient(header: true).setDriverClick(controller.getUserInfo()?.authorization, widget.item?.orderId, code, addr, auto).then((it) async {
+    await DioService.dioClient(header: true).setDriverClick(controller.getUserInfo()?.authorization, orderItem.value?.orderId, code, addr, auto).then((it) async {
       ReturnMap _response = DioService.dioResponse(it);
       logger.d("setDriverClick() _response -> ${_response.status} // ${_response.resultMap}");
       if(_response.status == "200") {
@@ -1656,7 +1660,7 @@ class _OrderDetailPageState extends State<OrderDetailPage>{
 
   void addAllocList() {
     List<String>? allocList = SP.getStringList(Const.KEY_ALLOC_ID);
-    allocList?.add(widget.item?.allocId??"");
+    allocList?.add(orderItem.value?.allocId??"");
     SP.putStringList(Const.KEY_ALLOC_ID, allocList);
     locationUpdate(widget.allocId);
   }
@@ -1674,7 +1678,7 @@ class _OrderDetailPageState extends State<OrderDetailPage>{
           var list = _response.resultMap?["data"] as List;
           List<OrderModel> itemsList = list.map((i) => OrderModel.fromJSON(i)).toList();
           if(itemsList != null && itemsList.isNotEmpty) {
-            widget.item = itemsList[0];
+            orderItem.value = itemsList[0];
             initView();
             setState(() {});
           }else{
@@ -1704,22 +1708,26 @@ class _OrderDetailPageState extends State<OrderDetailPage>{
 
   Future<void> getOrderDetail(String? allocId) async {
     Logger logger = Logger();
-    await pr?.show();
+    //await pr?.show();
     await DioService.dioClient(header: true).getOrderDetail(controller.getUserInfo()?.authorization, allocId).then((it) async {
-      await pr?.hide();
+      //await pr?.hide();
       ReturnMap _response = DioService.dioResponse(it);
       logger.d("getOrderDetail() _response -> ${_response.status} // ${_response.resultMap}");
       if(_response.status == "200") {
         if(_response.resultMap?["result"] == true) {
-
           var list = _response.resultMap?["data"] as List;
-          List<OrderModel> itemsList = list.map((i) => OrderModel.fromJSON(i)).toList();
-            if(itemsList != null && itemsList.isNotEmpty) {
-              widget.item = itemsList[0];
-              initView();
-            }else{
-              openOkBox(context,"삭제된 오더입니다.", Strings.of(context)?.get("confirm")??"Not Found", () => Navigator.of(context).pop(false));
-            }
+          if (list != null && list.isNotEmpty) {
+            List<OrderModel> itemsList = list.map((i) => OrderModel.fromJSON(i))
+                .toList();
+            orderItem.value = itemsList[0];
+            initView();
+          } else {
+            openOkBox(context, "삭제된 오더입니다.",
+                Strings.of(context)?.get("confirm") ?? "Not Found", () {
+                    Navigator.of(context).pop(false);
+                    Navigator.of(context).pop(false);
+            });
+          }
           }else{
           openOkBox(context, _response.resultMap?["msg"], Strings.of(context)?.get("close")??"Not Found", () => Navigator.of(context).pop(false));
         }
@@ -1727,7 +1735,7 @@ class _OrderDetailPageState extends State<OrderDetailPage>{
         openOkBox(context, _response.resultMap?["error_message"], Strings.of(context)?.get("close")??"Not Found", () => Navigator.of(context).pop(false));
       }
     }).catchError((Object obj) async {
-      await pr?.hide();
+      //await pr?.hide();
       switch (obj.runtimeType) {
         case DioError:
         // Here's the sample to get the failed response error code and message
@@ -1745,7 +1753,7 @@ class _OrderDetailPageState extends State<OrderDetailPage>{
   Future<void> setOrderState(String code, String msg) async {
       Logger logger = Logger();
       await pr?.show();
-      await DioService.dioClient(header: true).setOrderState(controller.getUserInfo()?.authorization, widget.item?.orderId, widget.item?.allocId, code).then((it) async {
+      await DioService.dioClient(header: true).setOrderState(controller.getUserInfo()?.authorization, orderItem.value?.orderId, orderItem.value?.allocId, code).then((it) async {
         await pr?.hide();
         ReturnMap _response = DioService.dioResponse(it);
         logger.d("setOrderState() _response -> ${_response.status} // ${_response.resultMap}");
@@ -1753,17 +1761,14 @@ class _OrderDetailPageState extends State<OrderDetailPage>{
           if(_response.resultMap?["result"] == true) {
             if(code == "04") {
               addAllocList();
-              await setDriverClick(code,widget.item?.sAddr,"N");
-              setState(() {});
+              await setDriverClick(code,orderItem.value?.sAddr,"N");
             }else if(code == "05"){
-              widget.item?.allocState = code;
+              orderItem.value?.allocState = code;
               removeAllocList();
-              await setDriverClick(code,widget.item?.eAddr,"N");
-              setState(() {});
+              await setDriverClick(code,orderItem.value?.eAddr,"N");
             }
             removeGeofence(code);
-            await getOrderDetail(widget.item?.allocId);
-            setState(() {});
+            await getOrderDetail(orderItem.value?.allocId);
             app_util.Util.toast(msg);
           }else{
             app_util.Util.toast(_response.resultMap?["msg"]);
@@ -1810,7 +1815,7 @@ class _OrderDetailPageState extends State<OrderDetailPage>{
     locationUpdate(widget.allocId);
 
     List<String>? allocList = SP.getStringList(Const.KEY_ALLOC_ID);
-    allocList?.remove(widget.item?.allocId);
+    allocList?.remove(orderItem.value?.allocId);
     SP.putStringList(Const.KEY_ALLOC_ID, allocList);
   }
 
@@ -1883,24 +1888,24 @@ class _OrderDetailPageState extends State<OrderDetailPage>{
                    });
 
                    List<LatLng> bounds = List.empty(growable: true);
-                    bounds.add(LatLng(widget.item!.sLat!, widget.item!.sLon!));
-                    bounds.add(LatLng(widget.item!.eLat!, widget.item!.eLon!));
+                    bounds.add(LatLng(orderItem.value!.sLat!, orderItem.value!.sLon!));
+                    bounds.add(LatLng(orderItem.value!.eLat!, orderItem.value!.eLon!));
 
-                   if(widget.item?.sLat.isNull != true || widget.item?.sLon.isNull != null) {
+                   if(orderItem.value?.sLat.isNull != true || orderItem.value?.sLon.isNull != null) {
                      markers.add(Marker(
-                         markerId: widget.item?.sComName ?? "상차지",
+                         markerId: orderItem.value?.sComName ?? "상차지",
                          markerImageSrc: 'https://t1.daumcdn.net/localimg/localimages/07/2018/pc/flagImg/blue_b.png',
-                         latLng: LatLng(widget.item!.sLat!, widget.item!.sLon!),
-                         infoWindowContent: '<div style="font: bold italic 0.5em 돋움체;">${widget.item?.sComName ?? "상차지"}</div>'
+                         latLng: LatLng(orderItem.value!.sLat!, orderItem.value!.sLon!),
+                         infoWindowContent: '<div style="font: bold italic 0.5em 돋움체;">${orderItem.value?.sComName ?? "상차지"}</div>'
                      ));
                    }
 
-                   if(widget.item?.eLat.isNull != true || widget.item?.eLon.isNull != null) {
+                   if(orderItem.value?.eLat.isNull != true || orderItem.value?.eLon.isNull != null) {
                      markers.add(Marker(
-                     markerId: widget.item?.eComName??"하차지",
+                     markerId: orderItem.value?.eComName??"하차지",
                      markerImageSrc: 'https://t1.daumcdn.net/localimg/localimages/07/2018/pc/flagImg/red_b.png',
-                     latLng: LatLng(widget.item!.eLat!, widget.item!.eLon!),
-                       infoWindowContent: '<div style="font: bold italic 0.5em 돋움체;">${widget.item?.eComName??"하차지"}</div>',
+                     latLng: LatLng(orderItem.value!.eLat!, orderItem.value!.eLon!),
+                       infoWindowContent: '<div style="font: bold italic 0.5em 돋움체;">${orderItem.value?.eComName??"하차지"}</div>',
                    ));
                    }
 
@@ -1929,8 +1934,9 @@ class _OrderDetailPageState extends State<OrderDetailPage>{
             SliverList(
                 delegate: SliverChildBuilderDelegate(
                     (BuildContext context, int index){
-                      print("뭐야뭐야? => ${widget.item} // ${widget.item!.stopCount!}");
-                      return Container(
+                      print("뭐야뭐야? => ${orderItem.value} // ${orderItem.value.stopCount}");
+                      return Obx((){
+                        return Container(
                           padding: EdgeInsets.all(CustomStyle.getHeight(10.0)),
                           child: Column(
                             children: [
@@ -1950,7 +1956,7 @@ class _OrderDetailPageState extends State<OrderDetailPage>{
                               getWayCargoesInfo("wayon"),
                               CustomStyle.getDivider1(),
                               //경유지 정보
-                              widget.item != null ? widget.item!.stopCount! > 0 ? getStopPointFuture() : const SizedBox() : const SizedBox(),
+                              orderItem.value != null ? orderItem.value!.stopCount! > 0 ? getStopPointFuture() : const SizedBox() : const SizedBox(),
                               CustomStyle.sizedBoxHeight(CustomStyle.getHeight(10.0)),
                               getCargoesStateAndTime("wayoff"),
                               getWayCargoesInfo("wayoff"),
@@ -1958,6 +1964,7 @@ class _OrderDetailPageState extends State<OrderDetailPage>{
                             ],
                           )
                       );
+                      });
                     },
                   childCount: 1
                 )
@@ -1999,7 +2006,7 @@ class _OrderDetailPageState extends State<OrderDetailPage>{
                     showGuestDialog();
                     return;
                   }
-                  launch("tel://${widget.item?.sellStaffTel}");
+                  launch("tel://${orderItem.value?.sellStaffTel}");
                 },
                 child: Container(
                   height: CustomStyle.getHeight(60.0),
