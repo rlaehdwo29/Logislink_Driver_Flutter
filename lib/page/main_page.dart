@@ -244,8 +244,49 @@ class _MainPageState extends State<MainPage> with CommonMainWidget,WidgetsBindin
   }
 
   // This function is to be called when the location has changed.
-  void _onLocationChanged(Location location) {
+  Future<void> _onLocationChanged(Location location) async {
     print('location: ${location.toJson()}');
+    double lat = location.latitude;
+    double lon = location.longitude;
+
+    SP.putString(Const.KEY_LAT, lat.toString());
+    SP.putString(Const.KEY_LON, lon.toString());
+    List<String>? list = SP.getStringList(Const.KEY_ALLOC_ID);
+    if(list == null || list.isEmpty) {
+      await locationUpdate("0",lat,lon);
+    }else{
+      for(var id in list){
+        await locationUpdate(id,lat,lon);
+      }
+    }
+
+  }
+
+  Future<void> locationUpdate(String allocId,double lat, double lon) async {
+    //if(Const.userDebugger) return;
+    //if(SP.getBoolean(Const.KEY_GUEST_MODE)) return;
+
+    Logger logger = Logger();
+    await DioService.dioClient(header: true).locationUpdate(App().getUserInfo().authorization, lat.toString(), lon.toString(),allocId).then((it) {
+      ReturnMap _response = DioService.dioResponse(it);
+      logger.d("locationUpdate() _response -> ${_response.status} // ${_response.resultMap}");
+      if(_response.status == "200") {
+        if (_response.resultMap?["data"] != null) {
+        }
+      }
+    }).catchError((Object obj){
+      switch (obj.runtimeType) {
+        case DioError:
+        // Here's the sample to get the failed response error code and message
+          final res = (obj as DioError).response;
+          print("locationUpdate() Error => ${res?.statusCode} // ${res?.statusMessage}");
+          break;
+        default:
+          print("locationUpdate() Error Default => ");
+          break;
+      }
+    });
+
   }
 
   // This function is to be called when a location services status change occurs
