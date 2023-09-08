@@ -385,7 +385,6 @@ class _MainPageState extends State<MainPage> with CommonMainWidget,WidgetsBindin
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
-    print("하아앙-=>$state");
     switch(state){
       case AppLifecycleState.resumed:
       // 앱이 표시되고 사용자 입력에 응답합니다.
@@ -421,8 +420,6 @@ class _MainPageState extends State<MainPage> with CommonMainWidget,WidgetsBindin
   @override
   void dispose() {
     super.dispose();
-    FBroadcast.instance().unregister(this);
-    WidgetsBinding.instance.removeObserver(this);
   }
 
   Future<void> setGeofencingClient() async {
@@ -434,13 +431,8 @@ class _MainPageState extends State<MainPage> with CommonMainWidget,WidgetsBindin
     if(list != null && list.length != 0) {
       if(geofenceList.isNotEmpty) geofenceList.clear();
       for(var data in list) {
-        print("값 찍어보기0000 => ${data?.id} // ${data?.orderId} // ${data.vehicId} // ${data.allocId} // ${data.allocState}");
         geofenceList?.add(Geofence(id: data.id.toString(),data: {"orderId": data.orderId,"vehicId":data.vehicId,"allocId":data.allocId,"allocState":data.allocState}, latitude: double.parse(data.lat), longitude: double.parse(data.lon), radius: [GeofenceRadius(id: 'radius_150', length: double.parse(Const.GEOFENCE_RADIUS_IN_METERS.toString()))]));
       }
-    }
-    print("설마 얘가 없나? => ${geofenceList.length}");
-    for(var data in geofenceList) {
-      print("값 찍어보기 => ${data?.id} // ${data?.data}");
     }
     await addGeofence();
   }
@@ -456,7 +448,6 @@ class _MainPageState extends State<MainPage> with CommonMainWidget,WidgetsBindin
   void checkCarInfo() {
     String? carType = App().getUserInfo()?.carTypeCode;
     String? carTon = App().getUserInfo()?.carTonCode;
-    print("응애옹애옹 => ${carType} // ${carTon}");
     if((carType != null && carType.isNotEmpty) && (carTon != null && carTon.isNotEmpty)) {
       startService();
     }else{
@@ -544,10 +535,8 @@ class _MainPageState extends State<MainPage> with CommonMainWidget,WidgetsBindin
 
   Future<void> startService() async {
     SP.putBool(Const.KEY_SETTING_WORK, true);
-    print("음음 => ${_geofenceService.isRunningService}");
     if(!_geofenceService.isRunningService) {
       await setGeofencingClient();
-      print("몇개 있는데? => ${geofenceList.length}");
       _geofenceService.addGeofenceStatusChangeListener(_onGeofenceStatusChanged);
       _geofenceService.addLocationChangeListener(_onLocationChanged);
       _geofenceService.addLocationServicesStatusChangeListener(_onLocationServicesStatusChanged);
