@@ -249,9 +249,9 @@ class _MainPageState extends State<MainPage> with CommonMainWidget,WidgetsBindin
     double lat = location.latitude;
     double lon = location.longitude;
 
-    SP.putString(Const.KEY_LAT, lat.toString());
-    SP.putString(Const.KEY_LON, lon.toString());
-    List<String>? list = SP.getStringList(Const.KEY_ALLOC_ID);
+    await SP.putString(Const.KEY_LAT, lat.toString());
+    await SP.putString(Const.KEY_LON, lon.toString());
+    List<String>? list = await SP.getStringList(Const.KEY_ALLOC_ID);
     if(list == null || list.isEmpty) {
       await locationUpdate("0",lat,lon);
     }else{
@@ -334,8 +334,8 @@ class _MainPageState extends State<MainPage> with CommonMainWidget,WidgetsBindin
     Future.delayed(Duration.zero, () async {
 
       await setGeofencingClient();
-
-      switch (SP.getFirstScreen(context)) {
+      var first_screen = await SP.getFirstScreen(context);
+      switch (first_screen) {
         case SCREEN_HISTORY:
           goToHistory();
           break;
@@ -350,8 +350,8 @@ class _MainPageState extends State<MainPage> with CommonMainWidget,WidgetsBindin
       }
 
       showPermissionDialog();
-
-      if (SP.getBoolean(Const.KEY_GUEST_MODE)) showGuestDialog();
+        var guest = await SP.getBoolean(Const.KEY_GUEST_MODE);
+      if (guest) showGuestDialog();
     });
   }
 
@@ -572,7 +572,8 @@ class _MainPageState extends State<MainPage> with CommonMainWidget,WidgetsBindin
    }
   }
 
-  void goToExit() {
+  Future<void> goToExit() async {
+    var guest = await SP.getBoolean(Const.KEY_GUEST_MODE);
     openCommonConfirmBox(
         context,
         "퇴근하시겠습니까?",
@@ -581,7 +582,7 @@ class _MainPageState extends State<MainPage> with CommonMainWidget,WidgetsBindin
             () {Navigator.of(context).pop(false);},
             () {
           Navigator.of(context).pop(false);
-          if(SP.getBoolean(Const.KEY_GUEST_MODE)) SP.remove(Const.KEY_USER_INFO);
+          if(guest) SP.remove(Const.KEY_USER_INFO);
           logout();
         }
     );
@@ -778,7 +779,7 @@ class _MainPageState extends State<MainPage> with CommonMainWidget,WidgetsBindin
                 child: InkWell(
                     onTap: () async {
                       beforeUser.value = controller.getUserInfo();
-                      Map<String,int> results = await Navigator.of(context).push(MaterialPageRoute(
+                      var results = await Navigator.of(context).push(MaterialPageRoute(
                           builder: (BuildContext context) => UserCarListPage())
                       );
 
@@ -890,8 +891,8 @@ class _MainPageState extends State<MainPage> with CommonMainWidget,WidgetsBindin
                 "퇴근하기",
                 style: CustomStyle.CustomFont(styleFontSize14, order_state_09),
               ),
-              onTap: (){
-                goToExit();
+              onTap: () async {
+                await goToExit();
               },
             )
           ],

@@ -211,7 +211,7 @@ class _LoginPageState extends State<LoginPage> with CommonMainWidget {
             m_TermsCheck = false;
             m_TermsMode= TERMS.INSERT;
           }
-          SP.putBool(Const.KEY_TERMS, true);
+          await SP.putBool(Const.KEY_TERMS, true);
           userLogin();
       }else{
         openOkBox(context,_response.message??"",Strings.of(context)?.get("confirm")??"Error!!",() {Navigator.of(context).pop(false);});
@@ -296,11 +296,14 @@ class _LoginPageState extends State<LoginPage> with CommonMainWidget {
       return;
     }
     await pr?.show();
+    String? push_id = await SP.get(Const.KEY_PUSH_ID)??"";
+    var setting_push = await SP.getDefaultTrueBoolean(Const.KEY_SETTING_PUSH)??false;
+    var setting_talk = await SP.getDefaultTrueBoolean(Const.KEY_SETTING_TALK)??false;
       await DioService.dioClient(header: true).deviceUpdate(
           user?.authorization,
-          Util.booleanToYn(SP.getDefaultTrueBoolean(Const.KEY_SETTING_PUSH)??false),
-          Util.booleanToYn(SP.getDefaultTrueBoolean(Const.KEY_SETTING_TALK)??false),
-          SP.get(Const.KEY_PUSH_ID)??"",
+          Util.booleanToYn(setting_push),
+          Util.booleanToYn(setting_talk),
+          push_id,
           controller.device_info["model"],
           controller.device_info["deviceOs"],
           controller.app_info["version"]

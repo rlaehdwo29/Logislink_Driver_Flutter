@@ -209,8 +209,7 @@ class _HistoryPageState extends State<HistoryPage> {
                         }
                     },
                     onRangeSelected: (start, end, focusedDay) {
-                      print(
-                          "onRangeSelected => ${start} // $end // ${focusedDay}");
+                      //print("onRangeSelected => ${start} // $end // ${focusedDay}");
                       setState(() {
                         _tempSelectedDay = start;
                         _focusedDay = focusedDay;
@@ -324,10 +323,10 @@ class _HistoryPageState extends State<HistoryPage> {
         case DioError:
         // Here's the sample to get the failed response error code and message
           final res = (obj as DioError).response;
-          print("getHistory() Error => ${res?.statusCode} // ${res?.statusMessage}");
+          //print("getHistory() Error => ${res?.statusCode} // ${res?.statusMessage}");
           break;
         default:
-          print("getHistory() Error Default => ");
+          //print("getHistory() Error Default => ");
           break;
       }
     });

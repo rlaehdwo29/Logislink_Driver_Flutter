@@ -204,8 +204,7 @@ class _AppBarSalesPageState extends State<AppBarSalesPage> {
                                       }
                                     },
                                     onRangeSelected: (start, end, focusedDay) {
-                                      print(
-                                          "onRangeSelected => ${start} // $end // ${focusedDay}");
+                                     // print("onRangeSelected => ${start} // $end // ${focusedDay}");
                                       setState(() {
                                         _tempSelectedDay = start;
                                         _focusedDay = focusedDay;
@@ -864,7 +863,7 @@ class _AppBarSalesPageState extends State<AppBarSalesPage> {
                                   },
                                   calendarFormat: _calendarFormat,
                                   onDaySelected: (selectedDay, focusedDay) {
-                                    print("onDaySelected => ${selectedDay} // ${focusedDay}");
+                                    //print("onDaySelected => ${selectedDay} // ${focusedDay}");
                                     if (!isSameDay(_tempSelectedDay, selectedDay)) {
                                       setState(() {
                                         _tempSelectedDay = selectedDay;
@@ -873,7 +872,7 @@ class _AppBarSalesPageState extends State<AppBarSalesPage> {
                                     }
                                   },
                                   onFormatChanged: (format) {
-                                    print("onFormatChanged => ${format}");
+                                    //print("onFormatChanged => ${format}");
                                     if (_calendarFormat != format) {
                                       setState(() {
                                         _calendarFormat = format;
@@ -881,7 +880,7 @@ class _AppBarSalesPageState extends State<AppBarSalesPage> {
                                     }
                                   },
                                   onPageChanged: (focusedDay) {
-                                    print("onPageChanged => ${focusedDay}");
+                                    //print("onPageChanged => ${focusedDay}");
                                     _depoFocusedDay = focusedDay;
                                   },
                                 ),
@@ -1015,8 +1014,9 @@ class _AppBarSalesPageState extends State<AppBarSalesPage> {
     );
   }
 
-  void goToSalesReg(){
-    if(SP.getBoolean(Const.KEY_GUEST_MODE)??false) {
+  Future<void> goToSalesReg() async {
+    var guest = await SP.getBoolean(Const.KEY_GUEST_MODE);
+    if(guest) {
       showGuestDialog();
       return;
     }
@@ -1024,7 +1024,7 @@ class _AppBarSalesPageState extends State<AppBarSalesPage> {
   }
 
   void showGuestDialog(){
-    openOkBox(context, Strings.of(context)?.get("Guest_Intro_Mode")??"Error", Strings.of(context)?.get("confirm")??"Error!!",() {Navigator.of(context).pop(false);});
+    openOkBox(context, Strings.of(context)?.get("Guest_Permission_Mode")??"Error", Strings.of(context)?.get("confirm")??"Error!!",() {Navigator.of(context).pop(false);});
   }
 
   @override
@@ -1062,7 +1062,7 @@ class _AppBarSalesPageState extends State<AppBarSalesPage> {
       ),
         bottomNavigationBar: InkWell(
           onTap: () async {
-            goToSalesReg();
+            await goToSalesReg();
           },
           child: Container(
               height: 60.0,

@@ -1,8 +1,11 @@
 import 'dart:convert';
+import 'dart:io';
 
+import 'package:device_info_plus/device_info_plus.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
+import 'package:geolocator/geolocator.dart';
 import 'package:get/get.dart';
 import 'package:logger/logger.dart';
 import 'package:logislink_driver_flutter/common/app.dart';
@@ -15,12 +18,14 @@ import 'package:logislink_driver_flutter/common/strings.dart';
 import 'package:logislink_driver_flutter/constants/const.dart';
 import 'package:logislink_driver_flutter/db/appdatabase.dart';
 import 'package:logislink_driver_flutter/page/main_page.dart';
+import 'package:logislink_driver_flutter/page/permission_page.dart';
 import 'package:logislink_driver_flutter/page/subPage/user_car_list_page.dart';
 import 'package:logislink_driver_flutter/page/terms_page.dart';
 import 'package:logislink_driver_flutter/provider/dio_service.dart';
 import 'package:logislink_driver_flutter/utils/sp.dart';
 import 'package:logislink_driver_flutter/utils/util.dart';
 import 'package:mobile_number/mobile_number.dart';
+import 'package:permission_handler/permission_handler.dart';
 import 'package:progress_dialog_null_safe/progress_dialog_null_safe.dart';
 import '../common/style_theme.dart';
 import 'login_page.dart';
@@ -46,10 +51,80 @@ class _BridgePageState extends State<BridgePage> {
     super.initState();
 
     Future.delayed(Duration.zero, () async {
-      checkFinishGeofence();
-      await checkVersion();
+      await checkFinishGeofence();
+      bool? chkPermission = await checkPermission();
+      if(chkPermission == true){
+        await checkVersion();
+      }else {
+        await goToPermission();
+      }
     });
 
+  }
+
+  Future goToPermission() async {
+    Map<String,int> results = await Navigator.of(context).push(MaterialPageRoute(
+        builder: (BuildContext context) => const PermissionPage())
+    );
+
+    if(results != null && results.containsKey("code")){
+      if(results["code"] == 200) {
+        await checkVersion();
+      }
+    }
+  }
+
+  Future<bool?> checkPermission() async {
+    DeviceInfoPlugin deviceInfo = DeviceInfoPlugin();
+    AndroidDeviceInfo info  = await deviceInfo.androidInfo;
+    if(Platform.isAndroid) {
+      var phone_per = await Permission.phone.status;
+      var location_per = await Permission.location.status;
+      var activityRecognition_per = await Permission.activityRecognition.status;
+      if (info.version.sdkInt >= 33) {
+        var photos_per = await Permission.photos.status;
+        var locationPermission = await Geolocator.checkPermission();
+        if (location_per != PermissionStatus.granted) {
+          return false;
+        } else if (photos_per != PermissionStatus.granted) {
+          return false;
+        } else if (phone_per != PermissionStatus.granted) {
+          return false;
+        }else if(locationPermission != LocationPermission.always) {
+          return false;
+        } else if (activityRecognition_per != PermissionStatus.granted) {
+          return false;
+        }
+        return true;
+      } else {
+        var storage_per = await Permission.storage.status;
+        if (location_per != PermissionStatus.granted) {
+          return false;
+        } else if (storage_per != PermissionStatus.granted) {
+          return false;
+        } else if (phone_per != PermissionStatus.granted) {
+          return false;
+        } else if (activityRecognition_per != PermissionStatus.granted) {
+          return false;
+        }
+        return true;
+      }
+    }else{
+      var phone_per = await Permission.phone.status;
+      var location_per = await Permission.location.status;
+      var photos_per = await Permission.photos.status;
+      var activityRecognition_per = await Permission.activityRecognition.status;
+      if (location_per != PermissionStatus.granted) {
+        return false;
+      } else if (photos_per != PermissionStatus.granted) {
+        return false;
+      } else if (phone_per != PermissionStatus.granted) {
+        return false;
+      } else if (activityRecognition_per != PermissionStatus.granted) {
+        return false;
+      }
+      return true;
+    }
   }
 
   Future<void> checkFinishGeofence() async {
@@ -71,8 +146,9 @@ class _BridgePageState extends State<BridgePage> {
 
           if (list != null && list.isNotEmpty) {
             VersionModel? codeVersion = VersionModel.fromJSON(list[1]);
-            if (SP.get(Const.CD_VERSION) != codeVersion.versionCode) {
-              SP.putString(Const.CD_VERSION, codeVersion.versionCode ?? "");
+            String? shareVersion = await SP.get(Const.CD_VERSION);
+            if (shareVersion != codeVersion.versionCode) {
+              await SP.putString(Const.CD_VERSION, codeVersion.versionCode ?? "");
               await GetCodeTask();
             }
           }
@@ -195,11 +271,14 @@ class _BridgePageState extends State<BridgePage> {
       return;
     }
     await pr?.show();
+    var push_id = await SP.get(Const.KEY_PUSH_ID)??"";
+    var setting_push = await SP.getDefaultTrueBoolean(Const.KEY_SETTING_PUSH)??false;
+    var setting_talk = await  SP.getDefaultTrueBoolean(Const.KEY_SETTING_TALK)??false;
     await DioService.dioClient(header: true).deviceUpdate(
         user?.authorization,
-        Util.booleanToYn(SP.getDefaultTrueBoolean(Const.KEY_SETTING_PUSH)??false),
-        Util.booleanToYn(SP.getDefaultTrueBoolean(Const.KEY_SETTING_TALK)??false),
-        SP.get(Const.KEY_PUSH_ID)??"",
+        Util.booleanToYn(setting_push),
+        Util.booleanToYn(setting_talk),
+        push_id,
         controller.device_info["model"],
         controller.device_info["deviceOs"],
         controller.app_info["version"]
@@ -273,16 +352,16 @@ class _BridgePageState extends State<BridgePage> {
               if (user.necessary == "N" || user.necessary == "") {
                 m_TermsCheck = true;
                 m_TermsMode = TERMS.UPDATE;
-                SP.putBool(Const.KEY_TERMS, false);
+                await SP.putBool(Const.KEY_TERMS, false);
               } else {
                 m_TermsCheck = true;
                 m_TermsMode = TERMS.DONE;
-                SP.putBool(Const.KEY_TERMS, true);
+                await SP.putBool(Const.KEY_TERMS, true);
               }
             } else {
               m_TermsCheck = false;
               m_TermsMode = TERMS.INSERT;
-              SP.putBool(Const.KEY_TERMS, false);
+              await SP.putBool(Const.KEY_TERMS, false);
             }
             if (m_TermsCheck == false && m_TermsMode == TERMS.INSERT) {
               var results = await Navigator.of(context).push(MaterialPageRoute(

@@ -4,7 +4,7 @@ class Const {
 
  // 디버그 모드 개발 true, 운영 false
  static final bool debugEnable = false;
- static final bool userDebugger = true;
+ static final bool userDebugger = false;
 
  // 버전명
  static final APP_VERSION = "1.1.31";

@@ -987,8 +987,9 @@ class _AppBarSalesDetailPageState extends State<AppBarSalesDetailPage> {
     );
   }
 
-  void salesDelete() {
-    if(SP.getBoolean(Const.KEY_GUEST_MODE)) {
+  Future<void> salesDelete() async {
+    var guest = await SP.getBoolean(Const.KEY_GUEST_MODE);
+    if(guest) {
       showGuestDialog();
       return;
     }
@@ -1043,8 +1044,9 @@ class _AppBarSalesDetailPageState extends State<AppBarSalesDetailPage> {
     });
   }
 
-  void salesCorrect() {
-    if(SP.getBoolean(Const.KEY_GUEST_MODE)) {
+  Future<void> salesCorrect() async {
+    var guest = await SP.getBoolean(Const.KEY_GUEST_MODE);
+    if(guest) {
       showGuestDialog();
       return;
     }
@@ -1108,8 +1110,9 @@ class _AppBarSalesDetailPageState extends State<AppBarSalesDetailPage> {
     });
   }
 
-  void salesRegister() {
-    if(SP.getBoolean(Const.KEY_GUEST_MODE)) {
+  Future<void> salesRegister() async {
+    var guest = await SP.getBoolean(Const.KEY_GUEST_MODE);
+    if(guest) {
       showGuestDialog();
       return;
     }
@@ -1235,7 +1238,7 @@ class _AppBarSalesDetailPageState extends State<AppBarSalesDetailPage> {
               flex: 1,
               child: InkWell(
                 onTap: () async {
-                  salesDelete();
+                  await salesDelete();
                 },
                 child: Container(
                   height: 60.0,
@@ -1255,7 +1258,7 @@ class _AppBarSalesDetailPageState extends State<AppBarSalesDetailPage> {
               flex: 1,
               child: InkWell(
                 onTap: () async {
-                  salesCorrect();
+                  await salesCorrect();
                 },
                 child: Container(
                   height: 60.0,
@@ -1275,7 +1278,7 @@ class _AppBarSalesDetailPageState extends State<AppBarSalesDetailPage> {
               flex: 1,
               child: InkWell(
                 onTap: () async {
-                  salesRegister();
+                  await salesRegister();
                 },
                 child: Container(
                   height: 60.0,

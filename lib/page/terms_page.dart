@@ -32,9 +32,9 @@ class _TermsPageState extends State<TermsPage> {
   @override
   void initState(){
     super.initState();
-    SP.putBool(Const.KEY_TERMS, false);
 
-    Future.delayed(Duration.zero, () {
+    Future.delayed(Duration.zero, () async {
+      await SP.putBool(Const.KEY_TERMS, false);
       openOkBox(context,"${Strings.of(context)?.get("private_permission_failed")??"Not Found"}",Strings.of(context)?.get("confirm")??"Error!!",() {Navigator.of(context).pop(false);});
     });
 
@@ -431,7 +431,7 @@ class _TermsPageState extends State<TermsPage> {
                 onTap: () async {
               if(allcheck.value) {
                 await insertTermsAgree();
-                SP.putBool(Const.KEY_TERMS, true);
+                await SP.putBool(Const.KEY_TERMS, true);
                 Navigator.of(context).pop({'code': 200});
               }
             },

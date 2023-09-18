@@ -34,19 +34,21 @@ class _AppBarSettingPageState extends State<AppBarSettingPage> {
   @override
   void initState() {
     super.initState();
-    _wakeChecked.value = SP.getBoolean(Const.KEY_SETTING_WAKE)??false;
-    _pushChecked.value = SP.getBoolean(Const.KEY_SETTING_PUSH)??false;
-    _talkChecked.value = SP.getBoolean(Const.KEY_SETTING_TALK)??false;
-    _screen.value = SP.getFirstScreen(context);
-    _navi.value = SP.getString(Const.KEY_SETTING_NAVI, "카카오내비")??"카카오내비";
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      _screen.value = await SP.getFirstScreen(context);
+      _navi.value = await SP.getString(Const.KEY_SETTING_NAVI, "카카오내비")??"카카오내비";
+      _wakeChecked.value = await SP.getBoolean(Const.KEY_SETTING_WAKE);
+      _pushChecked.value = await SP.getBoolean(Const.KEY_SETTING_PUSH);
+      _talkChecked.value = await SP.getBoolean(Const.KEY_SETTING_TALK);
+    });
   }
 
-  Future openSelectDialog(List mList,String? type) {
+  Future openSelectDialog(List mList,String? type) async {
     String? typeValue;
     if(type == "S") {
-      typeValue = SP.getFirstScreen(context);
+      typeValue = await SP.getFirstScreen(context);
     }else if(type == "N") {
-      typeValue = SP.getString(Const.KEY_SETTING_NAVI,"카카오내비");
+      typeValue = await SP.getString(Const.KEY_SETTING_NAVI,"카카오내비");
     }
     return showDialog(
         context: context,
@@ -70,14 +72,14 @@ class _AppBarSettingPageState extends State<AppBarSettingPage> {
                                 (index) {
                               var item = mList[index];
                                 return InkWell(
-                                  onTap: (){
+                                  onTap: () async {
                                     if(type == "S") {
                                       SP.putString(Const.KEY_SETTING_SCREEN,item);
-                                      _screen.value = SP.getFirstScreen(context);
+                                      _screen.value = await SP.getFirstScreen(context);
                                       Navigator.of(context).pop(false);
                                     }else if(type == "N") {
                                       SP.putString(Const.KEY_SETTING_NAVI,item);
-                                      _navi.value = SP.getString(Const.KEY_SETTING_NAVI,"카카오내비")??"카카오내비";
+                                      _navi.value = await SP.getString(Const.KEY_SETTING_NAVI,"카카오내비")??"카카오내비";
                                       Navigator.of(context).pop(false);
                                     }
                                   },
@@ -114,11 +116,14 @@ class _AppBarSettingPageState extends State<AppBarSettingPage> {
   Future<void> sendDeviceInfo() async {
     Logger logger = Logger();
     await pr?.show();
+    String? push_id = await SP.get(Const.KEY_PUSH_ID) ?? "";
+    var setting_push = await SP.getDefaultTrueBoolean(Const.KEY_SETTING_PUSH)??false;
+    var setting_talk = await SP.getDefaultTrueBoolean(Const.KEY_SETTING_TALK) ?? false;
     await DioService.dioClient(header: true).deviceUpdate(
       controller.getUserInfo()?.authorization,
-      Util.booleanToYn(SP.getDefaultTrueBoolean(Const.KEY_SETTING_PUSH) ?? false),
-      Util.booleanToYn(SP.getDefaultTrueBoolean(Const.KEY_SETTING_TALK) ?? false),
-      SP.get(Const.KEY_PUSH_ID) ?? "",
+      Util.booleanToYn(setting_push),
+      Util.booleanToYn(setting_talk),
+      push_id,
       controller.device_info["model"],
       controller.device_info["deviceOs"],
       controller.app_info["version"],
@@ -222,10 +227,10 @@ class _AppBarSettingPageState extends State<AppBarSettingPage> {
                 Switch(
                     value: _wakeChecked.value,
                     onChanged: (value) {
-                      setState(() {
+                      setState(() async {
                         _wakeChecked.value = value;
-                        SP.putBool(Const.KEY_SETTING_WAKE, _wakeChecked.value);
-                        SP.getBoolean(Const.KEY_SETTING_WAKE) == true ? WakelockPlus.enable() : WakelockPlus.disable();
+                        await SP.putBool(Const.KEY_SETTING_WAKE, _wakeChecked.value);
+                        await SP.getBoolean(Const.KEY_SETTING_WAKE) == true ? WakelockPlus.enable() : WakelockPlus.disable();
                         sendDeviceInfo();
                       });
                     }
@@ -312,9 +317,9 @@ class _AppBarSettingPageState extends State<AppBarSettingPage> {
               Switch(
                   value: _pushChecked.value,
                   onChanged: (value) {
-                    setState(() {
+                    setState(() async {
                       _pushChecked.value = value;
-                      SP.putBool(Const.KEY_SETTING_PUSH, _pushChecked.value);
+                      await SP.putBool(Const.KEY_SETTING_PUSH, _pushChecked.value);
                       sendDeviceInfo();
                     });
                   }
@@ -345,9 +350,9 @@ class _AppBarSettingPageState extends State<AppBarSettingPage> {
               Switch(
                   value: _talkChecked.value,
                   onChanged: (value) {
-                    setState(() {
+                    setState(() async {
                       _talkChecked.value = value;
-                      SP.putBool(Const.KEY_SETTING_TALK, _talkChecked.value);
+                      await SP.putBool(Const.KEY_SETTING_TALK, _talkChecked.value);
                       sendDeviceInfo();
                     });
                   }
