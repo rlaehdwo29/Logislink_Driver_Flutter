@@ -21,7 +21,7 @@ class SP extends GetxController {
     super.onInit();
   }
 
-  static void open() async {
+  static Future<void> open() async {
     m_Pref ??= await SharedPreferences.getInstance();
   }
 
@@ -36,58 +36,58 @@ class SP extends GetxController {
     m_Pref?.commit();
   }
 
-  static void putString(String key, String value) {
-    open();
-    m_Pref?.setString(key, value);
+  static Future<void> putString(String key, String value) async {
+    await open();
+    await m_Pref?.setString(key, value);
   }
 
-  static void putInt(String key, int value) {
-    open();
-    m_Pref?.setInt(key, value);
+  static Future<void> putInt(String key, int value) async {
+    await open();
+    await m_Pref?.setInt(key, value);
   }
 
-  static void putBool(String key, bool value) {
-    open();
+  static Future<void> putBool(String key, bool value) async {
+    await open();
     m_Pref?.setBool(key, value);
   }
 
-  static void putUserModel(String key, UserModel? value) {
-    open();
+  static Future<void> putUserModel(String key, UserModel? value) async {
+    await open();
     m_Pref?.setString(key,jsonEncode(value));
   }
 
-  static String? get(String key) {
-    open();
+  static Future<String?> get(String key) async {
+    await open();
     return m_Pref?.getString(key);
   }
 
-  static String? getString(String key, String defaultValue) {
-    open();
+  static Future<String?> getString(String key, String defaultValue) async {
+    await open();
     return m_Pref?.getString(key)??defaultValue;
   }
 
-  static bool getBoolean(String key) {
-    open();
+  static Future<bool> getBoolean(String key) async {
+    await open();
     return m_Pref?.getBool(key)??false;
   }
 
-  static bool? getDefaultTrueBoolean(String key) {
-    open();
+  static Future<bool?>? getDefaultTrueBoolean(String key) async {
+    await open();
     return m_Pref?.getBool(key);
   }
 
-  static int? getInt(String key,{int? defaultValue}) {
-    open();
+  static Future<int>? getInt(String key,{int? defaultValue}) async {
+    await open();
     defaultValue ??= 0;
     return m_Pref?.getInt(key)??defaultValue;
   }
 
-  static String getFirstScreen(BuildContext context) {
-    open();
+  static Future<String> getFirstScreen(BuildContext context) async {
+    await open();
     return m_Pref?.getString(Const.KEY_SETTING_SCREEN)??Const.first_screen[0];
   }
 
-  static UserModel? getUserInfo(String key) {
+  static UserModel? getUserInfo(String key)  {
     open();
     String? json = m_Pref?.getString(key);
     if(json == null){
@@ -98,19 +98,19 @@ class SP extends GetxController {
     }
   }
 
-  static String getNavi() {
-    open();
+  static Future<String> getNavi() async {
+    await open();
     return m_Pref?.getString(Const.KEY_SETTING_NAVI)??"카카오내비";
   }
 
-  static void putStringList(String key, List<String>? list) {
-    open();
+  static Future<void> putStringList(String key, List<String>? list) async {
+    await open();
     m_Pref?.setStringList(key, list??[]);
   }
 
-  static List<String>? getStringList(String key) {
-    open();
-    List<String>? json = m_Pref?.getStringList(key);
+  static Future<List<String>?>? getStringList(String key) async {
+    await open();
+    List<String>? json = await m_Pref?.getStringList(key);
     return json;
   }
 

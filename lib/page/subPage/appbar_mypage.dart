@@ -155,8 +155,9 @@ class _AppBarMyPageState extends State<AppBarMyPage> {
     }
   }
 
-  void edit() {
-    if(SP.getBoolean(Const.KEY_GUEST_MODE)??false) {
+  Future<void> edit() async {
+    var guest = await SP.getBoolean(Const.KEY_GUEST_MODE);
+    if(guest) {
       showGuestDialog();
       return;
     }
@@ -264,7 +265,7 @@ class _AppBarMyPageState extends State<AppBarMyPage> {
   }
 
   void showGuestDialog(){
-    openOkBox(context, Strings.of(context)?.get("Guest_Intro_Mode")??"Error", Strings.of(context)?.get("confirm")??"Error!!",() {Navigator.of(context).pop(false);});
+    openOkBox(context, Strings.of(context)?.get("Guest_Permission_Mode")??"Error", Strings.of(context)?.get("confirm")??"Error!!",() {Navigator.of(context).pop(false);});
   }
 
   bool validation() {
@@ -1550,10 +1551,15 @@ class _AppBarMyPageState extends State<AppBarMyPage> {
                 ),
                 actions: [
                 IconButton(
-                onPressed: (){
+                onPressed: () async {
+                  var guest = await SP.getBoolean(Const.KEY_GUEST_MODE);
+                  if(guest) {
+                    showGuestDialog();
+                    return;
+                  }
               if(editMode.value == true) {
                 if(tempData.value != controller.getUserInfo()) {
-                  edit();
+                  await edit();
                 }else{
                   editMode.value = !editMode.value;
                 }

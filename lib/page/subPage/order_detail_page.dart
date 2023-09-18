@@ -123,7 +123,8 @@ class _OrderDetailPageState extends State<OrderDetailPage>{
   }
 
   Future<void> initNavi(String? name, double? lat, double? lon) async {
-    if(SP.getNavi() == "카카오내비") {
+    var navi = await SP.getNavi();
+    if(navi == "카카오내비") {
       bool result = await NaviApi.instance.isKakaoNaviInstalled();
       if(result){
         await NaviApi.instance.navigate(
@@ -585,8 +586,8 @@ class _OrderDetailPageState extends State<OrderDetailPage>{
               mainAxisAlignment: MainAxisAlignment.center,
               children:[
                 InkWell(
-                  onTap: (){
-                    goToReceipt();
+                  onTap: () async {
+                    await goToReceipt();
                   },
                   child: Container(
                     decoration: tvReceipt.value ? CustomStyle.customBoxDeco(styleWhiteCol,border_color: text_color_02) : CustomStyle.customBoxDeco(sub_color),
@@ -600,8 +601,8 @@ class _OrderDetailPageState extends State<OrderDetailPage>{
                 ),
                 orderItem.value?.chargeType == "01" ?
                 InkWell(
-                  onTap: (){
-                    goToTax();
+                  onTap: () async {
+                    await goToTax();
                   },
                   child: Container(
                       decoration: tvTax.value ? CustomStyle.customBoxDeco(styleWhiteCol,border_color: text_color_02) : CustomStyle.customBoxDeco(sub_color),
@@ -889,8 +890,8 @@ class _OrderDetailPageState extends State<OrderDetailPage>{
 
   Future<void> goToPay() async {
     Logger logger = Logger();
-
-    if(SP.getBoolean(Const.KEY_GUEST_MODE)){
+    var guest = await SP.getBoolean(Const.KEY_GUEST_MODE);
+    if(guest){
       showGuestDialog();
       return;
     }
@@ -1014,9 +1015,9 @@ class _OrderDetailPageState extends State<OrderDetailPage>{
         Strings.of(context)?.get("cancel")??"Not Found",
         Strings.of(context)?.get("confirm")??"Not Found",
             () => Navigator.of(context).pop(false),
-            () {
+            () async {
               Navigator.of(context).pop(false);
-              goToReceipt();
+              await goToReceipt();
             }
     );
   }
@@ -1433,7 +1434,8 @@ class _OrderDetailPageState extends State<OrderDetailPage>{
   }
 
   Future goToReceipt() async {
-    if(SP.getBoolean(Const.KEY_GUEST_MODE)){
+    var guest = await SP.getBoolean(Const.KEY_GUEST_MODE);
+    if(guest){
       showGuestDialog();
       return;
     }
@@ -1462,13 +1464,14 @@ class _OrderDetailPageState extends State<OrderDetailPage>{
             () => Navigator.of(context).pop(false),
             () async {
           Navigator.of(context).pop(false);
-          goToTax();
+          await goToTax();
         }
     );
   }
 
-  void goToTax(){
-    if(SP.getBoolean(Const.KEY_GUEST_MODE) ?? false) {
+  Future<void> goToTax() async {
+    var guest = await SP.getBoolean(Const.KEY_GUEST_MODE);
+    if(guest) {
       showGuestDialog();
       return;
     }
@@ -1481,7 +1484,7 @@ class _OrderDetailPageState extends State<OrderDetailPage>{
     );
 
     if(results != null && results.containsKey("code")){
-      print("IntentTax CallBack!! => ${results["code"]}");
+      //print("IntentTax CallBack!! => ${results["code"]}");
       if(results["code"] == 200) {
         app_util.Util.toast("전자세금계산서 발행 신청이 완료되었습니다.");
       }
@@ -1544,8 +1547,8 @@ class _OrderDetailPageState extends State<OrderDetailPage>{
     });
   }
 
-  void _setState() {
-    List<String>? allocList = SP.getStringList(Const.KEY_ALLOC_ID);
+  Future<void> _setState() async {
+    List<String>? allocList = await SP.getStringList(Const.KEY_ALLOC_ID);
     if(orderItem.value?.allocState == "04") {
       finished.value = false;
     }else if(orderItem.value?.allocState == "05") {
@@ -1573,8 +1576,9 @@ class _OrderDetailPageState extends State<OrderDetailPage>{
     openOkBox(context, Strings.of(context)?.get("Guest_Intro_Mode")??"Error", Strings.of(context)?.get("confirm")??"Error!!",() {Navigator.of(context).pop(false);});
   }
 
-  void showCancelDialog() {
-    if(SP.getBoolean(Const.KEY_GUEST_MODE)) {
+  Future<void> showCancelDialog() async {
+    var guest = await SP.getBoolean(Const.KEY_GUEST_MODE);
+    if(guest) {
       showGuestDialog();
       return;
     }
@@ -1658,10 +1662,10 @@ class _OrderDetailPageState extends State<OrderDetailPage>{
     });
   }
 
-  void addAllocList() {
-    List<String>? allocList = SP.getStringList(Const.KEY_ALLOC_ID);
+  Future<void> addAllocList() async {
+    List<String>? allocList = await SP.getStringList(Const.KEY_ALLOC_ID);
     allocList?.add(orderItem.value?.allocId??"");
-    SP.putStringList(Const.KEY_ALLOC_ID, allocList);
+    await SP.putStringList(Const.KEY_ALLOC_ID, allocList);
     locationUpdate(widget.allocId);
   }
 
@@ -1760,11 +1764,11 @@ class _OrderDetailPageState extends State<OrderDetailPage>{
         if(_response.status == "200") {
           if(_response.resultMap?["result"] == true) {
             if(code == "04") {
-              addAllocList();
+              await addAllocList();
               await setDriverClick(code,orderItem.value?.sAddr,"N");
             }else if(code == "05"){
               orderItem.value?.allocState = code;
-              removeAllocList();
+              await removeAllocList();
               await setDriverClick(code,orderItem.value?.eAddr,"N");
             }
             removeGeofence(code);
@@ -1811,17 +1815,19 @@ class _OrderDetailPageState extends State<OrderDetailPage>{
     FBroadcast.instance().broadcast(Const.INTENT_GEOFENCE);
   }
 
-  void removeAllocList() {
+  Future<void> removeAllocList() async {
     locationUpdate(widget.allocId);
 
-    List<String>? allocList = SP.getStringList(Const.KEY_ALLOC_ID);
+    List<String>? allocList = await SP.getStringList(Const.KEY_ALLOC_ID);
     allocList?.remove(orderItem.value?.allocId);
-    SP.putStringList(Const.KEY_ALLOC_ID, allocList);
+    await SP.putStringList(Const.KEY_ALLOC_ID, allocList);
   }
 
   Future<void> locationUpdate(String? allocId) async {
     Logger logger = Logger();
-    await DioService.dioClient(header: true).locationUpdate(App().getUserInfo().authorization, SP.getString(Const.KEY_LAT, ""),SP.getString(Const.KEY_LON, ""),allocId).then((it) {
+    var lat = await SP.getString(Const.KEY_LAT, "");
+    var lon = await SP.getString(Const.KEY_LON, "");
+    await DioService.dioClient(header: true).locationUpdate(App().getUserInfo().authorization, lat,lon,allocId).then((it) {
       ReturnMap _response = DioService.dioResponse(it);
       logger.d("locationUpdate() _response -> ${_response.status} // ${_response.resultMap}");
       if(_response.status == "200") {
@@ -1833,10 +1839,10 @@ class _OrderDetailPageState extends State<OrderDetailPage>{
         case DioError:
         // Here's the sample to get the failed response error code and message
           final res = (obj as DioError).response;
-          print("locationUpdate() Error => ${res?.statusCode} // ${res?.statusMessage}");
+          //print("locationUpdate() Error => ${res?.statusCode} // ${res?.statusMessage}");
           break;
         default:
-          print("locationUpdate() Error Default => ");
+          //print("locationUpdate() Error Default => ");
           break;
       }
     });
@@ -1934,7 +1940,6 @@ class _OrderDetailPageState extends State<OrderDetailPage>{
             SliverList(
                 delegate: SliverChildBuilderDelegate(
                     (BuildContext context, int index){
-                      print("뭐야뭐야? => ${orderItem.value} // ${orderItem.value.stopCount}");
                       return Obx((){
                         return Container(
                           padding: EdgeInsets.all(CustomStyle.getHeight(10.0)),
@@ -1981,8 +1986,8 @@ class _OrderDetailPageState extends State<OrderDetailPage>{
             !finished.value == true ? Expanded(
               flex: 1,
               child: InkWell(
-                onTap: (){
-                  showCancelDialog();
+                onTap: () async {
+                  await showCancelDialog();
                 },
                 child: Container(
                   height: CustomStyle.getHeight(60.0),
@@ -2001,8 +2006,9 @@ class _OrderDetailPageState extends State<OrderDetailPage>{
             Expanded(
               flex: 1,
               child: InkWell(
-                onTap: (){
-                  if(SP.getBoolean(Const.KEY_GUEST_MODE)){
+                onTap: () async {
+                  var guest = await SP.getBoolean(Const.KEY_GUEST_MODE);
+                  if(guest){
                     showGuestDialog();
                     return;
                   }

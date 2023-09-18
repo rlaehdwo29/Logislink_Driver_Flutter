@@ -123,7 +123,7 @@ class _ReceiptPageState extends State<ReceiptPage>{
         var response = await request.send();
         if (response.statusCode == 200) {
           var jsonBody = json.decode(await response.stream.bytesToString()); // json 응답 값을 decode
-          print("uploadReceipt() Result ToJson => ${jsonBody} // ${jsonBody["result"]} ${jsonBody["msg"]}");
+          //print("uploadReceipt() Result ToJson => ${jsonBody} // ${jsonBody["result"]} ${jsonBody["msg"]}");
           if(jsonBody["result"] == true) {
             await getReceiptList();
             setState(() {});
@@ -163,7 +163,7 @@ class _ReceiptPageState extends State<ReceiptPage>{
   Future<void> checkPermission() async {
     if (await Permission.contacts.request().isGranted) {
       // Either the permission was already granted before or the user just granted it.
-      print("연결");
+      //print("연결");
     }else{
       // You can request multiple permissions at once.
       Map<Permission, PermissionStatus> statuses = await [
@@ -346,7 +346,6 @@ class _ReceiptPageState extends State<ReceiptPage>{
             padding: EdgeInsets.symmetric(vertical: 15.0,horizontal: 10.0),
             child: InkWell(
               onTap: () async {
-                //checkPermission();
                 await showAlbum();
               },
                 child: Row(

@@ -391,7 +391,7 @@ class Util {
   static Future<void> getNotice(BuildContext context,String pageName,GlobalKey webviewKey) async {
     final controller = Get.find<App>();
     Logger logger = Logger();
-    await DioService.dioClient(header: true).getNotice2(controller.getUserInfo()?.authorization,"Y").then((it) {
+    await DioService.dioClient(header: true).getNotice2(controller.getUserInfo()?.authorization,"Y").then((it) async {
       ReturnMap _response = DioService.dioResponse(it);
       logger.d("Util getNotice() _response -> ${_response.status} // ${_response.resultMap}");
       if(_response.status == "200") {
@@ -401,7 +401,8 @@ class Util {
             List<NoticeModel> itemsList = list.map((i) => NoticeModel.fromJSON(i)).toList();
             if(itemsList.isNotEmpty) {
               NoticeModel data = itemsList[0];
-              if(data.boardSeq! > SP.getInt(Const.KEY_READ_NOTICE,defaultValue: 0)!){
+              var read_notice = await SP.getInt(Const.KEY_READ_NOTICE,defaultValue: 0)??0;
+              if(data.boardSeq! > read_notice){
                 openNotiDialog(context,pageName,webviewKey,data.boardSeq);
               }
             }
@@ -434,9 +435,10 @@ class Util {
     }
   }
 
-  static notificationDialog(BuildContext context,String pageName,GlobalKey webviewKey) {
+  static notificationDialog(BuildContext context,String pageName,GlobalKey webviewKey) async {
     final controller = Get.find<App>();
-    if(SP.getFirstScreen(context) == pageName) {
+    var first_screen = await SP.getFirstScreen(context);
+    if(first_screen == pageName) {
       if(!controller.isIsNoticeOpen.value) {
         controller.isIsNoticeOpen.value = true;
         getNotice(context, pageName, webviewKey);
