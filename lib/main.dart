@@ -39,7 +39,7 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
   // If you're going to use other Firebase services in the background, such as Firestore,
   // make sure you call `initializeApp` before using other Firebase services.
-  await Firebase.initializeApp();
+  //await Firebase.initializeApp();
   print("Handling a background message: ${message.messageId}");
 }
 
@@ -47,8 +47,11 @@ AndroidNotificationChannel? channel;
 FlutterLocalNotificationsPlugin? flutterLocalNotificationsPlugin;
 late AppDataBase database;
 
+bool permission_state = false;
+
 Future<void> main() async {
   final binding = WidgetsFlutterBinding.ensureInitialized();
+  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
   if (Platform.isAndroid) {
     await AndroidInAppWebViewController.setWebContentsDebuggingEnabled(true);
 
@@ -75,7 +78,6 @@ Future<void> main() async {
   AuthRepository.initialize(appKey: dotenv.env['APP_KEY'] ?? '');
   KakaoSdk.init(nativeAppKey: dotenv.env['NATIVE_KEY'] ?? '' ,javaScriptAppKey: dotenv.env['APP_KEY'] ?? '');
   //Firebase Setting
-  await Firebase.initializeApp();
   FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
 
   if (!kIsWeb) {
@@ -111,9 +113,8 @@ Future<void> main() async {
       sound: true,
     );
     print('User granted permission: ${settings.authorizationStatus}');
-  }
 
-  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+  }
 
   FlutterError.onError = (errorDetails) {
     FirebaseCrashlytics.instance.recordFlutterFatalError(errorDetails);
@@ -197,28 +198,12 @@ class _MyAppState extends State<MyApp> {
     setupInteractedMessage();
   }
 
-  Stream<int> get badgeCnt async* {
-    final prefs = await SharedPreferences.getInstance();
-    while (true) {
-      int badgeCnt = 0;
-      await Future.delayed(const Duration(seconds: 1), () async {
-        await prefs.reload();
-        badgeCnt = prefs.getInt('b1_cnt') ?? 0;
-      });
-      yield badgeCnt;
-    }
-  }
-
   // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
     Get.put(App());
     return MultiProvider(
       providers: [
-        StreamProvider<int>.value(
-            value:badgeCnt,
-            initialData:0
-        ),
         ChangeNotifierProvider<UserCarInfoService>(
             create: (_) => UserCarInfoService()),
         ChangeNotifierProvider<OrderService>(
@@ -240,7 +225,7 @@ class _MyAppState extends State<MyApp> {
           }
         },
         child: ScreenUtilInit(
-          designSize: Size(360, 750),
+          designSize: const Size(360, 750),
           builder: (_,child) => MaterialApp(
             //navigatorKey: navigatorKey,
             localizationsDelegates: const [
@@ -303,12 +288,14 @@ class _MyAppState extends State<MyApp> {
   }
 }
 
-Future<bool> checkPermission() async {
+Future<Map<String,dynamic>> checkPermission() async {
   if (await Permission.contacts.request().isGranted) {
     // Either the permission was already granted before or the user just granted it.
     print("권한 설정 완료");
     app_util.Util.toast("권한 설정 완료");
-    return true;
+    return <String,dynamic> {
+      "all":true
+    };
   }else{
     // You can request multiple permissions at once.
     DeviceInfoPlugin deviceInfo = DeviceInfoPlugin();
@@ -316,42 +303,45 @@ Future<bool> checkPermission() async {
       AndroidDeviceInfo info  = await deviceInfo.androidInfo;
       // Android 13 버전 이상.
       if(info.version.sdkInt >= 33) {
-        Map<Permission, PermissionStatus> statuses = await [
-          Permission.photos,
-          Permission.phone,
-          Permission.location,
-          Permission.activityRecognition,
-        ].request();
+        var phone_per = await Permission.phone.request();
+        var photos_per = await Permission.photos.request();
+        var location_per = await Permission.location.request();
+        var activityRecognition_per = await Permission.activityRecognition.request();
 
         var locationPermission = await Geolocator.checkPermission();
-        print("Notification => ${statuses[Permission.notification]}");
-        print("위치 => ${statuses[Permission.location]}");
+        /*print("위치 => ${location_per}");
         print("위치 => ${await Geolocator.checkPermission()}");
-        print("저장소 => ${statuses[Permission.photos]}");
-        print("폰 => ${statuses[Permission.phone]}");
-        print("신체활동 => ${statuses[Permission.activityRecognition]}");
+        print("저장소 => ${photos_per}");
+        print("폰 => ${phone_per}");
+        print("신체활동 => ${activityRecognition_per}");*/
 
-        if (statuses[Permission.photos] == PermissionStatus.denied || statuses[Permission.photos] == PermissionStatus.permanentlyDenied) {
-          await openAppSettings();
-        } else if (statuses[Permission.phone] == PermissionStatus.denied || statuses[Permission.phone] == PermissionStatus.permanentlyDenied) {
-          await openAppSettings();
-        } else if (statuses[Permission.location] == PermissionStatus.denied || statuses[Permission.location] == PermissionStatus.permanentlyDenied) {
-          await openAppSettings();
-        } else if(locationPermission != LocationPermission.always){
-          await Geolocator.openAppSettings();
-        }else if (statuses[Permission.activityRecognition] == PermissionStatus.denied || statuses[Permission.activityRecognition] == PermissionStatus.permanentlyDenied) {
-          await openAppSettings();
-        }
+        if(locationPermission == LocationPermission.whileInUse) openAppSettings();
 
-        if (statuses[Permission.location] != PermissionStatus.granted) {
-          return false;
-        } else if (statuses[Permission.photos] != PermissionStatus.granted) {
-          return false;
-        } else if (statuses[Permission.phone] != PermissionStatus.granted) {
-          return false;
-        } else if (statuses[Permission.activityRecognition] != PermissionStatus.granted) {
-          return false;
+        if (location_per != PermissionStatus.granted) {
+          return Future.value(<String,String> {
+            "result":"위치"
+          });
+        } else if (photos_per != PermissionStatus.granted) {
+          return Future.value(<String,String> {
+            "result":"사진 및 동영상"
+          });
+        } else if (phone_per != PermissionStatus.granted) {
+          return Future.value(<String,String> {
+            "result":"전화"
+          });
+        }else if(locationPermission != LocationPermission.always) {
+          return Future.value(<String,String> {
+            "result":"위치 항상 허용"
+          });
+        } else if (activityRecognition_per != PermissionStatus.granted) {
+          return Future.value(<String,String> {
+            "result":"신체활동"
+          });
         }
+        return Future.value(<String,String> {
+          "result":"checkAll"
+        });
+
       }else {
         Map<Permission, PermissionStatus> statuses = await [
           Permission.phone,
@@ -360,79 +350,150 @@ Future<bool> checkPermission() async {
           Permission.activityRecognition,
         ].request();
 
-        print("Notification => ${statuses[Permission.notification]}");
+       /* print("Notification => ${statuses[Permission.notification]}");
         print("위치 => ${statuses[Permission.location]}");
         print("저장소 => ${statuses[Permission.storage]}");
         print("폰 => ${statuses[Permission.phone]}");
-        print("신체활동 => ${statuses[Permission.activityRecognition]}");
+        print("신체활동 => ${statuses[Permission.activityRecognition]}");*/
 
         if (statuses[Permission.storage] == PermissionStatus.permanentlyDenied) {
           await openAppSettings();
-        } else
-        if (statuses[Permission.phone] == PermissionStatus.permanentlyDenied) {
+        } else if (statuses[Permission.phone] == PermissionStatus.permanentlyDenied) {
           await openAppSettings();
-        } else if (statuses[Permission.location] ==
-            PermissionStatus.permanentlyDenied) {
+        } else if (statuses[Permission.location] == PermissionStatus.permanentlyDenied) {
           await openAppSettings();
-        } else if (statuses[Permission.activityRecognition] ==
-            PermissionStatus.permanentlyDenied) {
+        } else if (statuses[Permission.activityRecognition] == PermissionStatus.permanentlyDenied) {
           await openAppSettings();
         }
 
         if (statuses[Permission.location] != PermissionStatus.granted) {
-          return false;
+          return Future.value(<String,String> {
+            "result":"위치"
+          });
         } else if (statuses[Permission.storage] != PermissionStatus.granted) {
-          return false;
+          return Future.value(<String,String> {
+            "result":"저장소"
+          });
         } else if (statuses[Permission.phone] != PermissionStatus.granted) {
-          return false;
+          return Future.value(<String,String> {
+            "result":"전화"
+          });
         } else if (statuses[Permission.activityRecognition] != PermissionStatus.granted) {
-          return false;
+          return Future.value(<String,String> {
+            "result":"신체활동"
+          });
         }
+        return Future.value(<String,String> {
+          "result":"checkAll"
+        });
       }
     }else{
+      Map<Permission, PermissionStatus> statuses = await [
+        Permission.photos,
+        Permission.phone,
+        Permission.location,
+        Permission.activityRecognition,
+      ].request();
 
+      var locationPermission = await Geolocator.checkPermission();
+     /* print("Notification => ${statuses[Permission.notification]}");
+      print("위치 => ${statuses[Permission.location]}");
+      print("위치 => ${await Geolocator.checkPermission()}");
+      print("저장소 => ${statuses[Permission.photos]}");
+      print("폰 => ${statuses[Permission.phone]}");
+      print("신체활동 => ${statuses[Permission.activityRecognition]}");*/
+
+      if (statuses[Permission.photos] == PermissionStatus.denied || statuses[Permission.photos] == PermissionStatus.permanentlyDenied) {
+        await openAppSettings();
+      } else if (statuses[Permission.phone] == PermissionStatus.denied || statuses[Permission.phone] == PermissionStatus.permanentlyDenied) {
+        await openAppSettings();
+      } else if (statuses[Permission.location] == PermissionStatus.denied || statuses[Permission.location] == PermissionStatus.permanentlyDenied) {
+        await openAppSettings();
+      } else if(locationPermission != LocationPermission.always){
+        await Geolocator.openAppSettings();
+      }else if (statuses[Permission.activityRecognition] == PermissionStatus.denied || statuses[Permission.activityRecognition] == PermissionStatus.permanentlyDenied) {
+        await openAppSettings();
+      }
+
+      if (statuses[Permission.location] != PermissionStatus.granted) {
+        return Future.value(<String,String> {
+          "result":"위치"
+        });
+      } else if (statuses[Permission.photos] != PermissionStatus.granted) {
+        return Future.value(<String,String> {
+          "result":"사진 및 동영상"
+        });
+      } else if (statuses[Permission.phone] != PermissionStatus.granted) {
+        return Future.value(<String,String> {
+          "result":"전화"
+        });
+      } else if (statuses[Permission.activityRecognition] != PermissionStatus.granted) {
+        return Future.value(<String,String> {
+          "result":"신체활동"
+        });
+      }
+      return Future.value(<String,String> {
+        "result":"checkAll"
+      });
     }
-    return true;
   }
 }
 
 
-Widget _splashLodingWidget(AsyncSnapshot<Object?> snapshot,BuildContext context) {
+Widget _splashLodingWidget(AsyncSnapshot snapshot,BuildContext context) {
   if(snapshot.hasError) {
-    return Container(
-        child:Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            Text("권한 처리 중 에러가 발생하였습니다.\n 앱을 재시작해주세요.",
-              style: CustomStyle.CustomFont(styleFontSize16, Colors.white),),
-            CustomStyle.sizedBoxHeight(10.0),
-            ElevatedButton(onPressed: (){
-              Navigator.of(context).pop(false);
-              SystemNavigator.pop();
-            }, child: Text("앱 종료",style: CustomStyle.CustomFont(styleFontSize14, Colors.black),))
-          ],
-        )
+    return Column(
+      mainAxisAlignment: MainAxisAlignment.center,
+      crossAxisAlignment: CrossAxisAlignment.center,
+      children: [
+        Text("권한 처리 중 에러가 발생하였습니다.\n 앱을 재시작해주세요.",
+          style: CustomStyle.CustomFont(styleFontSize16, Colors.white),),
+        CustomStyle.sizedBoxHeight(10.0),
+        ElevatedButton(onPressed: (){
+          Navigator.of(context).pop(false);
+          SystemNavigator.pop();
+        }, child: Text("앱 종료",style: CustomStyle.CustomFont(styleFontSize14, Colors.black),))
+      ],
     );
   }else if(snapshot.hasData){
-    if(snapshot.data == true){
+    if(snapshot.data["result"] == "checkAll"){
       return const BridgePage();
     }else{
-      return Container(
-        child:Column(
+      if(snapshot.data["result"] == "위치 항상 허용"){
+        return Column(
           mainAxisAlignment: MainAxisAlignment.center,
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            Text("권한 설정을 모두 허용 후\n사용하실 수 있습니다.",
-            style: CustomStyle.CustomFont(styleFontSize16, Colors.white),),
+            DefaultTextStyle(style: CustomStyle.CustomFont(styleFontSize16, Colors.white),
+                child: const Text("위치 권한을 항상 허용으로 변경해주세요.\n\n\n(설정 > 애플리케이션 >\n[로지스링크 차주앱] > 권한)\n\n\n에서 설정할 수 있습니다. ",
+            textAlign: TextAlign.center)),
             CustomStyle.sizedBoxHeight(10.0),
-            ElevatedButton(onPressed: (){
+            ElevatedButton(onPressed: () {
               Navigator.of(context).pop(false);
               SystemNavigator.pop();
-            }, child: Text("앱 종료",style: CustomStyle.CustomFont(styleFontSize14, Colors.black),))
+            },
+                child: Text("앱 종료", style: CustomStyle.CustomFont(
+                    styleFontSize14, Colors.black),))
           ],
-        )
-      );
+        );
+      }else {
+        return Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+        DefaultTextStyle(style: CustomStyle.CustomFont(styleFontSize16, Colors.white),
+            textAlign: TextAlign.center,
+            child: Text("${snapshot.data["result"]} 권한을 허용해주세요.\n\n\n(설정 > 애플리케이션 >\n[로지스링크 차주앱] > 권한)\n\n\n에서 설정할 수 있습니다.")),
+            CustomStyle.sizedBoxHeight(10.0),
+            ElevatedButton(onPressed: () {
+              Navigator.of(context).pop(false);
+              SystemNavigator.pop();
+            },
+                child: Text("앱 종료", style: CustomStyle.CustomFont(
+                    styleFontSize14, Colors.black),))
+          ],
+        );
+      }
     }
   }else{
     return Container(
