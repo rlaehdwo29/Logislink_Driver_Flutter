@@ -8,7 +8,6 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_background_service/flutter_background_service.dart';
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 import 'package:geofence_service/geofence_service.dart';
 
@@ -70,7 +69,6 @@ class _MainPageState extends State<MainPage> with CommonMainWidget,WidgetsBindin
   final GlobalKey webViewKey = GlobalKey();
   late final InAppWebViewController webViewController;
   late final PullToRefreshController pullToRefreshController;
-
 
   static bool isNoticeOpen = false;
 
@@ -445,11 +443,11 @@ class _MainPageState extends State<MainPage> with CommonMainWidget,WidgetsBindin
     GeofenceService.instance.addGeofenceList(geofenceList);
   }
 
-  void checkCarInfo() {
+  Future<void> checkCarInfo() async {
     String? carType = App().getUserInfo()?.carTypeCode;
     String? carTon = App().getUserInfo()?.carTonCode;
     if((carType != null && carType.isNotEmpty) && (carTon != null && carTon.isNotEmpty)) {
-      startService();
+      await startService();
     }else{
       showCarSetting();
     }
@@ -473,7 +471,7 @@ class _MainPageState extends State<MainPage> with CommonMainWidget,WidgetsBindin
           }
       );
     }else{
-      checkCarInfo();
+      await checkCarInfo();
     }
   }
 
@@ -520,21 +518,21 @@ class _MainPageState extends State<MainPage> with CommonMainWidget,WidgetsBindin
 
   Future<void> callPermission() async {
     if(await checkLocationPermission()) {
-      checkCarInfo();
+      await checkCarInfo();
     }else{
-      goToAppSetting();
+      await goToAppSetting();
     }
   }
 
-  void goToAppSetting() {
+  Future<void> goToAppSetting() async {
     if(Permission.location == PermissionStatus.denied) {
       AppSettings.openAppSettings();
     }
-    finishService();
+    await finishService();
   }
 
   Future<void> startService() async {
-    SP.putBool(Const.KEY_SETTING_WORK, true);
+    await SP.putBool(Const.KEY_SETTING_WORK, true);
     if(!_geofenceService.isRunningService) {
       await setGeofencingClient();
       _geofenceService.addGeofenceStatusChangeListener(_onGeofenceStatusChanged);
@@ -551,8 +549,8 @@ class _MainPageState extends State<MainPage> with CommonMainWidget,WidgetsBindin
 
   }
 
-  void finishService() {
-    stopService();
+  Future<void> finishService() async {
+    await stopService();
     exited();
   }
 
@@ -580,16 +578,16 @@ class _MainPageState extends State<MainPage> with CommonMainWidget,WidgetsBindin
         Strings.of(context)?.get("cancel")??"Not Found",
         Strings.of(context)?.get("confirm")??"Not Found",
             () {Navigator.of(context).pop(false);},
-            () {
+            () async {
           Navigator.of(context).pop(false);
-          if(guest) SP.remove(Const.KEY_USER_INFO);
-          logout();
+          if(guest) await SP.remove(Const.KEY_USER_INFO);
+          await logout();
         }
     );
   }
 
-  void logout() {
-    stopService();
+  Future<void> logout() async {
+    await stopService();
     Future.delayed(const Duration(milliseconds: 300), () {
       Navigator.pushNamedAndRemoveUntil(context, '/', (route) => false);
       exit(0);
@@ -1219,8 +1217,8 @@ class _MainPageState extends State<MainPage> with CommonMainWidget,WidgetsBindin
                     automaticallyImplyLeading: false,
                     actions: [
                       IconButton(
-                          onPressed: () {
-                            goToExit();
+                          onPressed: () async {
+                            await goToExit();
                           },
                           icon: Image.asset("assets/image/ic_exit_hangul.png",width: CustomStyle.getWidth(32.0),height: CustomStyle.getHeight(32.0),)),
                       IconButton(

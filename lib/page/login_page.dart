@@ -352,7 +352,7 @@ class _LoginPageState extends State<LoginPage> with CommonMainWidget {
             if (userInfo != null) {
               userInfo.authorization = it.response.headers["authorization"]?[0];
               logger.i("userJson => $userInfo");
-              controller.setUserInfo(userInfo);
+              await controller.setUserInfo(userInfo);
               logger.i("User Login => ${controller.getUserInfo()?.driverId}");
               if ((controller.getUserInfo()?.vehicCnt ?? 0) > 1) {
                 goToUserCar();
