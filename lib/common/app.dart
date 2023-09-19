@@ -35,8 +35,8 @@ class App extends GetxController{
   }*/
 
 
-  void setUserInfo(UserModel userInfo) {
-    SP.putUserModel(Const.KEY_USER_INFO, userInfo);
+  Future<void> setUserInfo(UserModel userInfo) async {
+    await SP.putUserModel(Const.KEY_USER_INFO, userInfo);
     user.value = userInfo;
     update();
   }

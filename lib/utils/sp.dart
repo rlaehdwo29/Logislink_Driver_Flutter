@@ -30,10 +30,10 @@ class SP extends GetxController {
     m_Pref?.clear();
   }
 
-  static void remove(String key) {
-    open();
-    m_Pref?.remove(key);
-    m_Pref?.commit();
+  static Future<void> remove(String key) async {
+    await open();
+    await m_Pref?.remove(key);
+    await m_Pref?.commit();
   }
 
   static Future<void> putString(String key, String value) async {

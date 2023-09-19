@@ -4,7 +4,7 @@
 
   const String m_ServerRelease = "https://app.logis-link.co.kr";    // 실 서버
 
-  const String m_ServerDebug = "http://192.168.53.51:8080";         // localhost
+  const String m_ServerDebug = "http://192.168.68.70:8080";         // localhost
   //const String m_ServerDebug = "http://172.30.1.89:8080";
   //const String m_ServerDebug = "http://192.168.0.2:8080";
 
@@ -17,7 +17,7 @@
   const String m_Release = "https://abt.logis-link.co.kr";
   const String m_Debug = "http://172.30.1.89:8080";
   //const String m_Debug = "http://192.168.0.2:8080";
-  const String m_Setting = m_Release;
+  const String m_Setting = m_ServerTest;
 
   const String JUSO_URL = "https://www.juso.go.kr";
   const String WEATHER_URL = "http://apis.data.go.kr/1360000/VilageFcstInfoService_2.0/";
