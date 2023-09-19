@@ -220,7 +220,7 @@ class ShowBankCheckWidget{
                                               }
                                             },
                                             child: Container(
-                                                decoration: CustomStyle.customBoxDeco(!isChecked.value?sub_color:text_color_02,radius: 15),
+                                                decoration: CustomStyle.customBoxDeco(!isChecked.value?text_color_02:sub_color,radius: 15,border_color: text_color_02),
                                                 padding: EdgeInsets.symmetric(vertical: CustomStyle.getHeight(5.0)),
                                                 margin: EdgeInsets.symmetric(horizontal: CustomStyle.getWidth(10.0), vertical: CustomStyle.getHeight(10.0)),
                                                 child:Row(
@@ -230,7 +230,7 @@ class ShowBankCheckWidget{
                                                   Text(
                                                     !isChecked.value? Strings.of(context)?.get("bank_check")??"Not Found" : "예금주 확인완료",
                                                     textAlign: TextAlign.center,
-                                                    style: CustomStyle.CustomFont(styleFontSize12, !isChecked.value?styleWhiteCol:text_color_02),
+                                                    style: CustomStyle.CustomFont(styleFontSize12,styleWhiteCol),
                                                   ),
                                                     isLoading == true? Container(
                                                         margin: EdgeInsets.only(left: CustomStyle.getWidth(5.0)),
@@ -296,7 +296,7 @@ class ShowBankCheckWidget{
                                                     ),
                                                     child: Text(
                                                       "${tempData.value?.acctNm}",
-                                                      textAlign: TextAlign.center,
+                                                      textAlign: TextAlign.left,
                                                       style: CustomStyle.CustomFont(styleFontSize12, text_color_01),
                                                     )
                                                 )
@@ -330,8 +330,8 @@ class ShowBankCheckWidget{
                                     Expanded(
                                         flex:1,
                                         child: InkWell(
-                                            onTap: (){
-                                              bank_check_confirm();
+                                            onTap: () async {
+                                              await bank_check_confirm();
                                             },
                                             child: Container(
                                                 height:CustomStyle.getHeight(50.0),
@@ -384,9 +384,19 @@ class ShowBankCheckWidget{
       logger.d("getIaccNm() _response -> ${_response.status} // ${_response.resultMap}");
       isLoading.value = false;
       if(_response.status == "200") {
-        isChecked.value = true;
-        tempData.value = BankInfoModel(bankCd: mData.value?.bankCd,acctNm: mData.value?.acctNm, acctNo: mData.value?.acctNo, chkDate: mData.value?.chkDate);
-      }else{
+        if (_response.resultMap?["result"] == true) {
+          isChecked.value = true;
+          mData.value.acctNm = _response.resultMap?["iacctNm"];
+          mData.value.chkDate = Util.getCurrentDate("yyyyMMdd");
+          tempData.value = BankInfoModel(bankCd: mData.value?.bankCd,
+              acctNm: mData.value?.acctNm,
+              acctNo: mData.value?.acctNo,
+              chkDate: mData.value?.chkDate);
+        }else{
+          isChecked.value = false;
+          Util.toast("${_response.resultMap?["msg"]}");
+        }
+        }else{
         Util.toast(_response.message);
       }
     }).catchError((Object obj) {
@@ -406,18 +416,18 @@ class ShowBankCheckWidget{
 
   }
 
-  void bank_check_confirm() {
+  Future<void> bank_check_confirm() async {
     //if(isChecked.value){
-      updateBank();
+      await updateBank();
     //}else{
     //  Util.toast("예금주를 확인해주세요.");
     //}
   }
 
-  void updateBank() {
+  Future<void> updateBank() async {
     UserModel? user = controller.getUserInfo();
     Logger logger = Logger();
-    DioService.dioClient(header: true).updateBank(user?.authorization, mData.value?.bankCd, "김동재", mData.value?.acctNo).then((it) {
+    await DioService.dioClient(header: true).updateBank(user?.authorization, mData.value?.bankCd, "김동재", mData.value?.acctNo).then((it) {
       ReturnMap _response = DioService.dioResponse(it);
       logger.d("updateBank() _response -> ${_response.status} // ${_response.resultMap}");
       if(_response.status == "200") {

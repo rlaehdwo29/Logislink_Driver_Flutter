@@ -34,6 +34,7 @@ class _TaxPageState extends State<TaxPage> {
   final tvTax = "".obs;
   final tvTotalPrice = "".obs;
   final _isChecked = false.obs;
+  final pay = false.obs;
 
 
   DateTime _focusedDay = DateTime.now();
@@ -916,6 +917,9 @@ class _TaxPageState extends State<TaxPage> {
         tvFee.value = Util.getInCodeCommaWon(fee.toString());
       }
     }
+
+    pay.value = widget.item?.reqPayYN == "Y"?true:false;
+
     tax = price ~/ 10;
     totalPrice = price + tax;
     tvCharge.value =  Util.getInCodeCommaWon(charge.toString());
@@ -1162,7 +1166,7 @@ class _TaxPageState extends State<TaxPage> {
                 ],
               ),
             ),
-          Container(
+          pay.value ? Container(
             padding:
             EdgeInsets.symmetric(vertical: CustomStyle.getHeight(10.0)),
             decoration: BoxDecoration(
@@ -1177,7 +1181,7 @@ class _TaxPageState extends State<TaxPage> {
                 Text("${tvFee.value}원",textAlign: TextAlign.center,style: CustomStyle.CustomFont(styleFontSize14, text_color_01),)
               ],
             ),
-          ),
+          ):Container(),
           Container(
             padding:
             EdgeInsets.symmetric(vertical: CustomStyle.getHeight(10.0)),
