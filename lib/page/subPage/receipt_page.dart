@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:io';
+import 'package:device_info_plus/device_info_plus.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -67,7 +68,7 @@ class _ReceiptPageState extends State<ReceiptPage>{
 
   Future<void> removeReceipt(int fileSeq) async {
     Logger logger = Logger();
-    UserModel user = controller.getUserInfo()!;
+    UserModel user = await controller.getUserInfo()!;
     await DioService.dioClient(header: true).removeReceipt(user.authorization, widget.item?.orderId, widget.item?.allocId, fileSeq).then((it) async {
       ReturnMap _response = DioService.dioResponse(it);
       await pr?.hide();
@@ -108,7 +109,7 @@ class _ReceiptPageState extends State<ReceiptPage>{
   }
 
   Future<void> uploadReceipt(XFile? file) async {
-      UserModel? user = controller.getUserInfo();
+      UserModel? user = await controller.getUserInfo();
 
       var _formatFile = File(file!.path);
         var request = http.MultipartRequest(
@@ -161,33 +162,52 @@ class _ReceiptPageState extends State<ReceiptPage>{
   }
 
   Future<void> checkPermission() async {
-    if (await Permission.contacts.request().isGranted) {
-      // Either the permission was already granted before or the user just granted it.
-      //print("연결");
-    }else{
-      // You can request multiple permissions at once.
-      Map<Permission, PermissionStatus> statuses = await [
-        Permission.storage,
-      ].request();
+      DeviceInfoPlugin deviceInfo = DeviceInfoPlugin();
+      if (Platform.isAndroid) {
+        AndroidDeviceInfo info = await deviceInfo.androidInfo;
+        if (info.version.sdkInt >= 33) {
+          final permissionStatus = await Permission.photos.status;
+          if (permissionStatus != PermissionStatus.granted) {
+            if (permissionStatus.isPermanentlyDenied) {
+              await openAppSettings();
+            } else {
+              await Permission.photos.request();
+            }
+          } else {
+            await showAlbum();
+          }
+        } else {
+          final permissionStatus = await Permission.storage.status;
 
-      final permissionStatus = await Permission.manageExternalStorage.status;
-
-      if(permissionStatus != PermissionStatus.granted) {
-        if (permissionStatus.isPermanentlyDenied) {
-          await openAppSettings();
-        }else{
-          await Permission.storage.request();
+          if (permissionStatus != PermissionStatus.granted) {
+            if (permissionStatus.isPermanentlyDenied) {
+              await openAppSettings();
+            } else {
+              await Permission.storage.request();
+            }
+          } else {
+            await showAlbum();
+          }
         }
       }else{
-        await showAlbum();
+        final permissionStatus = await Permission.photos.status;
+        if (permissionStatus != PermissionStatus.granted) {
+          if (permissionStatus.isPermanentlyDenied) {
+            await openAppSettings();
+          } else {
+            await Permission.photos.request();
+          }
+        } else {
+          await showAlbum();
+        }
       }
-    }
   }
 
   Future<void> getReceiptList () async {
     Logger logger = Logger();
+    var app = await App().getUserInfo();
     receiptList.value = List.empty(growable: true);
-    await DioService.dioClient(header: true).getReceipt(App().getUserInfo().authorization,  widget.item?.orderId).then((it) {
+    await DioService.dioClient(header: true).getReceipt(app.authorization,  widget.item?.orderId).then((it) {
       ReturnMap _response = DioService.dioResponse(it);
       logger.d("receipt_page.dart getReceipt() _response -> ${_response.status} // ${_response.resultMap}");
       if(_response.status == "200") {
@@ -264,7 +284,7 @@ class _ReceiptPageState extends State<ReceiptPage>{
   Widget getReceiptFuture() {
     final receiptService = Provider.of<ReceiptService>(context);
     return FutureBuilder(
-        future: receiptService.getReceipt(context, controller.getUserInfo()?.authorization, widget.item?.orderId),
+        future: receiptService.getReceipt(context, widget.item?.orderId),
         builder: (context, snapshot) {
           if(snapshot.hasData) {
             print("getReceiptFuture() has Data! => ${snapshot.data}");
@@ -346,7 +366,8 @@ class _ReceiptPageState extends State<ReceiptPage>{
             padding: EdgeInsets.symmetric(vertical: 15.0,horizontal: 10.0),
             child: InkWell(
               onTap: () async {
-                await showAlbum();
+                await checkPermission();
+                //await showAlbum();
               },
                 child: Row(
                   crossAxisAlignment: CrossAxisAlignment.center,

@@ -35,6 +35,7 @@ class _TaxPageState extends State<TaxPage> {
   final tvTotalPrice = "".obs;
   final _isChecked = false.obs;
   final pay = false.obs;
+  final app = UserModel().obs;
 
 
   DateTime _focusedDay = DateTime.now();
@@ -45,16 +46,30 @@ class _TaxPageState extends State<TaxPage> {
 
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      app.value = await controller.getUserInfo();
+    });
     initView();
   }
 
   void _callback(String? bankCd, String? acctNm, String? acctNo) {
-    UserModel user = controller.getUserInfo()!;
-    user?.bankCode = bankCd;
-    user?.bankCnnm = acctNm;
-    user?.bankAccount = acctNo;
-    controller.setUserInfo(user);
-    setState(() {});
+    setState(() async {
+      UserModel user = await controller.getUserInfo()!;
+      user?.bankCode = bankCd;
+      user?.bankCnnm = acctNm;
+      user?.bankAccount = acctNo;
+      controller.setUserInfo(user);
+    });
+  }
+
+  void onCallback(bool? refresh) {
+    setState(() async {
+      if (refresh != null) {
+        if (refresh) {
+          app.value = await controller.getUserInfo();
+        }
+      }
+    });
   }
 
   @override
@@ -133,25 +148,25 @@ class _TaxPageState extends State<TaxPage> {
   }
 
   bool validation() {
-    if(controller.getUserInfo()?.driverEmail?.isEmpty == true) {
+    if(app.value.driverEmail?.isEmpty == true) {
       Util.toast("등록된 이메일이 없습니다.");
       return false;
     }
-    if(controller.getUserInfo()?.bizNum?.isEmpty == true &&
-       controller.getUserInfo()?.bizName?.isEmpty == true &&
-       controller.getUserInfo()?.ceo?.isEmpty == true &&
-       controller.getUserInfo()?.bizAddr?.isEmpty == true &&
-       controller.getUserInfo()?.bizCond?.isEmpty == true &&
-       controller.getUserInfo()?.bizKind?.isEmpty == true) {
+    if(app.value.bizNum?.isEmpty == true &&
+        app.value.bizName?.isEmpty == true &&
+        app.value.ceo?.isEmpty == true &&
+        app.value.bizAddr?.isEmpty == true &&
+        app.value.bizCond?.isEmpty == true &&
+        app.value.bizKind?.isEmpty == true) {
       Util.toast("등록된 사업자정보가 없거나 정확하지 않습니다");
       return false;
     }
-    if(controller.getUserInfo()?.bankAccount?.isEmpty == true &&
-       controller.getUserInfo()?.bankCnnm?.isEmpty == true &&
-       controller.getUserInfo()?.bankCode?.isEmpty == true) {
+    if(app.value.bankAccount?.isEmpty == true &&
+        app.value.bankCnnm?.isEmpty == true &&
+        app.value.bankCode?.isEmpty == true) {
       Util.toast("등록된 계좌가 없습니다.");
     }
-    if(controller.getUserInfo()?.bankchkDate == null) {
+    if(app.value.bankchkDate == null) {
       Util.toast("확인되지 않은 계좌입니다.");
       return false;
     }
@@ -180,9 +195,9 @@ class _TaxPageState extends State<TaxPage> {
           Navigator.of(context).pop(false);
           showTax();
           },
-            () {
+            () async {
           Navigator.of(context).pop(false);
-          showPayDialog(showPayConfirm);
+          showPayDialog(await showPayConfirm);
         }
     );
   }
@@ -214,7 +229,8 @@ class _TaxPageState extends State<TaxPage> {
   Future<void> writeTax() async {
     Logger logger = Logger();
     await pr?.show();
-    await DioService.dioClient(header: true).writeTax(controller.getUserInfo()?.authorization, widget.item?.orderId, widget.item?.allocId, "02", controller.getUserInfo()?.vehicId, Util.getDateCalToStr(_selectDay.value, "yyyyMMdd")).then((it) async {
+    var app = await controller.getUserInfo();
+    await DioService.dioClient(header: true).writeTax(app.authorization, widget.item?.orderId, widget.item?.allocId, "02", app.vehicId, Util.getDateCalToStr(_selectDay.value, "yyyyMMdd")).then((it) async {
       await pr?.hide();
       ReturnMap _response = DioService.dioResponse(it);
       logger.d("writeTax() _response -> ${_response.status} // ${_response.resultMap}");
@@ -248,7 +264,8 @@ class _TaxPageState extends State<TaxPage> {
   Future<void> issueTax() async {
     Logger logger = Logger();
     await pr?.show();
-    await DioService.dioClient(header: true).issueTax(controller.getUserInfo()?.authorization, widget.item?.invId, controller.getUserInfo()?.vehicId).then((it) async {
+    var app = await controller.getUserInfo();
+    await DioService.dioClient(header: true).issueTax(app.authorization, widget.item?.invId, app.vehicId).then((it) async {
       await pr?.hide();
       ReturnMap _response = DioService.dioResponse(it);
       if(_response.status == "200") {
@@ -273,9 +290,10 @@ class _TaxPageState extends State<TaxPage> {
     });
   }
 
-  void showPayConfirm(String? _result) {
+  Future<void> showPayConfirm(String? _result) async {
     if(_result == "200") {
-      if(checkBankDate() != true) {
+      var result = await checkBankDate();
+      if(result != true) {
         sendPay();
       }else{
         checkAccNm();
@@ -286,7 +304,8 @@ class _TaxPageState extends State<TaxPage> {
   Future<void> checkAccNm() async {
     Logger logger = Logger();
     await pr?.show();
-    await DioService.dioClient(header: true).checkAccNm(controller.getUserInfo()?.authorization, controller.getUserInfo()?.vehicId, controller.getUserInfo()?.bankCode,controller.getUserInfo()?.bankAccount, controller.getUserInfo()?.bankCnnm).then((it) async {
+    var app = await controller.getUserInfo();
+    await DioService.dioClient(header: true).checkAccNm(app.authorization, app.vehicId, app.bankCode,app.bankAccount, app.bankCnnm).then((it) async {
     await pr?.hide();
     ReturnMap _response = DioService.dioResponse(it);
     if(_response.status == "200") {
@@ -317,13 +336,14 @@ class _TaxPageState extends State<TaxPage> {
 
   Future<void> updateBank() async {
     Logger logger = Logger();
+    var app = await controller.getUserInfo();
     await pr?.show();
-    await DioService.dioClient(header: true).updateBank(controller.getUserInfo()?.authorization, controller.getUserInfo()?.bankCode, controller.getUserInfo()?.bankCnnm, controller.getUserInfo()?.bankAccount).then((it) async {
+    await DioService.dioClient(header: true).updateBank(app.authorization, app.bankCode, app.bankCnnm, app.bankAccount).then((it) async {
     await pr?.hide();
     ReturnMap _response = DioService.dioResponse(it);
     if(_response.status == "200") {
       if (_response.resultMap?["result"] == true) {
-        UserModel user = controller.getUserInfo()!;
+        UserModel user = await controller.getUserInfo();
         user.bankchkDate = Util.getCurrentDate("yyyy-MM-dd HH:mm:ss");
         controller.setUserInfo(user);
         sendPay();
@@ -358,8 +378,8 @@ class _TaxPageState extends State<TaxPage> {
     }
   }
 
-  bool? checkBankDate() {
-    UserModel? user = controller.getUserInfo();
+  Future<bool?> checkBankDate() async {
+    UserModel? user = await controller.getUserInfo();
     String? nowDate = Util.getCurrentDate("yyyyMMdd");
     String? saveDate = Util.getDateStrToStr(user?.bankchkDate, "yyyyMMdd");
     return Util.betweenDate(nowDate, saveDate)! > 30;
@@ -367,8 +387,9 @@ class _TaxPageState extends State<TaxPage> {
 
   Future<void> sendPay() async {
     Logger logger = Logger();
+    var app = await controller.getUserInfo();
     await pr?.show();
-    await DioService.dioClient(header: true).sendPay(controller.getUserInfo()?.authorization, controller.getUserInfo()?.vehicId, widget.item?.orderId, widget.item?.allocId).then((it) async {
+    await DioService.dioClient(header: true).sendPay(app.authorization, app.vehicId, widget.item?.orderId, widget.item?.allocId).then((it) async {
       await pr?.hide();
       ReturnMap _response = DioService.dioResponse(it);
       if(_response.status == "200") {
@@ -479,8 +500,9 @@ class _TaxPageState extends State<TaxPage> {
                                         style: CustomStyle.CustomFont(styleFontSize12, text_color_01),
                                       ),
                                       InkWell(
-                                          onTap: (){
-                                            ShowBankCheckWidget(context: context,callback: _callback).showBankCheckDialog();
+                                          onTap: () async {
+                                            var app = await App().getUserInfo();
+                                            ShowBankCheckWidget(context: context,callback: _callback).showBankCheckDialog(app);
                                           },
                                           child: Container(
                                               decoration: CustomStyle.customBoxDeco(sub_color),
@@ -540,7 +562,7 @@ class _TaxPageState extends State<TaxPage> {
                                                       )
                                                   ),
                                                   child: Text(
-                                                    "${getBankName(controller.getUserInfo()?.bankCode??"")} ",
+                                                    "${getBankName(app.value.bankCode??"")} ",
                                                     textAlign: TextAlign.center,
                                                     style: CustomStyle.CustomFont(styleFontSize12, text_color_01),
                                                   )
@@ -586,7 +608,7 @@ class _TaxPageState extends State<TaxPage> {
                                                       )
                                                   ),
                                                   child: Text(
-                                                    "${controller.getUserInfo()?.bankAccount??"-"} ",
+                                                    "${app.value.bankAccount??"-"} ",
                                                     textAlign: TextAlign.center,
                                                     style: CustomStyle.CustomFont(styleFontSize12, text_color_01),
                                                   )
@@ -620,7 +642,7 @@ class _TaxPageState extends State<TaxPage> {
                                               child: Container(
                                                   padding: const EdgeInsets.all(10.0),
                                                   child: Text(
-                                                    "${controller.getUserInfo()?.bankCnnm??"-"} ",
+                                                    "${app.value.bankCnnm??"-"} ",
                                                     textAlign: TextAlign.center,
                                                     style: CustomStyle.CustomFont(styleFontSize12, text_color_01),
                                                   )
@@ -957,8 +979,9 @@ class _TaxPageState extends State<TaxPage> {
                           borderRadius: BorderRadius.circular(15.0),
                         ),
                       ),
-                      onPressed: () {
-                        ShowBankCheckWidget(context: context,callback: _callback).showBankCheckDialog();
+                      onPressed: () async {
+                        var app = await App().getUserInfo();
+                        ShowBankCheckWidget(context: context,callback: _callback).showBankCheckDialog(app);
                       },
                       child: Text(
                         Strings.of(context)?.get("tax_bank_edit") ??
@@ -1005,7 +1028,7 @@ class _TaxPageState extends State<TaxPage> {
                               child: Container(
                                 padding: const EdgeInsets.all(10.0),
                                 child: Text(
-                                  getBankName(controller.getUserInfo()?.bankCode),
+                                  getBankName(app.value.bankCode),
                                   style: CustomStyle.CustomFont(styleFontSize12, text_color_01),
                                 ),
                               )
@@ -1046,7 +1069,7 @@ class _TaxPageState extends State<TaxPage> {
                               child: Container(
                                 padding: const EdgeInsets.all(10.0),
                                 child: Text(
-                                  "${controller.getUserInfo()?.bankAccount}",
+                                  "${app.value.bankAccount}",
                                   style: CustomStyle.CustomFont(styleFontSize12, text_color_01),
                                 ),
                               )
@@ -1087,7 +1110,7 @@ class _TaxPageState extends State<TaxPage> {
                               child: Container(
                                 padding: const EdgeInsets.all(10.0),
                                 child: Text(
-                                  "${controller.getUserInfo()?.bankCnnm}",
+                                  "${app.value.bankCnnm}",
                                   style: CustomStyle.CustomFont(styleFontSize12, text_color_01),
                                 ),
                               )
@@ -1146,7 +1169,12 @@ class _TaxPageState extends State<TaxPage> {
                     ),
                   )
               ),
-              Icon(Icons.calendar_today_rounded,color: styleDefaultGrey, size: 24,)
+              InkWell(
+                onTap: (){
+                  openCalendarDialog();
+                },
+                child: Icon(Icons.calendar_today_rounded,color: styleDefaultGrey, size: 24,)
+              )
             ],
           )
           ),
@@ -1279,7 +1307,7 @@ class _TaxPageState extends State<TaxPage> {
                             )
                         ),
                         child:Text(
-                          "${makeBizNum(controller.getUserInfo()?.bizNum??"")}",
+                          "${makeBizNum(app.value.bizNum??"")}",
                           style: CustomStyle.CustomFont(styleFontSize12, text_color_01),
                         )
                     )
@@ -1307,7 +1335,7 @@ class _TaxPageState extends State<TaxPage> {
                     child: Container(
                         padding: const EdgeInsets.all(10.0),
                         child:Text(
-                          "${controller.getUserInfo()?.subBizNum}",
+                          "${app.value.subBizNum}",
                           style: CustomStyle.CustomFont(styleFontSize12, text_color_01),
                         )
                     )
@@ -1347,7 +1375,7 @@ class _TaxPageState extends State<TaxPage> {
                     child: Container(
                         padding: const EdgeInsets.all(10.0),
                         child:Text(
-                          "${controller.getUserInfo()?.bizName}",
+                          "${app.value.bizName}",
                           style: CustomStyle.CustomFont(styleFontSize12, text_color_01),
                         )
                     )
@@ -1387,7 +1415,7 @@ class _TaxPageState extends State<TaxPage> {
                     child: Container(
                         padding: const EdgeInsets.all(10.0),
                         child:Text(
-                          "${controller.getUserInfo()?.ceo}",
+                          "${app.value.ceo}",
                           style: CustomStyle.CustomFont(styleFontSize12, text_color_01),
                         )
                     )
@@ -1427,7 +1455,7 @@ class _TaxPageState extends State<TaxPage> {
                     child: Container(
                         padding: const EdgeInsets.all(10.0),
                         child:Text(
-                          "${controller.getUserInfo()?.bizAddr}",
+                          "${app.value.bizAddr}",
                           style: CustomStyle.CustomFont(styleFontSize12, text_color_01),
                         )
                     )
@@ -1467,7 +1495,7 @@ class _TaxPageState extends State<TaxPage> {
                     child: Container(
                         padding: const EdgeInsets.all(10.0),
                         child:Text(
-                          "${controller.getUserInfo()?.bizAddrDetail}",
+                          "${app.value.bizAddrDetail}",
                           style: CustomStyle.CustomFont(styleFontSize12, text_color_01),
                         )
                     )
@@ -1514,7 +1542,7 @@ class _TaxPageState extends State<TaxPage> {
                             )
                         ),
                         child:Text(
-                          "${controller.getUserInfo()?.bizCond}",
+                          "${app.value.bizCond}",
                           style: CustomStyle.CustomFont(styleFontSize12, text_color_01),
                         )
                     )
@@ -1542,7 +1570,7 @@ class _TaxPageState extends State<TaxPage> {
                     child: Container(
                         padding: const EdgeInsets.all(10.0),
                         child:Text(
-                          "${controller.getUserInfo()?.bizKind}",
+                          "${app.value.bizKind}",
                           style: CustomStyle.CustomFont(styleFontSize12, text_color_01),
                         )
                     )
@@ -1582,7 +1610,7 @@ class _TaxPageState extends State<TaxPage> {
                     child: Container(
                         padding: const EdgeInsets.all(10.0),
                         child:Text(
-                          "${controller.getUserInfo()?.driverEmail}",
+                          "${app.value.driverEmail}",
                           style: CustomStyle.CustomFont(styleFontSize12, text_color_01),
                         )
                     )
@@ -1615,7 +1643,7 @@ class _TaxPageState extends State<TaxPage> {
                   ),
                 ),
                 onPressed: (){
-                  Navigator.push(context, MaterialPageRoute(builder: (context) => AppBarMyPage(code:"edit_biz")));
+                  Navigator.push(context, MaterialPageRoute(builder: (context) => AppBarMyPage(code:"edit_biz",onCallback: onCallback,)));
                 },
                 child: Text(
                   Strings.of(context)?.get("tax_biz_edit")??"Not Fount",

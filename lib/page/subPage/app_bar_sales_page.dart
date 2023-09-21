@@ -626,8 +626,9 @@ class _AppBarSalesPageState extends State<AppBarSalesPage> {
 
   Future<void> getWork() async {
     Logger logger = Logger();
+    var app = await controller.getUserInfo();
     await DioService.dioClient(header: true).getSalesManageList(
-        controller.getUserInfo()?.authorization,
+        app.authorization,
       Util.getDateCalToStr(_rangeStart.value,'yyyy-MM-dd'),
       Util.getDateCalToStr(_rangeEnd.value,'yyyy-MM-dd')).then((it) {
       ReturnMap _response = DioService.dioResponse(it);
@@ -666,7 +667,6 @@ class _AppBarSalesPageState extends State<AppBarSalesPage> {
     return FutureBuilder(
       future: appBarService.getSalesManage(
           context,
-          controller.getUserInfo()?.authorization,
           Util.getDateCalToStr(_rangeStart.value,'yyyy-MM-dd'),
           Util.getDateCalToStr(_rangeEnd.value,'yyyy-MM-dd'),
       ),
@@ -724,8 +724,9 @@ class _AppBarSalesPageState extends State<AppBarSalesPage> {
   Future<void> depositDataAPI() async {
 
     Logger logger = Logger();
+    var app = await App().getUserInfo();
     await DioService.dioClient(header: true).depositSalesManage(
-        App().getUserInfo().authorization,
+        app.authorization,
         depo_workId,
         depo_deposit,
         _depoSelectDay.value).then((it) async {

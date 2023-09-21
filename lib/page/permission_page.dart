@@ -4,6 +4,7 @@ import 'package:device_info_plus/device_info_plus.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:geolocator/geolocator.dart';
+import 'package:logislink_driver_flutter/common/strings.dart';
 import 'package:logislink_driver_flutter/common/style_theme.dart';
 import 'package:logislink_driver_flutter/page/bridge_page.dart';
 import 'package:permission_handler/permission_handler.dart';
@@ -16,21 +17,19 @@ class PermissionPage extends StatefulWidget {
   _PermissionPageState createState() => _PermissionPageState();
 }
 
-Future<Map<String,dynamic>> requestPermission() async {
+Future<bool> requestPermission() async {
   if (await Permission.contacts.request().isGranted) {
     // Either the permission was already granted before or the user just granted it.
     //print("권한 설정 완료");
     //app_util.Util.toast("권한 설정 완료");
-    return Future.value(<String,String> {
-      "result":"checkAll"
-    });
+    return Future.value(true);
   }else{
     // You can request multiple permissions at once.
     DeviceInfoPlugin deviceInfo = DeviceInfoPlugin();
     if(Platform.isAndroid) {
       AndroidDeviceInfo info  = await deviceInfo.androidInfo;
       // Android 13 버전 이상.
-      if(info.version.sdkInt >= 33) {
+      if(info.version.sdkInt >= 29) {
         var phone_per = await Permission.phone.request();
         var photos_per = await Permission.photos.request();
         var location_per = await Permission.location.request();
@@ -43,40 +42,13 @@ Future<Map<String,dynamic>> requestPermission() async {
         print("폰 => ${phone_per}");
         print("신체활동 => ${activityRecognition_per}");*/
 
-        if (photos_per == PermissionStatus.permanentlyDenied) {
-          await openAppSettings();
-        } else if (phone_per == PermissionStatus.permanentlyDenied) {
-          await openAppSettings();
-        } else if (location_per == PermissionStatus.permanentlyDenied || locationPermission == LocationPermission.whileInUse) {
-          await openAppSettings();
-        } else if (activityRecognition_per == PermissionStatus.permanentlyDenied) {
-          await openAppSettings();
-        }
-
-        if (location_per != PermissionStatus.granted) {
-          return Future.value(<String,String> {
-            "result":"위치"
-          });
-        } else if (photos_per != PermissionStatus.granted) {
-          return Future.value(<String,String> {
-            "result":"사진 및 동영상"
-          });
-        } else if (phone_per != PermissionStatus.granted) {
-          return Future.value(<String,String> {
-            "result":"전화"
-          });
-        }else if(locationPermission != LocationPermission.always) {
-          return Future.value(<String,String> {
-            "result":"위치 항상 허용"
-          });
+        var requiredPermission = true;
+        if (phone_per != PermissionStatus.granted) {
+          requiredPermission = false;
         } else if (activityRecognition_per != PermissionStatus.granted) {
-          return Future.value(<String,String> {
-            "result":"신체활동"
-          });
+          requiredPermission = false;
         }
-        return Future.value(<String,String> {
-          "result":"checkAll"
-        });
+        return Future.value(requiredPermission);
 
       }else {
         Map<Permission, PermissionStatus> statuses = await [
@@ -91,37 +63,13 @@ Future<Map<String,dynamic>> requestPermission() async {
         print("저장소 => ${statuses[Permission.storage]}");
         print("폰 => ${statuses[Permission.phone]}");
         print("신체활동 => ${statuses[Permission.activityRecognition]}");*/
-
-        if (statuses[Permission.storage] == PermissionStatus.permanentlyDenied) {
-          await openAppSettings();
-        } else if (statuses[Permission.phone] == PermissionStatus.permanentlyDenied) {
-          await openAppSettings();
-        } else if (statuses[Permission.location] == PermissionStatus.permanentlyDenied) {
-          await openAppSettings();
-        } else if (statuses[Permission.activityRecognition] == PermissionStatus.permanentlyDenied) {
-          await openAppSettings();
-        }
-
-        if (statuses[Permission.location] != PermissionStatus.granted) {
-          return Future.value(<String,String> {
-            "result":"위치"
-          });
-        } else if (statuses[Permission.storage] != PermissionStatus.granted) {
-          return Future.value(<String,String> {
-            "result":"저장소"
-          });
-        } else if (statuses[Permission.phone] != PermissionStatus.granted) {
-          return Future.value(<String,String> {
-            "result":"전화"
-          });
+        var requiredPermission = true;
+        if (statuses[Permission.phone] != PermissionStatus.granted) {
+          requiredPermission = false;
         } else if (statuses[Permission.activityRecognition] != PermissionStatus.granted) {
-          return Future.value(<String,String> {
-            "result":"신체활동"
-          });
+          requiredPermission = false;
         }
-        return Future.value(<String,String> {
-          "result":"checkAll"
-        });
+        return Future.value(requiredPermission);
       }
     }else{
       Map<Permission, PermissionStatus> statuses = await [
@@ -138,39 +86,13 @@ Future<Map<String,dynamic>> requestPermission() async {
       print("저장소 => ${statuses[Permission.photos]}");
       print("폰 => ${statuses[Permission.phone]}");
       print("신체활동 => ${statuses[Permission.activityRecognition]}");*/
-
-      if (statuses[Permission.photos] == PermissionStatus.denied || statuses[Permission.photos] == PermissionStatus.permanentlyDenied) {
-        await openAppSettings();
-      } else if (statuses[Permission.phone] == PermissionStatus.denied || statuses[Permission.phone] == PermissionStatus.permanentlyDenied) {
-        await openAppSettings();
-      } else if (statuses[Permission.location] == PermissionStatus.denied || statuses[Permission.location] == PermissionStatus.permanentlyDenied) {
-        await openAppSettings();
-      } else if(locationPermission != LocationPermission.always){
-        await Geolocator.openAppSettings();
-      }else if (statuses[Permission.activityRecognition] == PermissionStatus.denied || statuses[Permission.activityRecognition] == PermissionStatus.permanentlyDenied) {
-        await openAppSettings();
-      }
-
-      if (statuses[Permission.location] != PermissionStatus.granted) {
-        return Future.value(<String,String> {
-          "result":"위치"
-        });
-      } else if (statuses[Permission.photos] != PermissionStatus.granted) {
-        return Future.value(<String,String> {
-          "result":"사진 및 동영상"
-        });
-      } else if (statuses[Permission.phone] != PermissionStatus.granted) {
-        return Future.value(<String,String> {
-          "result":"전화"
-        });
+      var requiredPermission = true;
+      if (statuses[Permission.phone] != PermissionStatus.granted) {
+        requiredPermission = false;
       } else if (statuses[Permission.activityRecognition] != PermissionStatus.granted) {
-        return Future.value(<String,String> {
-          "result":"신체활동"
-        });
+        requiredPermission = false;
       }
-      return Future.value(<String,String> {
-        "result":"checkAll"
-      });
+      return Future.value(requiredPermission);
     }
   }
 }
@@ -396,15 +318,15 @@ class _PermissionPageState extends State<PermissionPage>{
                 ))),
         bottomNavigationBar: InkWell(
           onTap: () async {
-            Map<String,dynamic>? result = await requestPermission();
-            if(result["result"] == "checkAll"){
+            bool? result = await requestPermission();
+            if(result){
               Navigator.of(context).pop({'code': 200});
             }else{
-              if(result["result"] == "위치 항상 허용") {
-                app_util.Util.toast("위치 권한을 항상 허용으로 변경해주세요.");
-              }else{
-                app_util.Util.toast("${result["result"]} 권한을 허용해주세요.");
-              }
+              app_util.Util.toast("${Strings.of(context)?.get("permission_failed") ?? "필요한 권한을 설정해 주세요. 앱이 종료됩니다."}");
+              Future.delayed(const Duration(milliseconds: 300), () {
+                Navigator.pushNamedAndRemoveUntil(context, '/', (route) => false);
+                exit(0);
+              });
             }
           },
           child: Container(

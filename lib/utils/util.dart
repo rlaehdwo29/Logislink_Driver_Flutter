@@ -390,8 +390,9 @@ class Util {
 
   static Future<void> getNotice(BuildContext context,String pageName,GlobalKey webviewKey) async {
     final controller = Get.find<App>();
+    var app = await controller.getUserInfo();
     Logger logger = Logger();
-    await DioService.dioClient(header: true).getNotice2(controller.getUserInfo()?.authorization,"Y").then((it) async {
+    await DioService.dioClient(header: true).getNotice2(app.authorization,"Y").then((it) async {
       ReturnMap _response = DioService.dioResponse(it);
       logger.d("Util getNotice() _response -> ${_response.status} // ${_response.resultMap}");
       if(_response.status == "200") {

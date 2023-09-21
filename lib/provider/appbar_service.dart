@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:logger/logger.dart';
+import 'package:logislink_driver_flutter/common/app.dart';
 import 'package:logislink_driver_flutter/common/common_util.dart';
 import 'package:logislink_driver_flutter/common/model/car_book_model.dart';
 import 'package:logislink_driver_flutter/common/model/car_model.dart';
@@ -40,10 +41,11 @@ class AppbarService with ChangeNotifier {
     noticeList.value = List.empty(growable: true);
   }
 
-  Future getNotice(BuildContext? context, String? auth) async {
+  Future getNotice(BuildContext? context) async {
     Logger logger = Logger();
+    var app = await App().getUserInfo();
     noticeList.value = List.empty(growable: true);
-    await DioService.dioClient(header: true).getNotice(auth).then((it) {
+    await DioService.dioClient(header: true).getNotice(app.authorization).then((it) {
       if (noticeList.isNotEmpty == true) noticeList.value = List.empty(growable: true);
       ReturnMap _response = DioService.dioResponse(it);
       logger.d("getNotice() _response -> ${_response.status} // ${_response.resultMap}");
@@ -76,10 +78,11 @@ class AppbarService with ChangeNotifier {
     return noticeList;
   }
 
-  Future getSalesManage(BuildContext? context,String? auth, String? startDate, String? endDate) async {
+  Future getSalesManage(BuildContext? context, String? startDate, String? endDate) async {
     Logger logger = Logger();
+    var app = await App().getUserInfo();
     salesList.value = List.empty(growable: true);
-    await DioService.dioClient(header: true).getSalesManageList(auth,startDate,endDate).then((it) {
+    await DioService.dioClient(header: true).getSalesManageList(app.authorization,startDate,endDate).then((it) {
       if (salesList.isNotEmpty == true) salesList.value = List.empty(growable: true);
       ReturnMap _response = DioService.dioResponse(it);
       logger.d("getSalesManage() _response -> ${_response.status} // ${_response.resultMap}");
@@ -134,10 +137,11 @@ class AppbarService with ChangeNotifier {
   }
 
   // 실적현황
-  Future getMonitor(BuildContext context, String? auth, String? startDate, String? endDate, String? vehicId) async {
+  Future getMonitor(BuildContext context, String? startDate, String? endDate) async {
     Logger logger = Logger();
+    var app = await App().getUserInfo();
     monitorModel.value = MonitorModel();
-    await DioService.dioClient(header: true).getMonitorOrder(auth,startDate,endDate,vehicId).then((it) {
+    await DioService.dioClient(header: true).getMonitorOrder(app.authorization,startDate,endDate,app.vehicId).then((it) {
       ReturnMap _response = DioService.dioResponse(it);
       logger.d("getMonitor() _response -> ${_response.status} // ${_response.resultMap}");
       if(_response.status == "200") {
@@ -171,9 +175,10 @@ class AppbarService with ChangeNotifier {
   }
 
   //차계부
-  Future getCar(BuildContext context, String? auth) async {
+  Future getCar(BuildContext context) async {
     Logger logger = Logger();
-    await DioService.dioClient(header: true).getCar(auth).then((it) {
+    var app = await App().getUserInfo();
+    await DioService.dioClient(header: true).getCar(app.authorization).then((it) {
       ReturnMap _response = DioService.dioResponse(it);
       logger.d("getCar() _response -> ${_response.status} // ${_response.resultMap}");
       if(_response.status == "200") {
@@ -205,10 +210,11 @@ class AppbarService with ChangeNotifier {
   }
 
   // 차계부 Tab별 리스트
-  Future getTabList(String? auth,int? carSeq, String? startDate, String? endDate,String? tabValue ) async {
+  Future getTabList(int? carSeq, String? startDate, String? endDate,String? tabValue ) async {
     Logger logger = Logger();
+    var app = await App().getUserInfo();
     await DioService.dioClient(header: true).getCarBook(
-        auth,
+        app.authorization,
         carSeq,
         startDate,
         endDate,

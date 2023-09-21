@@ -61,7 +61,7 @@ class _OrderDetailPageState extends State<OrderDetailPage>{
   late KakaoMapController? mapController;
   final platform = const MethodChannel("testing.flutter.android");
   Set<Marker> markers = {};
-
+  final app = UserModel().obs;
   final orderItem = OrderModel().obs;
   final stopPointList = List.empty(growable: true).obs;
 
@@ -70,7 +70,9 @@ class _OrderDetailPageState extends State<OrderDetailPage>{
     FBroadcast.instance().register(Const.INTENT_DETAIL_REFRESH, (value, callback) {
       getOrderDetail(widget.allocId);
     });
-
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      app.value = await controller.getUserInfo();
+    });
     if(widget.item != null) {
       orderItem.value = widget.item!;
       initView();
@@ -85,11 +87,13 @@ class _OrderDetailPageState extends State<OrderDetailPage>{
   }
 
   void _callback(String? bankCd, String? acctNm, String? acctNo) {
-    UserModel user = controller.getUserInfo()!;
-    user.bankCode = bankCd;
-    user.bankCnnm = acctNm;
-    user.bankAccount = acctNo;
-    controller.setUserInfo(user);
+    setState(() async {
+      UserModel user = await controller.getUserInfo()!;
+      user.bankCode = bankCd;
+      user.bankCnnm = acctNm;
+      user.bankAccount = acctNo;
+      controller.setUserInfo(user);
+    });
   }
 
 
@@ -372,8 +376,9 @@ class _OrderDetailPageState extends State<OrderDetailPage>{
   Future<void> finishStopPoint(StopPointModel data) async {
     set_EP_SP("EP");
     Logger logger = Logger();
+    var app = await controller.getUserInfo();
     await pr?.show();
-    await DioService.dioClient(header: true).finishStopPoint(controller.getUserInfo()?.authorization, data.orderId, data.stopSeq.toString()).then((it) async {
+    await DioService.dioClient(header: true).finishStopPoint(app.authorization, data.orderId, data.stopSeq.toString()).then((it) async {
       await pr?.hide();
       ReturnMap _response = DioService.dioResponse(it);
       logger.d(
@@ -409,10 +414,11 @@ class _OrderDetailPageState extends State<OrderDetailPage>{
   }
 
   Future<void> beginStartPoint(StopPointModel data) async {
-    set_EP_SP("SP");
+    await set_EP_SP("SP");
+    var app = await controller.getUserInfo();
     Logger logger = Logger();
     await pr?.show();
-    await DioService.dioClient(header: true).beginStartPoint(controller.getUserInfo()?.authorization, data.orderId, data.stopSeq.toString()).then((it) async {
+    await DioService.dioClient(header: true).beginStartPoint(app.authorization, data.orderId, data.stopSeq.toString()).then((it) async {
       await pr?.hide();
       ReturnMap _response = DioService.dioResponse(it);
       logger.d(
@@ -447,8 +453,9 @@ class _OrderDetailPageState extends State<OrderDetailPage>{
   }
 
   Future<void> set_EP_SP(String code) async {
+    var app = await App().getUserInfo();
     AppDataBase db = App().getRepository();
-    String? vehicId = App().getUserInfo()?.vehicId;
+    String? vehicId = app.vehicId;
 
     GeofenceModel? removeGeo = await db.getRemoveGeo(vehicId, orderItem.value?.orderId, code);
     if(removeGeo != null) {
@@ -458,9 +465,8 @@ class _OrderDetailPageState extends State<OrderDetailPage>{
 
   Widget getStopPointFuture() {
     final orderService = Provider.of<OrderService>(context);
-    UserModel? user = controller.getUserInfo();
     return FutureBuilder(
-        future: orderService.getStopPoint(context, user?.authorization,orderItem.value?.orderId),
+        future: orderService.getStopPoint(context,orderItem.value?.orderId),
         builder: (context, snapshot) {
           if(snapshot.hasData) {
             _setState();
@@ -896,7 +902,8 @@ class _OrderDetailPageState extends State<OrderDetailPage>{
       return;
     }
     await pr?.show();
-    await DioService.dioClient(header: true).getOrderList2(controller.getUserInfo()?.authorization, orderItem.value?.allocId, orderItem.value?.orderId).then((it) async {
+    var app = await controller.getUserInfo();
+    await DioService.dioClient(header: true).getOrderList2(app.authorization, orderItem.value?.allocId, orderItem.value?.orderId).then((it) async {
     ReturnMap _response = DioService.dioResponse(it);
     await pr?.hide();
         logger.d("goToPay() _response -> ${_response.status} // ${_response.resultMap}");
@@ -907,7 +914,7 @@ class _OrderDetailPageState extends State<OrderDetailPage>{
             OrderModel? gData = OrderModel.fromJSON(list[0]);
             if(gData?.finishYn == "N") {
               if(!tvPay.value) {
-                if (controller.getUserInfo()?.bankchkDate == null) {
+                if (app.bankchkDate == null) {
                   app_util.Util.snackbar(context, "계좌정보를 확인해 주세요. 등록된 계좌정보가 없거나 확인되지 않은 계좌입니다.");
                 } else {
                   showPay(showPayConfirm);
@@ -963,9 +970,10 @@ class _OrderDetailPageState extends State<OrderDetailPage>{
     openOkBox(context,"삭제된 오더입니다.", Strings.of(context)?.get("confirm")??"Not Found", () { Navigator.of(context).pop(false);});
   }
 
-  void showPayConfirm(String? _result) {
+  Future<void> showPayConfirm(String? _result) async {
     if(_result == "200") {
-      if(checkBankDate() != true) {
+      var result = await checkBankDate();
+      if( result != true) {
         sendPay();
       }else{
         checkAccNm();
@@ -975,8 +983,9 @@ class _OrderDetailPageState extends State<OrderDetailPage>{
 
   Future<void> sendPay() async {
     Logger logger = Logger();
+    var app = await controller.getUserInfo();
     await pr?.show();
-    await DioService.dioClient(header: true).sendPay(controller.getUserInfo()?.authorization, controller.getUserInfo()?.vehicId, orderItem.value?.orderId, orderItem.value?.allocId).then((it) async {
+    await DioService.dioClient(header: true).sendPay(app.authorization, app.vehicId, orderItem.value?.orderId, orderItem.value?.allocId).then((it) async {
     await pr?.hide();
     ReturnMap _response = DioService.dioResponse(it);
     if(_response.status == "200") {
@@ -1024,8 +1033,9 @@ class _OrderDetailPageState extends State<OrderDetailPage>{
 
   Future<void> checkAccNm() async {
     Logger logger = Logger();
+    var app = await App().getUserInfo();
     await pr?.show();
-    await DioService.dioClient(header: true).checkAccNm(App().getUserInfo()?.authorization, App().getUserInfo()?.vehicId, App().getUserInfo().bankCode, App().getUserInfo().bankAccount,App().getUserInfo().bankCnnm).then((it) async {
+    await DioService.dioClient(header: true).checkAccNm(app.authorization, app.vehicId, app.bankCode, app.bankAccount,app.bankCnnm).then((it) async {
     await pr?.hide();
     ReturnMap _response = DioService.dioResponse(it);
       if(_response.status == "200") {
@@ -1051,12 +1061,13 @@ class _OrderDetailPageState extends State<OrderDetailPage>{
 
   Future<void> updateBank() async {
     Logger logger = Logger();
+    var app = await App().getUserInfo();
     await pr?.show();
-    await DioService.dioClient(header: true).checkAccNm(App().getUserInfo()?.authorization, App().getUserInfo()?.vehicId, App().getUserInfo().bankCode,App().getUserInfo().bankCnnm, App().getUserInfo().bankAccount).then((it) async {
+    await DioService.dioClient(header: true).checkAccNm(app.authorization, app.vehicId, app.bankCode,app.bankCnnm, app.bankAccount).then((it) async {
     await pr?.hide();
     ReturnMap _response = DioService.dioResponse(it);
     if(_response.status == "200") {
-      UserModel user = App().getUserInfo();
+      UserModel user = await App().getUserInfo();
       user.bankchkDate = app_util.Util.getDateCalToStr(DateTime.now(), "yyyy-MM-dd HH:mm:ss");
         App().setUserInfo(user);
         sendPay();
@@ -1080,8 +1091,8 @@ class _OrderDetailPageState extends State<OrderDetailPage>{
     });
   }
 
-  bool? checkBankDate() {
-    UserModel? user = controller.getUserInfo();
+  Future<bool?> checkBankDate() async {
+    UserModel? user = await controller.getUserInfo();
     String? nowDate = app_util.Util.getCurrentDate("yyyyMMdd");
     String? saveDate = app_util.Util.getDateStrToStr(user?.bankchkDate, "yyyyMMdd");
     return app_util.Util.betweenDate(nowDate, saveDate)! > 30;
@@ -1170,8 +1181,9 @@ class _OrderDetailPageState extends State<OrderDetailPage>{
                                     style: CustomStyle.CustomFont(styleFontSize12, text_color_01),
                                   ),
                                   InkWell(
-                                    onTap: (){
-                                      ShowBankCheckWidget(context: context,callback: _callback).showBankCheckDialog();
+                                    onTap: () async {
+                                      var app = await App().getUserInfo();
+                                      ShowBankCheckWidget(context: context,callback: _callback).showBankCheckDialog(app);
                                     },
                                     child: Container(
                                         decoration: CustomStyle.customBoxDeco(sub_color),
@@ -1231,7 +1243,7 @@ class _OrderDetailPageState extends State<OrderDetailPage>{
                                                     )
                                                 ),
                                                 child: Text(
-                                                  "${getBankName(controller.getUserInfo()?.bankCode??"")} ",
+                                                  "${getBankName(app.value.bankCode??"")} ",
                                                   textAlign: TextAlign.center,
                                                   style: CustomStyle.CustomFont(styleFontSize12, text_color_01),
                                                 )
@@ -1277,7 +1289,7 @@ class _OrderDetailPageState extends State<OrderDetailPage>{
                                                     )
                                                 ),
                                                 child: Text(
-                                                  "${controller.getUserInfo()?.bankAccount??"-"} ",
+                                                  "${app.value.bankAccount??"-"} ",
                                                   textAlign: TextAlign.center,
                                                   style: CustomStyle.CustomFont(styleFontSize12, text_color_01),
                                                 )
@@ -1311,7 +1323,7 @@ class _OrderDetailPageState extends State<OrderDetailPage>{
                                             child: Container(
                                                 padding: const EdgeInsets.all(10.0),
                                                 child: Text(
-                                                  "${controller.getUserInfo()?.bankCnnm??"-"} ",
+                                                  "${app.value.bankCnnm??"-"} ",
                                                   textAlign: TextAlign.center,
                                                   style: CustomStyle.CustomFont(styleFontSize12, text_color_01),
                                                 )
@@ -1500,7 +1512,7 @@ class _OrderDetailPageState extends State<OrderDetailPage>{
   Future<void> getCheckOrderYn(String? allocId) async {
     Logger logger = Logger();
     await pr?.show();
-    await DioService.dioClient(header: true).getOrderDetail(controller.getUserInfo()?.authorization, allocId).then((it) async {
+    await DioService.dioClient(header: true).getOrderDetail(app.value.authorization, allocId).then((it) async {
       await pr?.hide();
       ReturnMap _response = DioService.dioResponse(it);
       logger.d("getCheckOrderYn() _response -> ${_response.status} // ${_response.resultMap}");
@@ -1641,7 +1653,7 @@ class _OrderDetailPageState extends State<OrderDetailPage>{
 
   Future<void> setDriverClick(String? code, String? addr, String? auto) async {
     Logger logger = Logger();
-    await DioService.dioClient(header: true).setDriverClick(controller.getUserInfo()?.authorization, orderItem.value?.orderId, code, addr, auto).then((it) async {
+    await DioService.dioClient(header: true).setDriverClick(app.value.authorization, orderItem.value?.orderId, code, addr, auto).then((it) async {
       ReturnMap _response = DioService.dioResponse(it);
       logger.d("setDriverClick() _response -> ${_response.status} // ${_response.resultMap}");
       if(_response.status == "200") {
@@ -1672,7 +1684,7 @@ class _OrderDetailPageState extends State<OrderDetailPage>{
   Future<void> getOrderList2() async {
     Logger logger = Logger();
     await pr?.show();
-    await DioService.dioClient(header: true).getOrderList2(controller.getUserInfo()?.authorization, widget.allocId, widget.orderId).then((it) async {
+    await DioService.dioClient(header: true).getOrderList2(app.value.authorization, widget.allocId, widget.orderId).then((it) async {
       await pr?.hide();
       ReturnMap _response = DioService.dioResponse(it);
       logger.d("getOrderList2() _response -> ${_response.status} // ${_response.resultMap}");
@@ -1713,7 +1725,7 @@ class _OrderDetailPageState extends State<OrderDetailPage>{
   Future<void> getOrderDetail(String? allocId) async {
     Logger logger = Logger();
     //await pr?.show();
-    await DioService.dioClient(header: true).getOrderDetail(controller.getUserInfo()?.authorization, allocId).then((it) async {
+    await DioService.dioClient(header: true).getOrderDetail(app.value.authorization, allocId).then((it) async {
       //await pr?.hide();
       ReturnMap _response = DioService.dioResponse(it);
       logger.d("getOrderDetail() _response -> ${_response.status} // ${_response.resultMap}");
@@ -1757,7 +1769,7 @@ class _OrderDetailPageState extends State<OrderDetailPage>{
   Future<void> setOrderState(String code, String msg) async {
       Logger logger = Logger();
       await pr?.show();
-      await DioService.dioClient(header: true).setOrderState(controller.getUserInfo()?.authorization, orderItem.value?.orderId, orderItem.value?.allocId, code).then((it) async {
+      await DioService.dioClient(header: true).setOrderState(app.value.authorization, orderItem.value?.orderId, orderItem.value?.allocId, code).then((it) async {
         await pr?.hide();
         ReturnMap _response = DioService.dioResponse(it);
         logger.d("setOrderState() _response -> ${_response.status} // ${_response.resultMap}");
@@ -1798,7 +1810,8 @@ class _OrderDetailPageState extends State<OrderDetailPage>{
 
   Future<void> removeGeofence(String code) async {
     AppDataBase db = App().getRepository();
-    String? vehicId = App().getUserInfo().vehicId;
+    var app = await App().getUserInfo();
+    String? vehicId = app.vehicId;
     if(code == "04") {
       GeofenceModel? removeGeo = await db.getRemoveGeo(vehicId, widget.orderId, "S");
       if(removeGeo != null) {
@@ -1810,7 +1823,7 @@ class _OrderDetailPageState extends State<OrderDetailPage>{
         db.delete(removeGeo);
       }
     }else if(code == "20"){
-      db.deleteAll(await db.getRemoveGeoList(App().getUserInfo().vehicId, widget.orderId));
+      db.deleteAll(await db.getRemoveGeoList(app.vehicId, widget.orderId));
     }
     FBroadcast.instance().broadcast(Const.INTENT_GEOFENCE);
   }
@@ -1827,7 +1840,8 @@ class _OrderDetailPageState extends State<OrderDetailPage>{
     Logger logger = Logger();
     var lat = await SP.getString(Const.KEY_LAT, "");
     var lon = await SP.getString(Const.KEY_LON, "");
-    await DioService.dioClient(header: true).locationUpdate(App().getUserInfo().authorization, lat,lon,allocId).then((it) {
+    var app = await App().getUserInfo();
+    await DioService.dioClient(header: true).locationUpdate(app.authorization, lat,lon,allocId).then((it) {
       ReturnMap _response = DioService.dioResponse(it);
       logger.d("locationUpdate() _response -> ${_response.status} // ${_response.resultMap}");
       if(_response.status == "200") {

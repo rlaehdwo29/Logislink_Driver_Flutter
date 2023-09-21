@@ -47,7 +47,7 @@ bool permission_state = false;
 
 Future<void> main() async {
   final binding = WidgetsFlutterBinding.ensureInitialized();
-  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+  await Firebase.initializeApp();
   if (Platform.isAndroid) {
     await AndroidInAppWebViewController.setWebContentsDebuggingEnabled(true);
 
@@ -74,7 +74,6 @@ Future<void> main() async {
   AuthRepository.initialize(appKey: dotenv.env['APP_KEY'] ?? '');
   KakaoSdk.init(nativeAppKey: dotenv.env['NATIVE_KEY'] ?? '' ,javaScriptAppKey: dotenv.env['APP_KEY'] ?? '');
   //Firebase Setting
-  FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
 
   if (!kIsWeb) {
     channel = AndroidNotificationChannel(

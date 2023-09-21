@@ -292,13 +292,14 @@ class _HistoryPageState extends State<HistoryPage> {
 
   Future<void> getHistory() async {
     Logger logger = Logger();
+    var app = await controller.getUserInfo();
     await pr?.show();
     _historyList.value = List.empty(growable: true);
     await DioService.dioClient(header: true).getHistory(
-        controller.getUserInfo()?.authorization,
+        app.authorization,
         Util.getDateCalToStr(_rangeStart.value,'yyyy-MM-dd'),
         Util.getDateCalToStr(_rangeEnd.value,'yyyy-MM-dd'),
-        controller.getUserInfo()?.vehicId,
+        app.vehicId,
         receiptYn.value,
         taxYn.value,
         payType.value,
@@ -337,10 +338,8 @@ class _HistoryPageState extends State<HistoryPage> {
     return FutureBuilder(
       future: orderService.getHistory(
           context,
-          controller.getUserInfo()?.authorization,
           Util.getDateCalToStr(_rangeStart.value,'yyyy-MM-dd'),
           Util.getDateCalToStr(_rangeEnd.value,'yyyy-MM-dd'),
-          controller.getUserInfo()?.vehicId,
           receiptYn.value,
           taxYn.value,
           payType.value,

@@ -50,9 +50,10 @@ class _CarListPageState extends State<CarListPage> {
 
   Future<void> setMainCar(CarModel data) async {
     Logger logger = Logger();
+    var app = await controller.getUserInfo();
     await pr?.show();
     await DioService.dioClient(header: true).carEdit(
-        controller.getUserInfo()?.authorization,
+        app.authorization,
         data.carSeq,
       data.carName,
       data.carNum,
@@ -86,7 +87,8 @@ class _CarListPageState extends State<CarListPage> {
   Future<void> getCar() async {
     Logger logger = Logger();
     await pr?.show();
-    await DioService.dioClient(header: true).getCar(controller.getUserInfo()?.authorization).then((it) async {
+    var app = await controller.getUserInfo();
+    await DioService.dioClient(header: true).getCar(app.authorization).then((it) async {
       await pr?.hide();
       ReturnMap _response = DioService.dioResponse(it);
       logger.d("getCar() _response -> ${_response.status} // ${_response.resultMap}");
@@ -147,9 +149,10 @@ class _CarListPageState extends State<CarListPage> {
 
   Future<void> carDel(CarModel mCar) async {
     Logger logger = Logger();
+    var app = await controller.getUserInfo();
     await pr?.show();
     await DioService.dioClient(header: true).carDel(
-        controller.getUserInfo()?.authorization,
+        app.authorization,
         mCar?.carSeq,
         "N"
     ).then((it) async {

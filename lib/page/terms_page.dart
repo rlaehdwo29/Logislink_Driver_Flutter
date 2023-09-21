@@ -69,9 +69,9 @@ class _TermsPageState extends State<TermsPage> {
     }else{
       m_Nece = "N";
     }
-
+    var app = await App().getUserInfo();
     Logger logger = Logger();
-    await DioService.dioClient(header: true).insertTermsAgree(App().getUserInfo().authorization, m_Number,"",m_Nece,m_Sel,"1.0").then((it) async {
+    await DioService.dioClient(header: true).insertTermsAgree(app.authorization, m_Number,"",m_Nece,m_Sel,"1.0").then((it) async {
       ReturnMap response = DioService.dioResponse(it);
       logger.d("insertTermsAgree() _response -> ${response.status} // ${response.resultMap}");
       if(response.status == "200") {

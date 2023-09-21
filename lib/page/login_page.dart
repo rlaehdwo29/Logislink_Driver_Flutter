@@ -191,7 +191,7 @@ class _LoginPageState extends State<LoginPage> with CommonMainWidget {
 
   Future<void> CheckTermsAgree() async {
     var logger = Logger();
-    UserModel? user = controller.getUserInfo();
+    UserModel? user = await controller.getUserInfo();
     await pr?.show();
     await DioService.dioClient(header: true).getTermsUserAgree(user?.authorization??"null",mobileNumber.value).then((it) async {
       await pr?.hide();
@@ -247,7 +247,7 @@ class _LoginPageState extends State<LoginPage> with CommonMainWidget {
 
   Future<void> getUserInfo() async {
     Logger logger = Logger();
-    UserModel? nowUser = controller.getUserInfo();
+    UserModel? nowUser = await controller.getUserInfo();
     await pr?.show();
     await DioService.dioClient(header: true).getUserInfo(nowUser?.authorization, nowUser?.vehicId).then((it) async {
       await pr?.hide();
@@ -290,7 +290,7 @@ class _LoginPageState extends State<LoginPage> with CommonMainWidget {
 
   Future<void> sendDeviceInfo() async {
     Logger logger = Logger();
-    UserModel? user = controller.getUserInfo();
+    UserModel? user = await controller.getUserInfo();
     if(Const.userDebugger) {
       goToMain();
       return;
@@ -348,14 +348,15 @@ class _LoginPageState extends State<LoginPage> with CommonMainWidget {
       logger.i("userLogin() _response -> ${_response.status} // ${_response.resultMap}");
       if (_response.status == "200") {
         if(_response.resultMap?["data"] != null) {
+          var app = await controller.getUserInfo();
             UserModel userInfo = UserModel.fromJSON(it.response.data["data"]);
             if (userInfo != null) {
               userInfo.authorization = it.response.headers["authorization"]?[0];
               logger.i("userJson => $userInfo");
               await controller.setUserInfo(userInfo);
-              logger.i("User Login => ${controller.getUserInfo()?.driverId}");
-              if ((controller.getUserInfo()?.vehicCnt ?? 0) > 1) {
-                goToUserCar();
+              logger.i("User Login => ${app.driverId}");
+              if ((app.vehicCnt ?? 0) > 1) {
+                await goToUserCar();
               } else {
                 sendDeviceInfo();
               }
@@ -417,8 +418,9 @@ class _LoginPageState extends State<LoginPage> with CommonMainWidget {
           userInfo.authorization = it.response.headers["authorization"]?[0];
           logger.i("userJson => $userInfo");
           controller.setUserInfo(userInfo);
-          logger.i("Guest Login => ${controller.getUserInfo()?.driverId}");
-          if ((controller.getUserInfo()?.vehicCnt ?? 0) > 1) {
+          var app = await controller.getUserInfo();
+          logger.i("Guest Login => ${app.driverId}");
+          if ((app.vehicCnt ?? 0) > 1) {
             goToUserCar();
           } else {
             sendDeviceInfo();

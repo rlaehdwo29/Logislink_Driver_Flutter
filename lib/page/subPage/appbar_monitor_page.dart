@@ -69,10 +69,8 @@ class _AppBarMonitorPageState extends State<AppBarMonitorPage> {
     return FutureBuilder(
         future: appbarService.getMonitor(
             context,
-            controller.getUserInfo()?.authorization,
             Util.getDateCalToStr(startDate.value, "yyyy-MM-dd"),
-            Util.getDateCalToStr(endDate.value, "yyyy-MM-dd"),
-            controller.getUserInfo()?.vehicId),
+            Util.getDateCalToStr(endDate.value, "yyyy-MM-dd")),
         builder: (context, snapshot) {
           if(snapshot.hasData) {
             mModel.value = snapshot.data;

@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:app_settings/app_settings.dart';
+import 'package:device_info_plus/device_info_plus.dart';
 import 'package:fbroadcast/fbroadcast.dart';
 import 'package:firebase_dynamic_links/firebase_dynamic_links.dart';
 import 'package:flutter/cupertino.dart';
@@ -10,6 +11,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 import 'package:geofence_service/geofence_service.dart';
+import 'package:geolocator/geolocator.dart' as geolocation;
 
 import 'package:get/get.dart';
 import 'package:logger/logger.dart';
@@ -100,17 +102,18 @@ class _MainPageState extends State<MainPage> with CommonMainWidget,WidgetsBindin
     print('geofenceStatus: ${geofenceStatus.toString()}');
     _geofenceStreamController.sink.add(geofence);
     AppDataBase db = App().getRepository();
-    GeofenceModel? data = await db.getGeoFence(App().getUserInfo()?.vehicId, int.parse(geofence.id));
+    var app = await App().getUserInfo();
+    GeofenceModel? data = await db.getGeoFence(app.vehicId, int.parse(geofence.id));
     if(data != null) {
       if(data.flag == "Y") {
         if(geofenceStatus == GeofenceStatus.ENTER) {
           if(data.allocState == "E") {
-            if(await db.checkEndGeo(App().getUserInfo()?.vehicId, data.orderId) == 1) {
+            if(await db.checkEndGeo(app.vehicId, data.orderId) == 1) {
               setOrderState(data, "05");
             }
           } else if(data.allocState == "EP" || data.allocState == "SP") {
             if(data.allocState == "EP") {
-              bool? checkGeoEPoint = await db.checkEPointGeo(App().getUserInfo()?.vehicId, data.orderId, data.stopNum);
+              bool? checkGeoEPoint = await db.checkEPointGeo(app.vehicId, data.orderId, data.stopNum);
               if(checkGeoEPoint??false) {
                 finishStopPoint(data);
               }
@@ -120,11 +123,11 @@ class _MainPageState extends State<MainPage> with CommonMainWidget,WidgetsBindin
           }
         }else if(geofenceStatus == GeofenceStatus.EXIT) {
           if(data.allocState == "E") {
-            if(await db.checkStartGeo(App().getUserInfo()?.vehicId, data.orderId) == 0) {
+            if(await db.checkStartGeo(app.vehicId, data.orderId) == 0) {
               setOrderState(data, "06");
             }
           }else if(data.allocState == "SP" || data.allocState == "EP"){
-            bool? checkGeoSPoint = await db.checkSPointGeo(App().getUserInfo()?.vehicId, data.orderId, data.stopNum);
+            bool? checkGeoSPoint = await db.checkSPointGeo(app.vehicId, data.orderId, data.stopNum);
             if(checkGeoSPoint??false) {
               beginStartPoint(data);
             }
@@ -146,7 +149,8 @@ class _MainPageState extends State<MainPage> with CommonMainWidget,WidgetsBindin
     }
 
     Logger logger = Logger();
-    await DioService.dioClient(header: true).finishStopPoint(App().getUserInfo()?.authorization,data.orderId,stopSeq).then((it) async {
+    var app = await App().getUserInfo();
+    await DioService.dioClient(header: true).finishStopPoint(app.authorization,data.orderId,stopSeq).then((it) async {
       ReturnMap _response = DioService.dioResponse(it);
       logger.d("geofence_receiver finishStopPoint() _response -> ${_response.status} // ${_response.resultMap}");
       if(_response.status == "200") {
@@ -179,7 +183,8 @@ class _MainPageState extends State<MainPage> with CommonMainWidget,WidgetsBindin
     }
 
     Logger logger = Logger();
-    await DioService.dioClient(header: true).beginStartPoint(App().getUserInfo()?.authorization,data.orderId,stopSeq).then((it) async {
+    var app = await App().getUserInfo();
+    await DioService.dioClient(header: true).beginStartPoint(app.authorization,data.orderId,stopSeq).then((it) async {
       ReturnMap _response = DioService.dioResponse(it);
       logger.d("geofence_receiver beginStartPoint() _response -> ${_response.status} // ${_response.resultMap}");
       if(_response.status == "200") {
@@ -204,7 +209,8 @@ class _MainPageState extends State<MainPage> with CommonMainWidget,WidgetsBindin
 
   Future<void> setOrderState(GeofenceModel data, String code) async {
     Logger logger = Logger();
-    await DioService.dioClient(header: true).setOrderState(App().getUserInfo()?.authorization, data?.orderId, data?.allocId, code).then((it) async {
+    var app = await App().getUserInfo();
+    await DioService.dioClient(header: true).setOrderState(app.authorization, data?.orderId, data?.allocId, code).then((it) async {
       ReturnMap _response = DioService.dioResponse(it);
       logger.d("geofence_receiver setOrderState() _response -> ${_response.status} // ${_response.resultMap} // $code");
       if(_response.status == "200") {
@@ -265,7 +271,8 @@ class _MainPageState extends State<MainPage> with CommonMainWidget,WidgetsBindin
     //if(SP.getBoolean(Const.KEY_GUEST_MODE)) return;
 
     Logger logger = Logger();
-    await DioService.dioClient(header: true).locationUpdate(App().getUserInfo().authorization, lat.toString(), lon.toString(),allocId).then((it) {
+    var app = await App().getUserInfo();
+    await DioService.dioClient(header: true).locationUpdate(app.authorization, lat.toString(), lon.toString(),allocId).then((it) {
       ReturnMap _response = DioService.dioResponse(it);
       logger.d("locationUpdate() _response -> ${_response.status} // ${_response.resultMap}");
       if(_response.status == "200") {
@@ -309,7 +316,6 @@ class _MainPageState extends State<MainPage> with CommonMainWidget,WidgetsBindin
     super.initState();
     WidgetsBinding.instance.addObserver(this);
     isRunning = true;
-    _nowUser.value = controller.getUserInfo();
     FBroadcast.instance().register(Const.INTENT_ORDER_REFRESH, (value, callback) async {
       await getOrderMethod(true);
     },context: this);
@@ -330,7 +336,7 @@ class _MainPageState extends State<MainPage> with CommonMainWidget,WidgetsBindin
     ))!;
 
     Future.delayed(Duration.zero, () async {
-
+      _nowUser.value = await controller.getUserInfo();
       await setGeofencingClient();
       var first_screen = await SP.getFirstScreen(context);
       switch (first_screen) {
@@ -346,8 +352,22 @@ class _MainPageState extends State<MainPage> with CommonMainWidget,WidgetsBindin
               builder: (BuildContext context) => AppBarCarBookPage()));
           break;
       }
+      DeviceInfoPlugin deviceInfo = DeviceInfoPlugin();
+      if(Platform.isAndroid) {
+        AndroidDeviceInfo info  = await deviceInfo.androidInfo;
+        if (info.version.sdkInt >= 29) {
+          var locationPermission = await geolocation.Geolocator.checkPermission();
+          if(locationPermission != geolocation.LocationPermission.always) {
+            await showPermissionDialog();
+          }else{
+            await checkCarInfo();
+          }
+        }else{
+          await checkCarInfo();
+        }
+      }else {
 
-      showPermissionDialog();
+      }
         var guest = await SP.getBoolean(Const.KEY_GUEST_MODE);
       if (guest) showGuestDialog();
     });
@@ -425,7 +445,8 @@ class _MainPageState extends State<MainPage> with CommonMainWidget,WidgetsBindin
     await removeGeofence();
 
     AppDataBase db = App().getRepository();
-    List<GeofenceModel> list = await db.getAllGeoFenceList(App().getUserInfo()?.vehicId);
+    var app = await App().getUserInfo();
+    List<GeofenceModel> list = await db.getAllGeoFenceList(app.vehicId);
     if(list != null && list.length != 0) {
       if(geofenceList.isNotEmpty) geofenceList.clear();
       for(var data in list) {
@@ -444,8 +465,9 @@ class _MainPageState extends State<MainPage> with CommonMainWidget,WidgetsBindin
   }
 
   Future<void> checkCarInfo() async {
-    String? carType = App().getUserInfo()?.carTypeCode;
-    String? carTon = App().getUserInfo()?.carTonCode;
+    var app = await App().getUserInfo();
+    String? carType = app.carTypeCode;
+    String? carTon = app.carTonCode;
     if((carType != null && carType.isNotEmpty) && (carTon != null && carTon.isNotEmpty)) {
       await startService();
     }else{
@@ -453,27 +475,17 @@ class _MainPageState extends State<MainPage> with CommonMainWidget,WidgetsBindin
     }
   }
 
-  void showPermissionDialog() async {
-    Map<Permission, PermissionStatus> statuses = await [
-      Permission.location,
-    ].request();
-
-    if (statuses[Permission.location] != PermissionStatus.granted) {
-      openCommonConfirmBox(
+  Future<void> showPermissionDialog() async {
+    return openOkBox(
           context,
           Strings.of(context)?.get("location_permission_failed")??"Not Found",
-          Strings.of(context)?.get("cancel")??"Not Found",
           Strings.of(context)?.get("confirm")??"Not Found",
-              () {Navigator.of(context).pop(false);},
               () async {
             Navigator.of(context).pop(false);
             callPermission();
           }
       );
-    }else{
-      await checkCarInfo();
     }
-  }
 
   void onCallback(bool? result) {
     if(result == true) {
@@ -506,9 +518,6 @@ class _MainPageState extends State<MainPage> with CommonMainWidget,WidgetsBindin
         Permission.location,
       ].request();
 
-      print("위치 => ${statuses[Permission.location]}");
-      print("Location 권한 미허용");
-
       if(statuses[Permission.location] != PermissionStatus.granted){
         await Permission.location.request();
       }
@@ -525,7 +534,8 @@ class _MainPageState extends State<MainPage> with CommonMainWidget,WidgetsBindin
   }
 
   Future<void> goToAppSetting() async {
-    if(Permission.location == PermissionStatus.denied) {
+    var locationPermission = await geolocation.Geolocator.checkPermission();
+    if(locationPermission != geolocation.LocationPermission.always) {
       AppSettings.openAppSettings();
     }
     await finishService();
@@ -615,7 +625,8 @@ class _MainPageState extends State<MainPage> with CommonMainWidget,WidgetsBindin
 
   Future<void> getOrderList() async {
     Logger logger = Logger();
-    await DioService.dioClient(header: true).getOrder(App().getUserInfo().authorization, App().getUserInfo().vehicId).then((it) {
+    var app = await App().getUserInfo();
+    await DioService.dioClient(header: true).getOrder(app.authorization, app.vehicId).then((it) {
       ReturnMap _response = DioService.dioResponse(it);
       logger.d("getOrder() _response -> ${_response.status} // ${_response.resultMap}");
       //openOkBox(context,_response.resultMap!["data"].toString(),Strings.of(context)?.get("confirm")??"Error!!",() {Navigator.of(context).pop(false);});
@@ -649,8 +660,9 @@ class _MainPageState extends State<MainPage> with CommonMainWidget,WidgetsBindin
 
   Future<void> setGeoList(bool flag) async {
     bool fData = flag;
+    var app = await App().getUserInfo();
     AppDataBase db = App().getRepository();
-    String? vehicId = App().getUserInfo()?.vehicId;
+    String? vehicId = app.vehicId;
 
     geoUpdate = false;
 
@@ -677,7 +689,8 @@ class _MainPageState extends State<MainPage> with CommonMainWidget,WidgetsBindin
     bool pData = flag;
 
     AppDataBase db = App().getRepository();
-    String? vehicId = App().getUserInfo()?.vehicId;
+    var app = await App().getUserInfo();
+    String? vehicId = app.vehicId;
 
     if(pGpsStop.length != 0) {
       for(var data in pGpsStop) {
@@ -716,7 +729,8 @@ class _MainPageState extends State<MainPage> with CommonMainWidget,WidgetsBindin
   Future<void> getStopPointGps(bool flag) async {
     bool data = flag;
     Logger logger = Logger();
-    await DioService.dioClient(header: true).getStopPointGps(App().getUserInfo()?.authorization, App().getUserInfo()?.vehicId, App().getUserInfo()?.driverId).then((it) {
+    var app = await App().getUserInfo();
+    await DioService.dioClient(header: true).getStopPointGps(app.authorization, app.vehicId, app.driverId).then((it) {
       ReturnMap _response = DioService.dioResponse(it);
       logger.d("getStopPointGps() _response -> ${_response.status} // ${_response.resultMap}");
       if (_response.status == "200") {
@@ -776,7 +790,7 @@ class _MainPageState extends State<MainPage> with CommonMainWidget,WidgetsBindin
                 ),
                 child: InkWell(
                     onTap: () async {
-                      beforeUser.value = controller.getUserInfo();
+                      beforeUser.value = await controller.getUserInfo();
                       var results = await Navigator.of(context).push(MaterialPageRoute(
                           builder: (BuildContext context) => UserCarListPage())
                       );
@@ -900,7 +914,7 @@ class _MainPageState extends State<MainPage> with CommonMainWidget,WidgetsBindin
 
   Future<void> getUserInfo() async {
     Logger logger = Logger();
-    UserModel? nowUser = controller.getUserInfo();
+    UserModel? nowUser = await controller.getUserInfo();
     await DioService.dioClient(header: true).getUserInfo(nowUser?.authorization, nowUser?.vehicId).then((it) async {
       ReturnMap _response = DioService.dioResponse(it);
       logger.i("getUserInfo() _response -> ${_response.status} // ${_response.resultMap}");
@@ -911,7 +925,6 @@ class _MainPageState extends State<MainPage> with CommonMainWidget,WidgetsBindin
             newUser.authorization = nowUser?.authorization;
             controller.setUserInfo(newUser);
             _nowUser.value = newUser;
-            print("응앱 => ${_nowUser.value.driverName} // ${_nowUser.value.carNum}");
           }catch(e) {
             print(e);
           }

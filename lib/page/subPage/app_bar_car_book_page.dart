@@ -7,6 +7,7 @@ import 'package:logislink_driver_flutter/common/app.dart';
 import 'package:logislink_driver_flutter/common/common_util.dart';
 import 'package:logislink_driver_flutter/common/model/car_book_model.dart';
 import 'package:logislink_driver_flutter/common/model/car_model.dart';
+import 'package:logislink_driver_flutter/common/model/user_model.dart';
 import 'package:logislink_driver_flutter/common/strings.dart';
 import 'package:logislink_driver_flutter/common/style_theme.dart';
 import 'package:logislink_driver_flutter/main.dart';
@@ -33,6 +34,7 @@ class _AppBarCarBookPageState extends State<AppBarCarBookPage> with TickerProvid
   final mCarBookList = List.empty(growable: true).obs;
   final mCarList = List.empty(growable: true).obs;
   final mCar = CarModel().obs;
+  final app = UserModel().obs;
   final focusDate = DateTime.now().obs;
   final startDate = DateTime(DateTime.now().year,DateTime.now().month,1).obs;
   final endDate = DateTime(DateTime.now().year,DateTime.now().month+1,0).obs;
@@ -59,6 +61,7 @@ class _AppBarCarBookPageState extends State<AppBarCarBookPage> with TickerProvid
     _tabController.addListener(_handleTabSelection);
 
     WidgetsBinding.instance.addPostFrameCallback((timeStamp) async {
+      app.value = await controller.getUserInfo();
       await getTabApi(mTabCode.value);
       await getCar();
     });
@@ -186,8 +189,7 @@ class _AppBarCarBookPageState extends State<AppBarCarBookPage> with TickerProvid
     final appbarService = Provider.of<AppbarService>(context);
     return FutureBuilder(
         future: appbarService.getTabList(
-            controller.getUserInfo()?.authorization,
-            controller.getCarInfo()?.carSeq,
+            mCar.value.carSeq,
             Util.getDateCalToStr(startDate.value, "yyyy-MM-dd"),
             Util.getDateCalToStr(endDate.value, "yyyy-MM-dd"),
             mTabCode.value
@@ -220,8 +222,8 @@ class _AppBarCarBookPageState extends State<AppBarCarBookPage> with TickerProvid
     Logger logger = Logger();
     await pr?.show();
     await DioService.dioClient(header: true).getCarBook(
-      controller.getUserInfo()?.authorization,
-      controller.getCarInfo()?.carSeq,
+        app.value.authorization,
+        mCar.value.carSeq,
         Util.getDateCalToStr(startDate.value, "yyyy-MM-dd"),
         Util.getDateCalToStr(endDate.value, "yyyy-MM-dd"),
         tabValue
@@ -745,7 +747,7 @@ class _AppBarCarBookPageState extends State<AppBarCarBookPage> with TickerProvid
 
   Future<void> getCar() async {
     Logger logger = Logger();
-    await DioService.dioClient(header: true).getCar(controller.getUserInfo()?.authorization).then((it) {
+    await DioService.dioClient(header: true).getCar(app.value.authorization).then((it) async {
       ReturnMap _response = DioService.dioResponse(it);
       logger.d("getCar() _response -> ${_response.status} // ${_response.resultMap}");
       if(_response.status == "200") {
@@ -763,9 +765,9 @@ class _AppBarCarBookPageState extends State<AppBarCarBookPage> with TickerProvid
                 }
               }
               if (count == 0) {
-                mCar.value = mCarList.value[0];
+                mCar.value = CarModel();
               }
-              controller.setCar(mCar.value);
+              await controller.setCar(mCar.value);
             } else {
               WidgetsBinding.instance.addPostFrameCallback((timeStamp) async {
                 showCarReg();
@@ -867,7 +869,7 @@ class _AppBarCarBookPageState extends State<AppBarCarBookPage> with TickerProvid
   Widget carServiceFuture() {
     final appbarService = Provider.of<AppbarService>(context);
     return FutureBuilder(
-        future: appbarService.getCar(context, controller.getUserInfo()?.authorization),
+        future: appbarService.getCar(context),
         builder: (context, snapshot) {
           if(snapshot.hasData) {
             mCarList.value = snapshot.data;
@@ -880,7 +882,7 @@ class _AppBarCarBookPageState extends State<AppBarCarBookPage> with TickerProvid
                 }
               }
               if(count == 0) {
-                mCar.value = mCarList.value[0];
+                mCar.value = CarModel();
               }
               controller.setCar(mCar.value);
             }
@@ -920,9 +922,9 @@ class _AppBarCarBookPageState extends State<AppBarCarBookPage> with TickerProvid
   Future<void> carReg() async {
     Logger logger = Logger();
     await DioService.dioClient(header: true).carReg(
-        controller.getUserInfo()?.authorization,
-        controller.getUserInfo().driverName,
-        controller.getUserInfo().carNum,
+        app.value.authorization,
+        app.value.driverName,
+        app.value.carNum,
         "Y", 0).then((it) async {
       ReturnMap _response = DioService.dioResponse(it);
       logger.d("carReg() _response -> ${_response.status} // ${_response.resultMap}");
@@ -952,9 +954,8 @@ class _AppBarCarBookPageState extends State<AppBarCarBookPage> with TickerProvid
   }
 
   Widget carServiceWidget() {
-    return Column(
-        children: [
-          Container(
+    return Column(children:[
+      Container(
       width: MediaQuery.of(context).size.width,
       padding: const EdgeInsets.all(20.0),
       child: Row(
@@ -1009,8 +1010,8 @@ class _AppBarCarBookPageState extends State<AppBarCarBookPage> with TickerProvid
         ],
       )
     ),
-    customTabBarWidget(),
-    getTabFuture()
+      customTabBarWidget(),
+      getTabFuture()
     ]);
   }
 
@@ -1037,14 +1038,16 @@ class _AppBarCarBookPageState extends State<AppBarCarBookPage> with TickerProvid
               )
           )
       ),
-      body: Obx((){
-        return SafeArea(
-            child: carServiceFuture(),
-        );
-      }),
+      body: SafeArea(
+            child: carServiceFuture()
+        ),
         bottomNavigationBar: InkWell(
           onTap: () async {
-            goToCarBookReg();
+            if(mCarList.isNotEmpty){
+              goToCarBookReg();
+            }else{
+              showCarReg();
+            }
           },
           child: Container(
             height: 60.0,
