@@ -27,7 +27,7 @@ class _UserCarListPageState extends State<UserCarListPage> {
         future: userCarService.getUserCarInfo(),
         builder: (context, snapshot) {
           if(snapshot.hasData){
-            if(userCarList.isNotEmpty) userCarList.value = List.empty(growable: true);
+            if(userCarList.isNotEmpty) userCarList.clear();
             userCarList.value.addAll(snapshot.data);
             return getUserCarInfoListItem();
           }else if(snapshot.hasError) {
