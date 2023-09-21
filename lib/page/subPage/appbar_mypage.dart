@@ -68,8 +68,54 @@ class _AppBarMyPageState extends State<AppBarMyPage> {
   @override
   void initState() {
     super.initState();
-    mData.value = controller.getUserInfo()!;
 
+    Future.delayed(Duration.zero, () async {
+      mData.value = await App().getUserInfo();
+      tempData.value =  UserModel(
+          authorization:mData.value.authorization,
+          driverId:mData.value.driverId,
+          vehicId:mData.value.vehicId,
+          driverName:mData.value.driverName,
+          carNum:mData.value.carNum,
+          mobile:mData.value.mobile,
+          telnum:mData.value.telnum,
+          pushYn:mData.value.pushYn,
+          talkYn:mData.value.talkYn,
+          bankCode:mData.value.bankCode,
+          bankCnnm:mData.value.bankCnnm,
+          bankAccount:mData.value.bankAccount,
+          carTypeCode:mData.value.carTypeCode,
+          carTypeName:mData.value.carTypeName,
+          carTonCode:mData.value.carTonCode,
+          carTonName:mData.value.carTonName,
+          bizName:mData.value.bizName,
+          bizNum:mData.value.bizNum,
+          ceo:mData.value.ceo,
+          bizPost:mData.value.bizPost,
+          bizAddr:mData.value.bizAddr,
+          bizAddrDetail:mData.value.bizAddrDetail,
+          subBizNum:mData.value.subBizNum,
+          bizKind:mData.value.bizKind,
+          bizCond:mData.value.bizCond,
+          driverEmail:mData.value.driverEmail,
+          vehicCnt:mData.value.vehicCnt,
+          dangerGoodsYn:mData.value.dangerGoodsYn,
+          chemicalsYn:mData.value.chemicalsYn,
+          foreignLicenseYn:mData.value.foreignLicenseYn,
+          forkliftYn:mData.value.forkliftYn,
+          cargoBox:mData.value.cargoBox,
+          bankchkDate:mData.value.bankchkDate);
+
+      cargoBoxController.text = tempData.value.cargoBox??"";
+      bizNumController.text = makeBizNum(tempData.value.bizNum??"")??"";
+      subBizNumController.text = tempData.value.subBizNum??"";
+      bizNameController.text = tempData.value.bizName??"";
+      ceoController.text = tempData.value.ceo??"";
+      bizAddrDetailController.text = tempData.value.bizAddrDetail??"";
+      bizCondController.text = tempData.value.bizCond??"";
+      bizKindController.text = tempData.value.bizKind??"";
+      driverEmailController.text = tempData.value.driverEmail??"";
+    });
 
     if(widget.code != null) {
       if(widget.code == EDIT_BIZ) {
@@ -77,51 +123,6 @@ class _AppBarMyPageState extends State<AppBarMyPage> {
         bizFocus.value = true;
       }
     }
-
-    tempData.value =  UserModel(
-        authorization:mData.value.authorization,
-        driverId:mData.value.driverId,
-        vehicId:mData.value.vehicId,
-        driverName:mData.value.driverName,
-        carNum:mData.value.carNum,
-        mobile:mData.value.mobile,
-        telnum:mData.value.telnum,
-        pushYn:mData.value.pushYn,
-        talkYn:mData.value.talkYn,
-        bankCode:mData.value.bankCode,
-        bankCnnm:mData.value.bankCnnm,
-        bankAccount:mData.value.bankAccount,
-        carTypeCode:mData.value.carTypeCode,
-        carTypeName:mData.value.carTypeName,
-        carTonCode:mData.value.carTonCode,
-        carTonName:mData.value.carTonName,
-        bizName:mData.value.bizName,
-        bizNum:mData.value.bizNum,
-        ceo:mData.value.ceo,
-        bizPost:mData.value.bizPost,
-        bizAddr:mData.value.bizAddr,
-        bizAddrDetail:mData.value.bizAddrDetail,
-        subBizNum:mData.value.subBizNum,
-        bizKind:mData.value.bizKind,
-        bizCond:mData.value.bizCond,
-        driverEmail:mData.value.driverEmail,
-        vehicCnt:mData.value.vehicCnt,
-        dangerGoodsYn:mData.value.dangerGoodsYn,
-        chemicalsYn:mData.value.chemicalsYn,
-        foreignLicenseYn:mData.value.foreignLicenseYn,
-        forkliftYn:mData.value.forkliftYn,
-        cargoBox:mData.value.cargoBox,
-        bankchkDate:mData.value.bankchkDate);
-
-    cargoBoxController.text = tempData.value.cargoBox??"";
-    bizNumController.text = makeBizNum(tempData.value.bizNum??"")??"";
-    subBizNumController.text = tempData.value.subBizNum??"";
-    bizNameController.text = tempData.value.bizName??"";
-    ceoController.text = tempData.value.ceo??"";
-    bizAddrDetailController.text = tempData.value.bizAddrDetail??"";
-    bizCondController.text = tempData.value.bizCond??"";
-    bizKindController.text = tempData.value.bizKind??"";
-    driverEmailController.text = tempData.value.driverEmail??"";
 
   }
 
@@ -201,8 +202,8 @@ class _AppBarMyPageState extends State<AppBarMyPage> {
           Navigator.of(context).pop(false);
           return false;
           },
-            () {
-              tempData.value = controller.getUserInfo()??UserModel();
+            () async {
+              tempData.value = await controller.getUserInfo();
               editMode.value = false;
           setState((){
             cargoBoxController.text = tempData.value.cargoBox??"";
@@ -239,7 +240,7 @@ class _AppBarMyPageState extends State<AppBarMyPage> {
       if(_response.status == "200") {
         if(_response.resultMap?["result"] == true) {
           editMode.value = false;
-          controller.setUserInfo(tempData.value);
+          await controller.setUserInfo(tempData.value);
           Util.toast("정보가 수정되었습니다.");
         }else{
           Util.toast(_response.resultMap?["msg"]);
@@ -305,12 +306,13 @@ class _AppBarMyPageState extends State<AppBarMyPage> {
   }
 
   void _callback(String? bankCd, String? acctNm, String? acctNo) {
-    UserModel? user = controller.getUserInfo();
-    user?.bankCode = bankCd;
-    user?.bankCnnm = acctNm;
-    user?.bankAccount = acctNo;
-    controller.setUserInfo(user!);
-    setState(() {});
+    setState(() async {
+      UserModel? user = await controller.getUserInfo();
+      user?.bankCode = bankCd;
+      user?.bankCnnm = acctNm;
+      user?.bankAccount = acctNo;
+      controller.setUserInfo(user!);
+    });
   }
 
   Widget accountInfo(BuildContext context) {
@@ -338,8 +340,9 @@ class _AppBarMyPageState extends State<AppBarMyPage> {
                               borderRadius: BorderRadius.circular(15.0),
                             ),
                           ),
-                          onPressed: () {
-                            ShowBankCheckWidget(context: context,callback: _callback).showBankCheckDialog();
+                          onPressed: () async {
+                            var app = await App().getUserInfo();
+                            ShowBankCheckWidget(context: context,callback: _callback).showBankCheckDialog(app);
                           },
                           child: Text(
                             Strings.of(context)?.get("tax_bank_edit") ??
@@ -386,7 +389,7 @@ class _AppBarMyPageState extends State<AppBarMyPage> {
                               child: Container(
                                 padding: const EdgeInsets.all(10.0),
                                 child: Text(
-                                  getBankName(controller.getUserInfo()?.bankCode),
+                                  getBankName(mData.value.bankCode),
                                   style: CustomStyle.CustomFont(styleFontSize12, text_color_01),
                                 ),
                               )
@@ -427,7 +430,7 @@ class _AppBarMyPageState extends State<AppBarMyPage> {
                               child: Container(
                                 padding: const EdgeInsets.all(10.0),
                                 child: Text(
-                                  "${controller.getUserInfo()?.bankAccount}",
+                                  "${mData.value.bankAccount}",
                                   style: CustomStyle.CustomFont(styleFontSize12, text_color_01),
                                 ),
                               )
@@ -468,7 +471,7 @@ class _AppBarMyPageState extends State<AppBarMyPage> {
                               child: Container(
                                 padding: const EdgeInsets.all(10.0),
                                 child: Text(
-                                  "${controller.getUserInfo()?.bankCnnm}",
+                                  "${mData.value.bankCnnm}",
                                   style: CustomStyle.CustomFont(styleFontSize12, text_color_01),
                                 ),
                               )
@@ -647,7 +650,6 @@ class _AppBarMyPageState extends State<AppBarMyPage> {
                                       width: CustomStyle.getWidth(0.5)))),
                           child: TextField(
                         maxLines: 1,
-                        maxLength: 12,
                         controller: bizNameController,
                         style: CustomStyle.CustomFont(styleFontSize12, text_color_01),
                         autofocus: false,
@@ -837,7 +839,6 @@ class _AppBarMyPageState extends State<AppBarMyPage> {
                                       width: CustomStyle.getWidth(0.5)))),
                           child: TextField(
                         maxLines: 1,
-                        maxLength: 12,
                         controller: bizAddrDetailController,
                         style: CustomStyle.CustomFont(styleFontSize12, text_color_01),
                         autofocus: false,
@@ -905,7 +906,6 @@ class _AppBarMyPageState extends State<AppBarMyPage> {
                               )),
                           child: TextField(
                             maxLines: 1,
-                            maxLength: 12,
                             controller: bizCondController,
                             style: CustomStyle.CustomFont(styleFontSize12, text_color_01),
                             autofocus: false,
@@ -958,7 +958,6 @@ class _AppBarMyPageState extends State<AppBarMyPage> {
                                       width: CustomStyle.getWidth(0.5)))),
                           child: TextField(
                             maxLines: 1,
-                            maxLength: 12,
                             controller: bizKindController,
                             style: CustomStyle.CustomFont(styleFontSize12, text_color_01),
                             autofocus: false,
@@ -1023,7 +1022,6 @@ class _AppBarMyPageState extends State<AppBarMyPage> {
                                     width: CustomStyle.getWidth(0.5)))),
                           child: TextField(
                             maxLines: 1,
-                            maxLength: 12,
                             controller: driverEmailController,
                             style: CustomStyle.CustomFont(styleFontSize12, text_color_01),
                             autofocus: false,
@@ -1319,7 +1317,7 @@ class _AppBarMyPageState extends State<AppBarMyPage> {
                         flex: 3,
                         child: Container(
                             padding: const EdgeInsets.all(10.0),
-                            child: Text("${tempData.value?.carNum}",style: CustomStyle.CustomFont(styleFontSize12, text_color_01))
+                            child: Text(tempData.value?.carNum??"",style: CustomStyle.CustomFont(styleFontSize12, text_color_01))
                         )
                     )
                   ],
@@ -1338,7 +1336,7 @@ class _AppBarMyPageState extends State<AppBarMyPage> {
                 child: Row(
                   children: [
                     Expanded(
-                        flex: 1,
+                        flex: 2,
                         child: Container(
                             padding: const EdgeInsets.all(10.0),
                             decoration: BoxDecoration(
@@ -1353,19 +1351,19 @@ class _AppBarMyPageState extends State<AppBarMyPage> {
                         )
                     ),
                     Expanded(
-                        flex: 3,
+                        flex: 4,
                         child: InkWell(
                           onTap: (){
                             if(editMode.value) ShowSelectDialogWidget(context:context, mTitle: Strings.of(context)?.get("car_type")??"", codeType: Const.CAR_TYPE_CD, callback: selectItem).showDialog();
                           },
                             child: Container(
                               padding: const EdgeInsets.all(10.0),
-                              child: Text("${tempData.value?.carTypeName}",style: CustomStyle.CustomFont(styleFontSize12, text_color_01))
+                              child: Text(tempData.value?.carTypeName??"",style: CustomStyle.CustomFont(styleFontSize12, text_color_01))
                           )
                         )
                     ),
                     Expanded(
-                        flex: 1,
+                        flex: 2,
                         child: Container(
                             padding: const EdgeInsets.all(10.0),
                             decoration: BoxDecoration(
@@ -1384,14 +1382,14 @@ class _AppBarMyPageState extends State<AppBarMyPage> {
                         )
                     ),
                     Expanded(
-                        flex: 3,
+                        flex: 4,
                         child: InkWell(
                           onTap: (){
                             if(editMode.value) ShowSelectDialogWidget(context:context, mTitle: Strings.of(context)?.get("car_ton")??"", codeType: Const.CAR_TON_CD, callback: selectItem).showDialog();
                           },
                             child: Container(
                             padding: const EdgeInsets.all(10.0),
-                            child: Text("${tempData.value?.carTonName}",style: CustomStyle.CustomFont(styleFontSize12, text_color_01))
+                            child: Text(tempData.value?.carTonName??"",style: CustomStyle.CustomFont(styleFontSize12, text_color_01))
                           )
                         )
                     )
@@ -1487,7 +1485,7 @@ class _AppBarMyPageState extends State<AppBarMyPage> {
             Row(
                 children: [
                   Text(
-                    "${controller.getUserInfo()?.driverName}",
+                    "${mData.value.driverName}",
                     style: CustomStyle.CustomFont(styleFontSize22, styleWhiteCol,font_weight: FontWeight.w900),
                   ),
                   Text(" 차주님", style: CustomStyle.CustomFont(styleFontSize18, styleWhiteCol))
@@ -1498,7 +1496,7 @@ class _AppBarMyPageState extends State<AppBarMyPage> {
                   children: [
                     Icon(Icons.call,size: 24, color: styleWhiteCol),
                     Text(
-                      "  ${makePhoneNumber(controller.getUserInfo()?.mobile)}",
+                      "  ${makePhoneNumber(mData.value.mobile)}",
                       style: CustomStyle.CustomFont(styleFontSize16, Colors.white),
                     )
                   ],
@@ -1512,9 +1510,11 @@ class _AppBarMyPageState extends State<AppBarMyPage> {
   @override
   Widget build(BuildContext context) {
     pr = Util.networkProgress(context);
+
     return WillPopScope(
         onWillPop: () async {
-          if(controller.getUserInfo() != tempData.value) {
+          var app = await controller.getUserInfo();
+          if(app != tempData.value) {
             var result = await showCanceled();
             if (result == true) {
               return true;
@@ -1539,7 +1539,8 @@ class _AppBarMyPageState extends State<AppBarMyPage> {
                 ),
                 leading: IconButton(
                   onPressed: () async {
-                if(controller.getUserInfo() != tempData.value) {
+                    var app = await controller.getUserInfo();
+                if(app != tempData.value) {
                   await showCanceled();
                 }else{
                   Navigator.of(context).pop();
@@ -1558,7 +1559,8 @@ class _AppBarMyPageState extends State<AppBarMyPage> {
                     return;
                   }
               if(editMode.value == true) {
-                if(tempData.value != controller.getUserInfo()) {
+                var app = await controller.getUserInfo();
+                if(app != tempData.value) {
                   await edit();
                 }else{
                   editMode.value = !editMode.value;

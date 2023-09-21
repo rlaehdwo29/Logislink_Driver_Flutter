@@ -24,7 +24,7 @@ class _UserCarListPageState extends State<UserCarListPage> {
   Widget getUserCarInfoFuture() {
     final userCarService = Provider.of<UserCarInfoService>(context);
     return FutureBuilder(
-        future: userCarService.getUserCarInfo(App().getUserInfo()?.authorization),
+        future: userCarService.getUserCarInfo(),
         builder: (context, snapshot) {
           if(snapshot.hasData){
             if(userCarList.isNotEmpty) userCarList.value = List.empty(growable: true);
@@ -57,8 +57,8 @@ class _UserCarListPageState extends State<UserCarListPage> {
                   children: List.generate(userCarList.value.length, (index) {
                     var item = userCarList[index];
                     return InkWell(
-                        onTap: () {
-                          UserModel? user = controller.getUserInfo();
+                        onTap: () async {
+                          UserModel? user = await controller.getUserInfo();
                           user?.vehicId = item.vehicId;
                           controller.setUserInfo(user!);
 

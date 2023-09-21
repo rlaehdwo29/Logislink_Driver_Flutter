@@ -1,6 +1,7 @@
 import 'package:flutter/cupertino.dart';
 import 'package:get/get.dart';
 import 'package:logger/logger.dart';
+import 'package:logislink_driver_flutter/common/app.dart';
 import 'package:logislink_driver_flutter/common/common_util.dart';
 import 'package:logislink_driver_flutter/common/model/user_car_model.dart';
 import 'package:logislink_driver_flutter/provider/dio_service.dart';
@@ -18,10 +19,11 @@ class UserCarInfoService with ChangeNotifier {
     userCarList.value = List.empty(growable: true);
   }
 
-  Future getUserCarInfo(String? auth) async {
+  Future getUserCarInfo() async {
     Logger logger = Logger();
+    var app = await App().getUserInfo();
     userCarList.value = List.empty(growable: true);
-    await DioService.dioClient(header: true).getUserCarInfo(auth).then((it) {
+    await DioService.dioClient(header: true).getUserCarInfo(app.authorization).then((it) {
       ReturnMap _response = DioService.dioResponse(it);
       logger.i("getUserCarInfo() _response -> ${_response.status} // ${_response.resultMap}");
       if (_response.status == "200") {

@@ -87,11 +87,11 @@ class SP extends GetxController {
     return m_Pref?.getString(Const.KEY_SETTING_SCREEN)??Const.first_screen[0];
   }
 
-  static UserModel? getUserInfo(String key)  {
-    open();
-    String? json = m_Pref?.getString(key);
+  static Future<UserModel>? getUserInfo(String key)  async {
+    await open();
+    var json = await m_Pref?.getString(key);
     if(json == null){
-      return null;
+      return UserModel();
     }else {
       Map<String, dynamic> jsonData = jsonDecode(json);
       return UserModel.fromJSON(jsonData);
@@ -117,11 +117,11 @@ class SP extends GetxController {
 /**
    * 공통코드 목록 저장
    */
-  static void putCodeList(String key, String codeList) {
-    open();
+  static Future<void> putCodeList(String key, String codeList) async {
+    await open();
     Logger logger = Logger();
     try {
-      m_Pref?.setString(key, codeList);
+      await m_Pref?.setString(key, codeList);
     }catch(e){
       logger.e(e);
     }
@@ -163,16 +163,16 @@ class SP extends GetxController {
     return codeName;
   }
 
-  static void setCar(CarModel? data) {
-    open();
-      m_Pref?.setString(Const.KEY_CAR_INFO, jsonEncode(data));
+  static Future<void> setCar(CarModel? data) async {
+    await open();
+    await m_Pref?.setString(Const.KEY_CAR_INFO, jsonEncode(data));
   }
 
-  static CarModel? getCarInfo(String key) {
-    open();
-    String? json = m_Pref?.getString(key);
+  static Future<CarModel>? getCarInfo(String key) async {
+    await open();
+    var json = await m_Pref?.getString(key);
     if(json == null){
-      return null;
+      return Future.value(null);
     }else {
       Map<String, dynamic> jsonData = jsonDecode(json);
       return CarModel.fromJSON(jsonData);

@@ -84,8 +84,7 @@ class _AppBarNoticePageState extends State<AppBarNoticePage> {
     final appBarService = Provider.of<AppbarService>(context);
     return FutureBuilder(
       future: appBarService.getNotice(
-        context,
-        controller.getUserInfo()?.authorization,
+        context
       ),
       builder: (context, snapshot) {
         if(snapshot.hasData) {
@@ -133,14 +132,12 @@ class _AppBarNoticePageState extends State<AppBarNoticePage> {
             ),
           )),
       body: SafeArea(
-          child: Obx((){
-            return SingleChildScrollView(
+          child: SingleChildScrollView(
                 child: SizedBox(
                   width: MediaQuery.of(context).size.width,
                   child: getNoticeFuture(),
                 )
-            );
-          })
+            )
       ),
     );
   }

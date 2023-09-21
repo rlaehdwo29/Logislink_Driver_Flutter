@@ -76,12 +76,12 @@ class _BridgePageState extends State<BridgePage> {
 
   Future<bool?> checkPermission() async {
     DeviceInfoPlugin deviceInfo = DeviceInfoPlugin();
-    AndroidDeviceInfo info  = await deviceInfo.androidInfo;
     if(Platform.isAndroid) {
+      AndroidDeviceInfo info  = await deviceInfo.androidInfo;
       var phone_per = await Permission.phone.status;
       var location_per = await Permission.location.status;
       var activityRecognition_per = await Permission.activityRecognition.status;
-      if (info.version.sdkInt >= 33) {
+      if (info.version.sdkInt >= 29) {
         var photos_per = await Permission.photos.status;
         var locationPermission = await Geolocator.checkPermission();
         if (location_per != PermissionStatus.granted) {
@@ -175,13 +175,13 @@ class _BridgePageState extends State<BridgePage> {
     Logger logger = Logger();
     List<String> codeList = Const.getCodeList();
     for(String code in codeList){
-      await DioService.dioClient(header: true).getCodeList(code).then((it){
+      await DioService.dioClient(header: true).getCodeList(code).then((it) async {
         ReturnMap _response = DioService.dioResponse(it);
         logger.d("GetCodeTask() _response -> ${_response.status} // ${_response.resultMap}");
         if(_response.status == "200") {
           if(_response.resultMap?["data"] != null) {
             var jsonString = jsonEncode(it.response.data);
-            SP.putCodeList(code, jsonString);
+            await SP.putCodeList(code, jsonString);
           }
         }
       }).catchError((Object obj) async {
@@ -204,11 +204,12 @@ class _BridgePageState extends State<BridgePage> {
       await goToLogin();
       return;
     }
-    if(App().getUserInfo().authorization != null ){
-      if(App().getUserInfo().vehicCnt! >= 2) {
-        goToUserCar();
+    var app = await App().getUserInfo();
+    if(app.authorization != null ){
+      if(app.vehicCnt! >= 2) {
+        await goToUserCar();
       }else{
-        getUserInfo();
+        await getUserInfo();
       }
     }else{
       await goToLogin();
@@ -223,14 +224,14 @@ class _BridgePageState extends State<BridgePage> {
 
     if(results != null && results.containsKey("code")){
       if(results["code"] == 200) {
-        getUserInfo();
+        await getUserInfo();
       }
     }
   }
 
   Future<void> getUserInfo() async {
     Logger logger = Logger();
-    UserModel? nowUser = controller.getUserInfo();
+    UserModel? nowUser = await controller.getUserInfo();
     await pr?.show();
     await DioService.dioClient(header: true).getUserInfo(nowUser?.authorization, nowUser?.vehicId).then((it) async {
       await pr?.hide();
@@ -242,7 +243,7 @@ class _BridgePageState extends State<BridgePage> {
             UserModel newUser = UserModel.fromJSON(it.response.data["data"]);
             newUser.authorization = nowUser?.authorization;
             controller.setUserInfo(newUser);
-            sendDeviceInfo();
+            await sendDeviceInfo();
           }catch(e) {
             print(e);
           }
@@ -266,7 +267,7 @@ class _BridgePageState extends State<BridgePage> {
 
   Future<void> sendDeviceInfo() async {
     Logger logger = Logger();
-    UserModel? user = controller.getUserInfo();
+    UserModel? user = await controller.getUserInfo();
     if(Const.userDebugger) {
       return;
     }
@@ -317,7 +318,6 @@ class _BridgePageState extends State<BridgePage> {
   }
 
   Future<void> goToLogin() async {
-    try {
       if(defaultTargetPlatform == TargetPlatform.android){
         if (!await MobileNumber.hasPhonePermission) {
           await MobileNumber.requestPhonePermission;
@@ -327,9 +327,6 @@ class _BridgePageState extends State<BridgePage> {
       }else{
         await checkTermsAgree();
       }
-    }catch(e) {
-      print("goToLogin() Exection ==>${e}");
-    }
   }
 
   Future<void> checkTermsAgree() async {
@@ -341,7 +338,8 @@ class _BridgePageState extends State<BridgePage> {
       telNum = "";
     }
     Logger logger = Logger();
-    await DioService.dioClient(header: true).getTermsTelAgree(App().getUserInfo().authorization, telNum).then((it) async {
+    var app = await App().getUserInfo();
+    await DioService.dioClient(header: true).getTermsTelAgree(app.authorization, telNum).then((it) async {
       ReturnMap response = DioService.dioResponse(it);
       logger.d("CheckTermsAgree() _response -> ${response.status} // ${response.resultMap}");
       if(response.status == "200") {

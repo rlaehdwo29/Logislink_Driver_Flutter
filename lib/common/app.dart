@@ -42,27 +42,22 @@ class App extends GetxController{
   }
 
 
-   UserModel getUserInfo() {
-    if (user == null) {
-      user.value = UserModel();
-    }else{
-      user.value = SP.getUserInfo(Const.KEY_USER_INFO)?? UserModel();
-    }
-
+   Future<UserModel> getUserInfo() async {
+    user.value = await SP.getUserInfo(Const.KEY_USER_INFO)??UserModel();
     return user.value;
   }
 
-  void setCar(CarModel carInfo) {
-    SP.setCar(carInfo);
+  Future<void> setCar(CarModel carInfo) async {
+    await SP.setCar(carInfo);
     car.value = carInfo;
     update();
   }
 
-  CarModel getCarInfo() {
+  Future<CarModel> getCarInfo() async {
     if (car == null) {
       car.value = CarModel();
     } else {
-      car.value = SP.getCarInfo(Const.KEY_CAR_INFO) ?? CarModel();
+      car.value = await SP.getCarInfo(Const.KEY_CAR_INFO) ?? CarModel();
     }
     return car.value;
   }

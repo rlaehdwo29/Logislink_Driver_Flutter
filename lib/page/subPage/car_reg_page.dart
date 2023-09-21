@@ -92,9 +92,10 @@ class _CarRegPageState extends State<CarRegPage> {
   Future<void> carReg() async {
     if (validate()) {
       Logger logger = Logger();
+      var app = await controller.getUserInfo();
       await pr?.show();
       await DioService.dioClient(header: true).carReg(
-          controller.getUserInfo()?.authorization,
+          app.authorization,
           mCar?.value.carName,
           mCar?.value.carNum,
           "Y",
@@ -131,9 +132,10 @@ class _CarRegPageState extends State<CarRegPage> {
   Future<void> carEdit() async {
     if (validate()) {
       Logger logger = Logger();
+      var app = await controller.getUserInfo();
       await pr?.show();
       await DioService.dioClient(header: true).carEdit(
-          controller.getUserInfo()?.authorization,
+          app.authorization,
           mCar?.value.carSeq,
           mCar?.value.carName,
           mCar?.value.carNum,
@@ -184,9 +186,10 @@ class _CarRegPageState extends State<CarRegPage> {
   Future<void> carDel() async {
     if (validate()) {
       Logger logger = Logger();
+      var app = await controller.getUserInfo();
       await pr?.show();
       await DioService.dioClient(header: true).carDel(
-          controller.getUserInfo()?.authorization,
+          app.authorization,
           mCar?.value.carSeq,
           "N"
       ).then((it) async {

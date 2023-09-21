@@ -36,10 +36,10 @@ class ShowBankCheckWidget{
     mData.value?.bankCd = codeModel?.code;
   }
 
-  Future showBankCheckDialog() {
+  Future showBankCheckDialog(UserModel mUser) {
 
     var _controller = TextEditingController();
-    UserModel? user = controller.getUserInfo();
+    UserModel? user = mUser;
     mData.value = BankInfoModel(bankCd: user?.bankCode,acctNm: user?.bankCnnm, acctNo: user?.bankAccount, chkDate: user?.bankchkDate);
     tempData.value = BankInfoModel(bankCd: mData.value?.bankCd,acctNm: mData.value?.acctNm, acctNo: mData.value?.acctNo, chkDate: mData.value?.chkDate);
     _controller.text = tempData.value?.acctNo ?? "";
@@ -78,24 +78,22 @@ class ShowBankCheckWidget{
                                   ),
                                   child: Column(
                                     crossAxisAlignment: CrossAxisAlignment.stretch,
+                                    mainAxisAlignment: MainAxisAlignment.center,
                                     children: [
                                       Row(
+                                          crossAxisAlignment: CrossAxisAlignment.center,
+                                          mainAxisAlignment: MainAxisAlignment.center,
                                           children: [
                                             Expanded(
                                                 flex: 1,
                                                 child: Container(
-                                                  height: CustomStyle.getHeight(50.0),
-                                                  padding: const EdgeInsets.all(10.0),
+                                                  padding: EdgeInsets.symmetric(vertical: CustomStyle.getHeight(15)),
                                                   decoration: BoxDecoration(
                                                       border: Border(
-                                                          bottom: BorderSide(
-                                                              color: line,
-                                                              width: CustomStyle.getWidth(1.0)
-                                                          ),
-                                                          right: BorderSide(
-                                                              color: line,
-                                                              width: CustomStyle.getWidth(1.0)
-                                                          )
+                                                        bottom: BorderSide(
+                                                            color: line,
+                                                            width: CustomStyle.getWidth(1.0)
+                                                        ),
                                                       )
                                                   ),
                                                   child: Text(
@@ -113,14 +111,17 @@ class ShowBankCheckWidget{
                                                       ShowSelectDialogWidget(context:context, mTitle: Strings.of(context)?.get("bank_name")??"", codeType: Const.BANK_CD, callback: selectItem).showDialog();
                                                     },
                                                     child: Container(
-                                                        height: CustomStyle.getHeight(50.0),
-                                                        padding: const EdgeInsets.all(10.0),
+                                                        padding: EdgeInsets.symmetric(vertical: CustomStyle.getHeight(15)),
                                                         decoration: BoxDecoration(
                                                             border: Border(
                                                               bottom: BorderSide(
                                                                   color: line,
                                                                   width: CustomStyle.getWidth(1.0)
                                                               ),
+                                                              left: BorderSide(
+                                                                color: line,
+                                                                width: CustomStyle.getWidth(1.0)
+                                                            ),
                                                             )
                                                         ),
                                                         child: Text(
@@ -134,20 +135,12 @@ class ShowBankCheckWidget{
                                           ]
                                       ),
                                       Row(
+                                        crossAxisAlignment: CrossAxisAlignment.center,
+                                          mainAxisAlignment: MainAxisAlignment.center,
                                           children: [
                                             Expanded(
                                                 flex: 1,
-                                                child: Container(
-                                                  height: CustomStyle.getHeight(50.0),
-                                                  padding: const EdgeInsets.all(10.0),
-                                                  decoration: BoxDecoration(
-                                                      border: Border(
-                                                          right: BorderSide(
-                                                              color: line,
-                                                              width: CustomStyle.getWidth(1.0)
-                                                          )
-                                                      )
-                                                  ),
+                                                child: SizedBox(
                                                   child: Text(
                                                     "계좌번호",
                                                     textAlign: TextAlign.center,
@@ -157,8 +150,15 @@ class ShowBankCheckWidget{
                                             ),
                                             Expanded(
                                                 flex: 3,
-                                                child: SizedBox(
-                                                    height: CustomStyle.getHeight(50.0),
+                                                child: Container(
+                                                    decoration: BoxDecoration(
+                                                        border: Border(
+                                                            left: BorderSide(
+                                                                color: line,
+                                                                width: CustomStyle.getWidth(1.0)
+                                                            )
+                                                        )
+                                                    ),
                                                     child: TextField(
                                                       maxLines: 1,
                                                       style: CustomStyle.CustomFont(styleFontSize14, text_color_01),
@@ -214,13 +214,13 @@ class ShowBankCheckWidget{
                                     Expanded(
                                         child: InkWell(
                                             onTap: () async {
-                                              if(isChecked == false) {
+                                              if(isChecked.value == false) {
                                                 FocusManager.instance.primaryFocus?.unfocus();
                                                 await getIaccNm();
                                               }
                                             },
                                             child: Container(
-                                                decoration: CustomStyle.customBoxDeco(!isChecked.value?text_color_02:sub_color,radius: 15,border_color: text_color_02),
+                                                decoration: CustomStyle.customBoxDeco(!isChecked.value?sub_color:text_color_02,radius: 15,border_color: text_color_02),
                                                 padding: EdgeInsets.symmetric(vertical: CustomStyle.getHeight(5.0)),
                                                 margin: EdgeInsets.symmetric(horizontal: CustomStyle.getWidth(10.0), vertical: CustomStyle.getHeight(10.0)),
                                                 child:Row(
@@ -232,7 +232,7 @@ class ShowBankCheckWidget{
                                                     textAlign: TextAlign.center,
                                                     style: CustomStyle.CustomFont(styleFontSize12,styleWhiteCol),
                                                   ),
-                                                    isLoading == true? Container(
+                                                    isLoading.value == true? Container(
                                                         margin: EdgeInsets.only(left: CustomStyle.getWidth(5.0)),
                                                         child: SpinKitFadingCircle(
                                                           color: Colors.white,
@@ -256,20 +256,7 @@ class ShowBankCheckWidget{
                                         Expanded(
                                             flex: 1,
                                             child: Container(
-                                              height: CustomStyle.getHeight(50.0),
-                                              padding: const EdgeInsets.all(10.0),
-                                              decoration: BoxDecoration(
-                                                  border: Border(
-                                                      bottom: BorderSide(
-                                                          color: line,
-                                                          width: CustomStyle.getWidth(1.0)
-                                                      ),
-                                                      right: BorderSide(
-                                                          color: line,
-                                                          width: CustomStyle.getWidth(1.0)
-                                                      )
-                                                  )
-                                              ),
+                                              padding: EdgeInsets.symmetric(vertical: CustomStyle.getHeight(15.0)),
                                               child: Text(
                                                 Strings.of(context)?.get("bank_cnnm")??"Not Found",
                                                 textAlign: TextAlign.center,
@@ -284,11 +271,10 @@ class ShowBankCheckWidget{
 
                                                 },
                                                 child: Container(
-                                                    height: CustomStyle.getHeight(50.0),
-                                                    padding: const EdgeInsets.all(10.0),
+                                                    padding: EdgeInsets.symmetric(vertical: CustomStyle.getHeight(15.0),horizontal: CustomStyle.getWidth(10.0)),
                                                     decoration: BoxDecoration(
                                                         border: Border(
-                                                          bottom: BorderSide(
+                                                          left: BorderSide(
                                                               color: line,
                                                               width: CustomStyle.getWidth(1.0)
                                                           ),
@@ -331,7 +317,7 @@ class ShowBankCheckWidget{
                                         flex:1,
                                         child: InkWell(
                                             onTap: () async {
-                                              await bank_check_confirm();
+                                              if(isChecked.value) await bank_check_confirm();
                                             },
                                             child: Container(
                                                 height:CustomStyle.getHeight(50.0),
@@ -365,7 +351,7 @@ class ShowBankCheckWidget{
   }
 
   Future<void> getIaccNm() async {
-    UserModel? user = controller.getUserInfo();
+    UserModel? user = await controller.getUserInfo();
     if(mData.value?.bankCd == null || mData.value?.bankCd == "") {
       Util.toast("은행명을 선택해 주세요.");
       return;
@@ -425,14 +411,14 @@ class ShowBankCheckWidget{
   }
 
   Future<void> updateBank() async {
-    UserModel? user = controller.getUserInfo();
+    UserModel? user = await controller.getUserInfo();
     Logger logger = Logger();
     await DioService.dioClient(header: true).updateBank(user?.authorization, mData.value?.bankCd, "김동재", mData.value?.acctNo).then((it) {
       ReturnMap _response = DioService.dioResponse(it);
       logger.d("updateBank() _response -> ${_response.status} // ${_response.resultMap}");
       if(_response.status == "200") {
         Util.toast("계좌정보가 등록되었습니다.");
-        callback(mData.value?.bankCd,"김동재",mData.value?.acctNo);
+        callback(mData.value?.bankCd,mData.value?.acctNm,mData.value?.acctNo);
         Navigator.pop(context);
       }else{
         Util.toast(_response.message);

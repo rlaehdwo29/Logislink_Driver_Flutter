@@ -115,12 +115,13 @@ class _AppBarSettingPageState extends State<AppBarSettingPage> {
 
   Future<void> sendDeviceInfo() async {
     Logger logger = Logger();
+    var app = await controller.getUserInfo();
     await pr?.show();
     String? push_id = await SP.get(Const.KEY_PUSH_ID) ?? "";
     var setting_push = await SP.getDefaultTrueBoolean(Const.KEY_SETTING_PUSH)??false;
     var setting_talk = await SP.getDefaultTrueBoolean(Const.KEY_SETTING_TALK) ?? false;
     await DioService.dioClient(header: true).deviceUpdate(
-      controller.getUserInfo()?.authorization,
+      app.authorization,
       Util.booleanToYn(setting_push),
       Util.booleanToYn(setting_talk),
       push_id,

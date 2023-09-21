@@ -39,7 +39,7 @@ class _NotificationPageState extends State<NotificationPage> {
 
   Future<void> getNotification() async {
     Logger logger = Logger();
-    UserModel? user = controller.getUserInfo();
+    UserModel? user = await controller.getUserInfo();
     await pr?.show();
     await DioService.dioClient(header: true).getNotification(user?.authorization).then((it) async {
       await pr?.hide();
@@ -95,11 +95,10 @@ class _NotificationPageState extends State<NotificationPage> {
               ),
             )),
         body: SafeArea(
-            child: Obx(() {
-          return Container(
+            child: Container(
               child: itemListFuture()
-          );
-        })));
+          )
+        ));
   }
 
   Widget getNotificationListWidget() {
@@ -173,7 +172,7 @@ class _NotificationPageState extends State<NotificationPage> {
   Widget itemListFuture() {
     final notificationService = Provider.of<NotificationService>(context);
     return FutureBuilder(
-      future: notificationService.getNotification(context, controller.getUserInfo()?.authorization),
+      future: notificationService.getNotification(context),
       builder: (context, snapshot) {
         if(snapshot.hasData) {
           if(mList.isNotEmpty) mList.clear();

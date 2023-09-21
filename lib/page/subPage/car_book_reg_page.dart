@@ -47,6 +47,9 @@ class _CarBookRegPageState extends State<CarBookRegPage>{
   @override
   void initState() {
     super.initState();
+    Future.delayed(Duration.zero, () async {
+      mCar = await controller.getCarInfo();
+    });
     priceController = TextEditingController();
     oilUnitPriceController = TextEditingController();
     memoController = TextEditingController();
@@ -69,8 +72,6 @@ class _CarBookRegPageState extends State<CarBookRegPage>{
   }
 
   void initView() {
-    mCar = controller.getCarInfo();
-
     switch(widget.mCode) {
       case "01" :
         regTitle = Strings.of(context)?.get("car_book_oil_reg_title")??"Not Found";
@@ -1695,9 +1696,10 @@ class _CarBookRegPageState extends State<CarBookRegPage>{
 
   Future<void> carBookDel() async {
       Logger logger = Logger();
+      var app = await controller.getUserInfo();
       await pr?.show();
       await DioService.dioClient(header: true).carBookDel(
-          controller.getUserInfo()?.authorization,mData.value.bookSeq
+          app.authorization,mData.value.bookSeq
       ).then((it) async {
         await pr?.hide();
         ReturnMap response = DioService.dioResponse(it);
@@ -1730,9 +1732,10 @@ class _CarBookRegPageState extends State<CarBookRegPage>{
   Future<void> carUpdate() async {
     if (validate()) {
       Logger logger = Logger();
+      var app = await controller.getUserInfo();
       await pr?.show();
       await DioService.dioClient(header: true).carEdit(
-        controller.getUserInfo()?.authorization,
+          app.authorization,
         mCar?.carSeq,
         mCar?.carName,
         mCar?.carNum,
@@ -1770,10 +1773,12 @@ class _CarBookRegPageState extends State<CarBookRegPage>{
   Future<void> carBookReg() async {
     if (validate()) {
       Logger logger = Logger();
+      var app = await controller.getUserInfo();
+      var app_car = await controller.getCarInfo();
       await pr?.show();
       await DioService.dioClient(header: true).carBookReg(
-        controller.getUserInfo()?.authorization,
-        controller.getCarInfo()?.carSeq,
+          app.authorization,
+          app_car.carSeq,
         widget.mCode,
         mData.value.bookDate,
         mData.value.price,
@@ -1821,9 +1826,10 @@ class _CarBookRegPageState extends State<CarBookRegPage>{
   Future<void> carBookEdit() async {
     if (validate()) {
       Logger logger = Logger();
+      var app = await controller.getUserInfo();
       await pr?.show();
       await DioService.dioClient(header: true).carBookEdit(
-        controller.getUserInfo()?.authorization,
+        app.authorization,
         mData.value.bookSeq,
         widget.mCode,
         mData.value.bookDate,

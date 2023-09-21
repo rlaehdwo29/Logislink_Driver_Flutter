@@ -1,6 +1,7 @@
 import 'package:flutter/cupertino.dart';
 import 'package:get/get.dart';
 import 'package:logger/logger.dart';
+import 'package:logislink_driver_flutter/common/app.dart';
 import 'package:logislink_driver_flutter/common/common_util.dart';
 import 'package:logislink_driver_flutter/common/model/receipt_model.dart';
 import 'package:logislink_driver_flutter/provider/dio_service.dart';
@@ -18,10 +19,11 @@ class ReceiptService with ChangeNotifier {
     receiptList.value = List.empty(growable: true);
   }
 
-  Future getReceipt(BuildContext? context, String? _auth, String? _orderId) async {
+  Future getReceipt(BuildContext? context, String? _orderId) async {
     Logger logger = Logger();
+    var app = await App().getUserInfo();
     receiptList.value = List.empty(growable: true);
-    await DioService.dioClient(header: true).getReceipt(_auth, _orderId).then((it) {
+    await DioService.dioClient(header: true).getReceipt(app.authorization, _orderId).then((it) {
       ReturnMap _response = DioService.dioResponse(it);
       logger.d("getReceipt() _response -> ${_response.status} // ${_response.resultMap}");
       if(_response.status == "200") {

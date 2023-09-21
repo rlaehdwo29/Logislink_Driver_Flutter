@@ -1011,9 +1011,10 @@ class _AppBarSalesDetailPageState extends State<AppBarSalesDetailPage> {
 
   Future<void> deleteDataAPI() async {
     Logger logger = Logger();
+    var app = await controller.getUserInfo();
     await pr?.show();
     await DioService.dioClient(header: true)
-        .invisibleSalesManage(controller.getUserInfo()?.authorization,
+        .invisibleSalesManage(app.authorization,
             mTempData.value.workId, "N")
         .then((it) async {
       await pr?.hide();
@@ -1063,9 +1064,10 @@ class _AppBarSalesDetailPageState extends State<AppBarSalesDetailPage> {
 
   Future<void> updateDataAPI() async {
     Logger logger = Logger();
+    var app = await controller.getUserInfo();
     await pr?.show();
     await DioService.dioClient(header: true).udpateSalesManage(
-        controller.getUserInfo()?.authorization,
+        app.authorization,
         mTempData.value.workId,
         mTempData.value.driveDate,
         mTempData.value.startDate,
@@ -1129,9 +1131,10 @@ class _AppBarSalesDetailPageState extends State<AppBarSalesDetailPage> {
 
   Future<void> insertRegisterAPI() async {
     Logger logger = Logger();
+    var app = await controller.getUserInfo();
     await pr?.show();
     await DioService.dioClient(header: true).insertSalesManage(
-        controller.getUserInfo()?.authorization,
+        app.authorization,
         mTempData.value.driveDate,
         mTempData.value.startDate,
         mTempData.value.endDate,
