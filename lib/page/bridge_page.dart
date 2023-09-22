@@ -337,6 +337,16 @@ class _BridgePageState extends State<BridgePage> {
     }else{
       telNum = "";
     }
+    if(!Const.userDebugger) {
+      if (telNum.isEmpty) {
+        Future.delayed(const Duration(milliseconds: 300), () {
+          Navigator.pushNamedAndRemoveUntil(context, '/', (route) => false);
+          exit(0);
+          //SystemNavigator.pop();
+        });
+        return;
+      }
+    }
     Logger logger = Logger();
     var app = await App().getUserInfo();
     await DioService.dioClient(header: true).getTermsTelAgree(app.authorization, telNum).then((it) async {

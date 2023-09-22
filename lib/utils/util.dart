@@ -150,12 +150,12 @@ class Util {
       final List<SimCard> simCards = (await MobileNumber.getSimCards)!;
       simCards?.map((sim) => print("Sim Number => ${sim.number} // ${sim.carrierName} // ${sim.countryIso} // ${sim.countryPhonePrefix} // ${sim.displayName} // ${sim.slotIndex}")).toList();
       return mobileNumber;
-    } on PlatformException catch (e) {
+    } catch (e) {
       print("getPhoneNumber Exception => $e");
-      debugPrint("Failed to get mobile number because of '${e.message}'");
-      //toast("${e.message}");
-      return "";
+      debugPrint("Failed to get mobile number because of '${e}'");
+      toast("단말기의 정보를 가져오는 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.");
     }
+    return "";
   }
 
   static String ynToPossible(String? yn) {
