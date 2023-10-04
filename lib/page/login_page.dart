@@ -314,8 +314,8 @@ class _LoginPageState extends State<LoginPage> with CommonMainWidget {
     }
     await pr?.show();
     String? push_id = await SP.get(Const.KEY_PUSH_ID)??"";
-    var setting_push = await SP.getDefaultTrueBoolean(Const.KEY_SETTING_PUSH)??false;
-    var setting_talk = await SP.getDefaultTrueBoolean(Const.KEY_SETTING_TALK)??false;
+    var setting_push = await SP.getDefaultTrueBoolean(Const.KEY_SETTING_PUSH);
+    var setting_talk = await SP.getDefaultTrueBoolean(Const.KEY_SETTING_TALK);
       await DioService.dioClient(header: true).deviceUpdate(
           user?.authorization,
           Util.booleanToYn(setting_push),

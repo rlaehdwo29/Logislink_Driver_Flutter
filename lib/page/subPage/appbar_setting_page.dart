@@ -38,8 +38,8 @@ class _AppBarSettingPageState extends State<AppBarSettingPage> {
       _screen.value = await SP.getFirstScreen(context);
       _navi.value = await SP.getString(Const.KEY_SETTING_NAVI, "카카오내비")??"카카오내비";
       _wakeChecked.value = await SP.getBoolean(Const.KEY_SETTING_WAKE);
-      _pushChecked.value = await SP.getBoolean(Const.KEY_SETTING_PUSH);
-      _talkChecked.value = await SP.getBoolean(Const.KEY_SETTING_TALK);
+      _pushChecked.value = await SP.getDefaultTrueBoolean(Const.KEY_SETTING_PUSH);
+      _talkChecked.value = await SP.getDefaultTrueBoolean(Const.KEY_SETTING_TALK);
     });
   }
 
@@ -118,8 +118,8 @@ class _AppBarSettingPageState extends State<AppBarSettingPage> {
     var app = await controller.getUserInfo();
     await pr?.show();
     String? push_id = await SP.get(Const.KEY_PUSH_ID) ?? "";
-    var setting_push = await SP.getDefaultTrueBoolean(Const.KEY_SETTING_PUSH)??false;
-    var setting_talk = await SP.getDefaultTrueBoolean(Const.KEY_SETTING_TALK) ?? false;
+    var setting_push = await SP.getDefaultTrueBoolean(Const.KEY_SETTING_PUSH);
+    var setting_talk = await SP.getDefaultTrueBoolean(Const.KEY_SETTING_TALK);
     await DioService.dioClient(header: true).deviceUpdate(
       app.authorization,
       Util.booleanToYn(setting_push),
