@@ -232,7 +232,7 @@ class _AppBarSettingPageState extends State<AppBarSettingPage> {
                         _wakeChecked.value = value;
                         await SP.putBool(Const.KEY_SETTING_WAKE, _wakeChecked.value);
                         await SP.getBoolean(Const.KEY_SETTING_WAKE) == true ? WakelockPlus.enable() : WakelockPlus.disable();
-                        sendDeviceInfo();
+                        await sendDeviceInfo();
                       });
                     }
                 )
@@ -321,7 +321,7 @@ class _AppBarSettingPageState extends State<AppBarSettingPage> {
                     setState(() async {
                       _pushChecked.value = value;
                       await SP.putBool(Const.KEY_SETTING_PUSH, _pushChecked.value);
-                      sendDeviceInfo();
+                      await sendDeviceInfo();
                     });
                   }
               )
@@ -354,7 +354,7 @@ class _AppBarSettingPageState extends State<AppBarSettingPage> {
                     setState(() async {
                       _talkChecked.value = value;
                       await SP.putBool(Const.KEY_SETTING_TALK, _talkChecked.value);
-                      sendDeviceInfo();
+                      await sendDeviceInfo();
                     });
                   }
               )

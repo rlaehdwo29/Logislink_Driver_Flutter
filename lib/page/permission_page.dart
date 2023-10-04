@@ -324,7 +324,6 @@ class _PermissionPageState extends State<PermissionPage>{
             }else{
               app_util.Util.toast("${Strings.of(context)?.get("permission_failed") ?? "필요한 권한을 설정해 주세요. 앱이 종료됩니다."}");
               Future.delayed(const Duration(milliseconds: 300), () {
-                Navigator.pushNamedAndRemoveUntil(context, '/', (route) => false);
                 exit(0);
               });
             }

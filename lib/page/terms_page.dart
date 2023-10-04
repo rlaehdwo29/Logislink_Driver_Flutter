@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -63,7 +65,15 @@ class _TermsPageState extends State<TermsPage> {
 
     if(defaultTargetPlatform == TargetPlatform.android) {
       m_Number = await Util.getPhoneNum();
+      if(m_Number.isEmpty) {
+        Util.toast("단말기의 정보를 가져오는 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.");
+        Future.delayed(const Duration(milliseconds: 300), () {
+          exit(0);
+          //SystemNavigator.pop();
+        });
+      }
     }
+
     if(checkBoxArrayList.value[0] == true && checkBoxArrayList.value[1] == true && checkBoxArrayList.value[2] == true && checkBoxArrayList.value[3] && checkBoxArrayList.value[4]){
       m_Nece = "Y";
     }else{

@@ -118,7 +118,7 @@ class Util {
     } else if (Platform.isIOS) {
       IosDeviceInfo info = await deviceInfo.iosInfo;
       device = {
-        "model":info.name,
+        "model":info.data['utsname']['machine'],
         "deviceOs": "${info.systemName} ${info.systemVersion}"
       };
     } else {
@@ -153,9 +153,8 @@ class Util {
     } catch (e) {
       print("getPhoneNumber Exception => $e");
       debugPrint("Failed to get mobile number because of '${e}'");
-      toast("단말기의 정보를 가져오는 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.");
+      return "";
     }
-    return "";
   }
 
   static String ynToPossible(String? yn) {
@@ -269,6 +268,9 @@ class Util {
   static String? splitSDate(String? date) {
       DateFormat dateFormat = DateFormat('yyyy-MM-dd HH:mm:ss');
       DateTime? d;
+      if(date == null) {
+        return "-";
+      }
       try{
         d = dateFormat.parse(date!);
       }catch(e) {

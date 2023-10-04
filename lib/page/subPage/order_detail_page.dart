@@ -731,7 +731,7 @@ class _OrderDetailPageState extends State<OrderDetailPage>{
               )
           ),
           Text(
-            orderItem.value != null ? app_util.Util.splitSDate(_type == "wayon"?orderItem.value?.sDate:orderItem.value?.eDate)??"":"-",
+            orderItem.value.isNull ? "-":app_util.Util.splitSDate(_type == "wayon"?orderItem.value?.sDate:orderItem.value?.eDate)??"",
             style: CustomStyle.CustomFont(styleFontSize14, text_color_01),
           )
         ],
@@ -1456,7 +1456,7 @@ class _OrderDetailPageState extends State<OrderDetailPage>{
         builder: (BuildContext context) => ReceiptPage(item: orderItem.value))
     );
 
-    if(results != null && results.containsKey("code")){
+    if(results.containsKey("code")){
       if(results["code"] == 200) {
         await getOrderDetail(orderItem.value?.allocId);
         if (orderItem.value?.taxinvYn == "N" && orderItem.value?.loadStatus == "0") {
@@ -1521,7 +1521,7 @@ class _OrderDetailPageState extends State<OrderDetailPage>{
           var list = _response.resultMap?["data"] as List;
           List<OrderModel> itemsList =
               list.map((i) => OrderModel.fromJSON(i)).toList();
-          if (itemsList != null && itemsList.isNotEmpty) {
+          if (itemsList.isNotEmpty) {
             if(itemsList[0].taxinvYn == "N"){
               if(tvTax.value) {
                 if (itemsList[0].loadStatus == "1") {
@@ -1653,7 +1653,8 @@ class _OrderDetailPageState extends State<OrderDetailPage>{
 
   Future<void> setDriverClick(String? code, String? addr, String? auto) async {
     Logger logger = Logger();
-    await DioService.dioClient(header: true).setDriverClick(app.value.authorization, orderItem.value?.orderId, code, addr, auto).then((it) async {
+    var app = await controller.getUserInfo();
+    await DioService.dioClient(header: true).setDriverClick(app.authorization, orderItem.value?.orderId, code, addr, auto).then((it) async {
       ReturnMap _response = DioService.dioResponse(it);
       logger.d("setDriverClick() _response -> ${_response.status} // ${_response.resultMap}");
       if(_response.status == "200") {
@@ -1684,7 +1685,8 @@ class _OrderDetailPageState extends State<OrderDetailPage>{
   Future<void> getOrderList2() async {
     Logger logger = Logger();
     await pr?.show();
-    await DioService.dioClient(header: true).getOrderList2(app.value.authorization, widget.allocId, widget.orderId).then((it) async {
+    var app = await controller.getUserInfo();
+    await DioService.dioClient(header: true).getOrderList2(app.authorization, widget.allocId, widget.orderId).then((it) async {
       await pr?.hide();
       ReturnMap _response = DioService.dioResponse(it);
       logger.d("getOrderList2() _response -> ${_response.status} // ${_response.resultMap}");
@@ -1693,10 +1695,37 @@ class _OrderDetailPageState extends State<OrderDetailPage>{
 
           var list = _response.resultMap?["data"] as List;
           List<OrderModel> itemsList = list.map((i) => OrderModel.fromJSON(i)).toList();
-          if(itemsList != null && itemsList.isNotEmpty) {
+          if(itemsList.isNotEmpty) {
             orderItem.value = itemsList[0];
             initView();
-            setState(() {});
+            setState(() {
+              List<LatLng> bounds = List.empty(growable: true);
+              bounds.add(LatLng(orderItem.value!.sLat!, orderItem.value!.sLon!));
+              bounds.add(LatLng(orderItem.value!.eLat!, orderItem.value!.eLon!));
+
+              if(orderItem.value?.sLat.isNull != true || orderItem.value?.sLon.isNull != null) {
+                markers.add(Marker(
+                    markerId: orderItem.value?.sComName ?? "상차지",
+                    markerImageSrc: 'https://t1.daumcdn.net/localimg/localimages/07/2018/pc/flagImg/blue_b.png',
+                    latLng: LatLng(orderItem.value!.sLat!, orderItem.value!.sLon!),
+                    infoWindowContent: '<div style="font: bold italic 0.5em 돋움체;">${orderItem.value?.sComName ?? "상차지"}</div>'
+                ));
+              }
+
+              if(orderItem.value?.eLat.isNull != true || orderItem.value?.eLon.isNull != null) {
+                markers.add(Marker(
+                  markerId: orderItem.value?.eComName??"하차지",
+                  markerImageSrc: 'https://t1.daumcdn.net/localimg/localimages/07/2018/pc/flagImg/red_b.png',
+                  latLng: LatLng(orderItem.value!.eLat!, orderItem.value!.eLon!),
+                  infoWindowContent: '<div style="font: bold italic 0.5em 돋움체;">${orderItem.value?.eComName??"하차지"}</div>',
+                ));
+              }
+
+              setState(() {
+                mapController?.fitBounds(bounds);
+                mapController?.setBounds();
+              });
+            });
           }else{
             openOkBox(context,"삭제된 오더입니다.", Strings.of(context)?.get("confirm")??"Not Found", () { Navigator.of(context).pop(false); Navigator.of(context).pop(false);});
           }
@@ -1725,14 +1754,15 @@ class _OrderDetailPageState extends State<OrderDetailPage>{
   Future<void> getOrderDetail(String? allocId) async {
     Logger logger = Logger();
     //await pr?.show();
-    await DioService.dioClient(header: true).getOrderDetail(app.value.authorization, allocId).then((it) async {
+    var app = await controller.getUserInfo();
+    await DioService.dioClient(header: true).getOrderDetail(app.authorization, allocId).then((it) async {
       //await pr?.hide();
       ReturnMap _response = DioService.dioResponse(it);
       logger.d("getOrderDetail() _response -> ${_response.status} // ${_response.resultMap}");
       if(_response.status == "200") {
         if(_response.resultMap?["result"] == true) {
           var list = _response.resultMap?["data"] as List;
-          if (list != null && list.isNotEmpty) {
+          if (list.isNotEmpty) {
             List<OrderModel> itemsList = list.map((i) => OrderModel.fromJSON(i))
                 .toList();
             orderItem.value = itemsList[0];
@@ -1769,7 +1799,8 @@ class _OrderDetailPageState extends State<OrderDetailPage>{
   Future<void> setOrderState(String code, String msg) async {
       Logger logger = Logger();
       await pr?.show();
-      await DioService.dioClient(header: true).setOrderState(app.value.authorization, orderItem.value?.orderId, orderItem.value?.allocId, code).then((it) async {
+      var app = await controller.getUserInfo();
+      await DioService.dioClient(header: true).setOrderState(app.authorization, orderItem.value?.orderId, orderItem.value?.allocId, code).then((it) async {
         await pr?.hide();
         ReturnMap _response = DioService.dioResponse(it);
         logger.d("setOrderState() _response -> ${_response.status} // ${_response.resultMap}");
@@ -1954,6 +1985,7 @@ class _OrderDetailPageState extends State<OrderDetailPage>{
             SliverList(
                 delegate: SliverChildBuilderDelegate(
                     (BuildContext context, int index){
+                      int? stopCnt = orderItem.value?.stopCount;
                       return Obx((){
                         return Container(
                           padding: EdgeInsets.all(CustomStyle.getHeight(10.0)),
@@ -1975,7 +2007,7 @@ class _OrderDetailPageState extends State<OrderDetailPage>{
                               getWayCargoesInfo("wayon"),
                               CustomStyle.getDivider1(),
                               //경유지 정보
-                              orderItem.value != null ? orderItem.value!.stopCount! > 0 ? getStopPointFuture() : const SizedBox() : const SizedBox(),
+                              stopCnt.isNull? const SizedBox() : stopCnt! > 0 ? getStopPointFuture():const SizedBox(),
                               CustomStyle.sizedBoxHeight(CustomStyle.getHeight(10.0)),
                               getCargoesStateAndTime("wayoff"),
                               getWayCargoesInfo("wayoff"),
