@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
@@ -61,6 +63,14 @@ class _LoginPageState extends State<LoginPage> with CommonMainWidget {
     initMobileNumberState();*/
     if(defaultTargetPlatform == TargetPlatform.android) {
       mobileNumber.value = await Util.getPhoneNum();
+      if(mobileNumber.value.isEmpty) {
+        Util.toast("단말기의 정보를 가져오는 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.");
+        Future.delayed(const Duration(milliseconds: 300), () {
+          exit(0);
+          //SystemNavigator.pop();
+        });
+        return;
+      }
     }
   }
 
@@ -74,6 +84,13 @@ class _LoginPageState extends State<LoginPage> with CommonMainWidget {
 
     setState(() async {
       mobileNumber.value = await Util.getPhoneNum();
+      if(mobileNumber.value.isEmpty) {
+        Util.toast("단말기의 정보를 가져오는 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.");
+        Future.delayed(const Duration(milliseconds: 300), () {
+          exit(0);
+        });
+          //SystemNavigator.pop();
+      }
     });
   }
 
@@ -259,7 +276,7 @@ class _LoginPageState extends State<LoginPage> with CommonMainWidget {
             UserModel newUser = UserModel.fromJSON(it.response.data["data"]);
             newUser.authorization = nowUser?.authorization;
             controller.setUserInfo(newUser);
-            sendDeviceInfo();
+            await sendDeviceInfo();
           }catch(e) {
             print(e);
           }
@@ -297,8 +314,8 @@ class _LoginPageState extends State<LoginPage> with CommonMainWidget {
     }
     await pr?.show();
     String? push_id = await SP.get(Const.KEY_PUSH_ID)??"";
-    var setting_push = await SP.getDefaultTrueBoolean(Const.KEY_SETTING_PUSH)??false;
-    var setting_talk = await SP.getDefaultTrueBoolean(Const.KEY_SETTING_TALK)??false;
+    var setting_push = await SP.getDefaultTrueBoolean(Const.KEY_SETTING_PUSH);
+    var setting_talk = await SP.getDefaultTrueBoolean(Const.KEY_SETTING_TALK);
       await DioService.dioClient(header: true).deviceUpdate(
           user?.authorization,
           Util.booleanToYn(setting_push),
@@ -358,7 +375,7 @@ class _LoginPageState extends State<LoginPage> with CommonMainWidget {
               if ((app.vehicCnt ?? 0) > 1) {
                 await goToUserCar();
               } else {
-                sendDeviceInfo();
+                await sendDeviceInfo();
               }
             } else {
               openOkBox(context, _response.message ?? "",
@@ -423,7 +440,7 @@ class _LoginPageState extends State<LoginPage> with CommonMainWidget {
           if ((app.vehicCnt ?? 0) > 1) {
             goToUserCar();
           } else {
-            sendDeviceInfo();
+            await sendDeviceInfo();
           }
         } else {
           openOkBox(context, _response.message ?? "",
@@ -480,8 +497,8 @@ class _LoginPageState extends State<LoginPage> with CommonMainWidget {
                           children: [
                             Image.asset("assets/image/ic_top_logo.png"),
                             CustomStyle.sizedBoxHeight(100.0),
-                            Const.userDebugger? _entryField():
                             (defaultTargetPlatform != TargetPlatform.android)?_entryFieldNotAndroid():
+                            Const.userDebugger? _entryField():
                             Obx(() {
                             return Container(
                               alignment: Alignment.centerLeft,

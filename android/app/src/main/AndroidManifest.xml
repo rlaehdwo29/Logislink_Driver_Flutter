@@ -42,7 +42,12 @@
             <action android:name="android.intent.action.SEND" />
             <data android:mimeType="*/*" />
         </intent>
+
+        <package android:name="com.skt.skaf.l001mtm091" />
+        <package android:name="com.skt.tmap.ku" />
+
     </queries>
+
     <application
         android:label="로지스링크 차주용"
         tools:replace="android:label"

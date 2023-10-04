@@ -273,8 +273,8 @@ class _BridgePageState extends State<BridgePage> {
     }
     await pr?.show();
     var push_id = await SP.get(Const.KEY_PUSH_ID)??"";
-    var setting_push = await SP.getDefaultTrueBoolean(Const.KEY_SETTING_PUSH)??false;
-    var setting_talk = await  SP.getDefaultTrueBoolean(Const.KEY_SETTING_TALK)??false;
+    var setting_push = await SP.getDefaultTrueBoolean(Const.KEY_SETTING_PUSH);
+    var setting_talk = await  SP.getDefaultTrueBoolean(Const.KEY_SETTING_TALK);
     await DioService.dioClient(header: true).deviceUpdate(
         user?.authorization,
         Util.booleanToYn(setting_push),
@@ -331,20 +331,16 @@ class _BridgePageState extends State<BridgePage> {
 
   Future<void> checkTermsAgree() async {
 
-    String? telNum;
+    String? telNum = "";
     if(defaultTargetPlatform == TargetPlatform.android) {
       telNum = await Util.getPhoneNum();
-    }else{
-      telNum = "";
     }
     if(!Const.userDebugger) {
       if (telNum.isEmpty) {
+        Util.toast("단말기의 정보를 가져오는 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.");
         Future.delayed(const Duration(milliseconds: 300), () {
-          Navigator.pushNamedAndRemoveUntil(context, '/', (route) => false);
           exit(0);
-          //SystemNavigator.pop();
         });
-        return;
       }
     }
     Logger logger = Logger();
