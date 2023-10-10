@@ -86,14 +86,13 @@ class _OrderDetailPageState extends State<OrderDetailPage>{
     super.initState();
   }
 
-  void _callback(String? bankCd, String? acctNm, String? acctNo) {
-    setState(() async {
-      UserModel user = await controller.getUserInfo()!;
+  void _callback(String? bankCd, String? acctNm, String? acctNo) async {
+      UserModel user = await controller.getUserInfo();
       user.bankCode = bankCd;
       user.bankCnnm = acctNm;
       user.bankAccount = acctNo;
       controller.setUserInfo(user);
-    });
+      setState(() {});
   }
 
 

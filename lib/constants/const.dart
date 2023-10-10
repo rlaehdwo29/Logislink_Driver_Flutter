@@ -7,7 +7,7 @@ class Const {
  static final bool userDebugger = false;
 
  // 버전명
- static final APP_VERSION = "1.1.48";
+ static final APP_VERSION = "1.1.50";
 
  static final int CONNECT_TIMEOUT = 15;
  static final int WRITE_TIMEOUT = 15;
