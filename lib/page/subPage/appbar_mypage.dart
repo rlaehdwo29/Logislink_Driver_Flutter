@@ -305,14 +305,13 @@ class _AppBarMyPageState extends State<AppBarMyPage> {
     return SP.getCodeName(Const.BANK_CD, code??"");
   }
 
-  void _callback(String? bankCd, String? acctNm, String? acctNo) {
-    setState(() async {
+  void _callback(String? bankCd, String? acctNm, String? acctNo) async {
       UserModel? user = await controller.getUserInfo();
       user?.bankCode = bankCd;
       user?.bankCnnm = acctNm;
       user?.bankAccount = acctNo;
       controller.setUserInfo(user!);
-    });
+      mData.value = await App().getUserInfo();
   }
 
   Widget accountInfo(BuildContext context) {

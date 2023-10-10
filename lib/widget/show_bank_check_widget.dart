@@ -413,16 +413,16 @@ class ShowBankCheckWidget{
   Future<void> updateBank() async {
     UserModel? user = await controller.getUserInfo();
     Logger logger = Logger();
-    await DioService.dioClient(header: true).updateBank(user?.authorization, mData.value?.bankCd, "김동재", mData.value?.acctNo).then((it) {
+    await DioService.dioClient(header: true).updateBank(user?.authorization, mData.value?.bankCd, mData.value.acctNm, mData.value?.acctNo).then((it) {
       ReturnMap _response = DioService.dioResponse(it);
-      logger.d("updateBank() _response -> ${_response.status} // ${_response.resultMap}");
-      if(_response.status == "200") {
-        Util.toast("계좌정보가 등록되었습니다.");
-        callback(mData.value?.bankCd,mData.value?.acctNm,mData.value?.acctNo);
-        Navigator.pop(context);
-      }else{
-        Util.toast(_response.message);
-      }
+        logger.d("updateBank() _response -> ${_response.status} // ${_response.resultMap}");
+        if (_response.status == "200") {
+          Util.toast("계좌정보가 등록되었습니다.");
+          callback(mData.value?.bankCd, mData.value?.acctNm, mData.value?.acctNo);
+          Navigator.pop(context);
+        } else {
+          Util.toast(_response.message);
+        }
     }).catchError((Object obj) {
       switch (obj.runtimeType) {
         case DioError:
