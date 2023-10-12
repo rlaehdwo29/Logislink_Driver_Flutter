@@ -448,8 +448,8 @@ abstract class Rest {
    */
   @FormUrlEncoded()
   @POST(URL_DEAD_LINE)
-  Future<HttpResponse> getDeadLine(@Header("Authorization") String Authorization,
-      @Field("stdDate") String stdDate);
+  Future<HttpResponse> getDeadLine(@Header("Authorization") String? Authorization,
+      @Field("stdDate") String? stdDate);
 
 
   /**

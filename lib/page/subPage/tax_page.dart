@@ -37,7 +37,11 @@ class _TaxPageState extends State<TaxPage> {
   final pay = false.obs;
   final app = UserModel().obs;
 
-
+  var maxCal = DateTime.now();
+  var mCalendar = DateTime.now();
+  int deadLine = 10;
+  String writeDate = "";
+  
   DateTime _focusedDay = DateTime.now();
   CalendarFormat _calendarFormat = CalendarFormat.month;
   final _selectDay = DateTime.now().obs;
@@ -141,8 +145,74 @@ class _TaxPageState extends State<TaxPage> {
   }
 
   void initView() {
-    //setCalendar();
+    setCalendar();
     setPrice();
+  }
+
+  Future<void> setCalendar() async {
+    maxCal = DateTime.now();
+    int maxYear = maxCal.year;
+    int maxMonth = maxCal.month;
+    int maxDay = maxCal.day;
+
+    // 상차 일자
+    mCalendar = Util.getDateStrToCal(widget.item?.sDate);
+
+    int maxDate = int.parse(Util.getDateCalToStr(maxCal, "yyyyMM"));
+    int sDate = int.parse(Util.getDateCalToStr(mCalendar, "yyyyMM"));
+    int interval = maxDate - sDate;
+
+
+    if(interval == 1 || interval == 89) {
+      var dead = await getDeadLine(sDate);
+      if(maxDay > dead){
+        mCalendar = DateTime(maxYear,maxMonth,maxDay);
+      }
+    }else if(interval > 1 && interval < 12) {
+      mCalendar = DateTime(maxYear,maxMonth,maxDay);
+    }else if(interval > 89) {
+      mCalendar = DateTime(maxYear,maxMonth,maxDay);
+    }
+
+    writeDate = Util.getDateCalToStr(mCalendar, "yyyyMMdd");
+    
+    int max = int.parse(Util.getDateCalToStr(maxCal, "yyyyMMdd"));
+    if(int.parse(writeDate) > max) {
+      _selectDay.value = maxCal;
+    }else {
+      _selectDay.value = mCalendar;
+    }
+    
+  }
+
+  Future<int> getDeadLine(int? sDate) async {
+    Logger logger = Logger();
+    await pr?.show();
+    var app = await controller.getUserInfo();
+    await DioService.dioClient(header: true).getDeadLine(app.authorization,"${sDate}01").then((it) async {
+      await pr?.hide();
+      ReturnMap _response = DioService.dioResponse(it);
+      logger.d("getDeadLine() _response -> ${_response.status} // ${_response.resultMap}");
+      if(_response.status == "200") {
+        if (_response.resultMap?["result"] == true) {
+            deadLine = int.parse(_response.resultMap?["data"]["closingDate"]);
+        }
+      }
+    }).catchError((Object obj) async {
+      await pr?.hide();
+      switch (obj.runtimeType) {
+        case DioError:
+        // Here's the sample to get the failed response error code and message
+          final res = (obj as DioError).response;
+          logger.e("tax_page.dart getDeadLine() Error Default: ${res?.statusCode} -> ${res?.statusMessage}");
+          openOkBox(context,"${res?.statusCode} / ${res?.statusMessage}",Strings.of(context)?.get("confirm")??"Error!!",() {Navigator.of(context).pop(false);});
+          break;
+        default:
+          logger.e("tax_page.dart getDeadLine() Error Default:");
+          break;
+      }
+    });
+    return deadLine;
   }
 
   bool validation() {
@@ -228,7 +298,7 @@ class _TaxPageState extends State<TaxPage> {
     Logger logger = Logger();
     await pr?.show();
     var app = await controller.getUserInfo();
-    await DioService.dioClient(header: true).writeTax(app.authorization, widget.item?.orderId, widget.item?.allocId, "02", app.vehicId, Util.getDateCalToStr(_selectDay.value, "yyyyMMdd")).then((it) async {
+    await DioService.dioClient(header: true).writeTax(app.authorization, widget.item?.orderId, widget.item?.allocId, "02", app.vehicId, writeDate).then((it) async {
       await pr?.hide();
       ReturnMap _response = DioService.dioResponse(it);
       logger.d("writeTax() _response -> ${_response.status} // ${_response.resultMap}");
@@ -902,6 +972,8 @@ class _TaxPageState extends State<TaxPage> {
                                 CustomStyle.sizedBoxWidth(CustomStyle.getWidth(15.0)),
                                 TextButton(
                                     onPressed: () async {
+                                      mCalendar = DateTime(_tempSelectedDay!.year,_tempSelectedDay!.month,_tempSelectedDay!.day);
+                                      writeDate = Util.getDateCalToStr(mCalendar, "yyyyMMdd");
                                       _selectDay.value = _tempSelectedDay!;
                                       Navigator.of(context).pop(false);
                                       setState((){});

@@ -34,6 +34,7 @@ Future<bool> requestPermission() async {
         var photos_per = await Permission.photos.request();
         var location_per = await Permission.location.request();
         var activityRecognition_per = await Permission.activityRecognition.request();
+        var camera_per = await Permission.camera.request();
 
         var locationPermission = await Geolocator.checkPermission();
         /*print("위치 => ${location_per}");
@@ -56,6 +57,7 @@ Future<bool> requestPermission() async {
           Permission.storage,
           Permission.location,
           Permission.activityRecognition,
+          Permission.camera
         ].request();
 
         /*print("Notification => ${statuses[Permission.notification]}");
@@ -77,6 +79,7 @@ Future<bool> requestPermission() async {
         Permission.phone,
         Permission.location,
         Permission.activityRecognition,
+        Permission.camera
       ].request();
 
       var locationPermission = await Geolocator.checkPermission();

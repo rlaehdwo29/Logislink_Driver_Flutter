@@ -321,6 +321,23 @@ class Util {
     return DateFormat(newPatten).format(calendar!);
   }
 
+  static DateTime getDateStrToCal(String? date){
+    DateTime calendar = DateTime.now();
+    DateTime? d = null;
+    try{
+      if(date != null) {
+        d = DateFormat("yyyy-MM-dd hh:mm:ss").parse(date);
+      }
+    }catch(e) {
+      print("getDateStrToCal => $e");
+    }
+
+    if(d != null) {
+      calendar = d;
+    }
+    return calendar;
+  }
+
   static String? getCurrentDate(String pattern) {
     return DateFormat(pattern).format(DateTime.fromMillisecondsSinceEpoch(DateTime.now().millisecondsSinceEpoch));
   }
