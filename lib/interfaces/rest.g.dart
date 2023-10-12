@@ -1546,9 +1546,11 @@ class _Rest implements Rest {
   ) async {
     const _extra = <String, dynamic>{};
     final queryParameters = <String, dynamic>{};
+    queryParameters.removeWhere((k, v) => v == null);
     final _headers = <String, dynamic>{r'Authorization': Authorization};
     _headers.removeWhere((k, v) => v == null);
     final _data = {'stdDate': stdDate};
+    _data.removeWhere((k, v) => v == null);
     final _result =
         await _dio.fetch(_setStreamType<HttpResponse<dynamic>>(Options(
       method: 'POST',

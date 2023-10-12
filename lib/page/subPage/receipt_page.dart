@@ -97,34 +97,26 @@ class _ReceiptPageState extends State<ReceiptPage>{
     });
   }
 
-  /*Map<String,dynamic> createPartFromString(String descriptionString) {
-    var map = {
-      "$descriptionString" : MediaType()
-    };
-    return map;
-  }*/
-
   Future<void> compressImage(XFile file) async {
     await uploadReceipt(file);
   }
 
-  Future<void> uploadReceipt(XFile? file) async {
+  Future<void> uploadReceipt(XFile file) async {
       UserModel? user = await controller.getUserInfo();
 
-      var _formatFile = File(file!.path);
+      var _formatFile = File(file.path);
         var request = http.MultipartRequest(
             "POST", Uri.parse(SERVER_URL + URL_RECEIPT_UPLOAD));
         request.headers.addAll({"Authorization": '${user?.authorization}'});
         request.fields['orderId'] = '${widget.item?.orderId}';
         request.fields['allocId'] = '${widget.item?.allocId}';
         request.fields['fileTypeCode'] = 'I';
-        //request.files.add(http.MultipartFile.fromString('uploadFile', file!.path));
-        request.files.add(await http.MultipartFile.fromPath('uploadFile', _formatFile!.path, contentType: MediaType.parse("multipart/form-data"))); // 이게 업로드 됨.
+        request.files.add(await http.MultipartFile.fromPath('uploadFile', _formatFile.path, contentType: MediaType.parse("multipart/form-data")));
 
         var response = await request.send();
         if (response.statusCode == 200) {
           var jsonBody = json.decode(await response.stream.bytesToString()); // json 응답 값을 decode
-          //print("uploadReceipt() Result ToJson => ${jsonBody} // ${jsonBody["result"]} ${jsonBody["msg"]}");
+          print("uploadReceipt() Result ToJson => ${jsonBody} // ${jsonBody["result"]} ${jsonBody["msg"]}");
           if(jsonBody["result"] == true) {
             await getReceiptList();
             setState(() {});
@@ -136,23 +128,19 @@ class _ReceiptPageState extends State<ReceiptPage>{
         }
   }
 
-  Future<void> showAlbum() async {
+  Future<void> showAlbum(ImageSource imageSource) async {
     await _displayPickImageDialog(context,
         (double? maxWidth, double? maxHeight, int? quality) async {
       try {
         final XFile? pickedFile = await _picker?.pickImage(
-          source: ImageSource.gallery,
+          source: imageSource,
           maxWidth: maxWidth,
           maxHeight: maxHeight,
           imageQuality: 50,
-        ).then((file) {
-          if (file == null) return null;
-          setState(() async {
-            //getImageDate(pickedFile?.path);
-            await compressImage(file);
-          });
+        );
+          if (pickedFile == null) return null;
+          await compressImage(pickedFile);
 
-        });
       } catch (e) {
         setState(() {
           _pickImageError = e;
@@ -161,44 +149,102 @@ class _ReceiptPageState extends State<ReceiptPage>{
     });
   }
 
-  Future<void> checkPermission() async {
+  Future<void> showPermissionDialog(ImageSource imageSource) async {
+    var permission = "";
+    if(imageSource == ImageSource.camera) {
+      permission = "카메라";
+    }else if(imageSource == ImageSource.gallery){
       DeviceInfoPlugin deviceInfo = DeviceInfoPlugin();
       if (Platform.isAndroid) {
         AndroidDeviceInfo info = await deviceInfo.androidInfo;
         if (info.version.sdkInt >= 33) {
-          final permissionStatus = await Permission.photos.status;
+          permission = "사진 및 동영상";
+        }else{
+          permission = "저장소";
+        }
+      }else{
+        permission = "사진";
+      }
+    }else {
+      permission = "해당";
+    }
+    return openOkBox(
+        context,
+        "${permission} 권한을 허용으로 설정해주세요.",
+        Strings.of(context)?.get("confirm")??"Not Found",
+            () async {
+          Navigator.of(context).pop(false);
+          await openAppSettings();
+        }
+    );
+  }
+
+  Future<void> checkPermission(ImageSource imageSource) async {
+      DeviceInfoPlugin deviceInfo = DeviceInfoPlugin();
+      if (Platform.isAndroid) {
+        AndroidDeviceInfo info = await deviceInfo.androidInfo;
+        if (info.version.sdkInt >= 33) {
+          var permissionStatus;
+          if(imageSource == ImageSource.camera){
+            permissionStatus = await Permission.camera.status;
+          }else{
+            permissionStatus = await Permission.photos.status;
+          }
           if (permissionStatus != PermissionStatus.granted) {
-            if (permissionStatus.isPermanentlyDenied) {
-              await openAppSettings();
+            if (permissionStatus == PermissionStatus.permanentlyDenied || permissionStatus == PermissionStatus.denied) {
+              showPermissionDialog(imageSource);
             } else {
-              await Permission.photos.request();
+              if(imageSource == ImageSource.camera){
+                await Permission.camera.request();
+              }else{
+                await Permission.photos.request();
+              }
             }
           } else {
-            await showAlbum();
+            await showAlbum(imageSource);
           }
+
         } else {
-          final permissionStatus = await Permission.storage.status;
+          var permissionStatus;
+          if(imageSource == ImageSource.camera){
+            permissionStatus = await Permission.camera.status;
+          }else{
+            permissionStatus = await Permission.storage.status;
+          }
 
           if (permissionStatus != PermissionStatus.granted) {
-            if (permissionStatus.isPermanentlyDenied) {
-              await openAppSettings();
+            if (permissionStatus == PermissionStatus.permanentlyDenied || permissionStatus == PermissionStatus.denied) {
+              showPermissionDialog(imageSource);
             } else {
-              await Permission.storage.request();
+              if(imageSource == ImageSource.camera){
+                await Permission.camera.request();
+              }else{
+                await Permission.storage.request();
+              }
             }
           } else {
-            await showAlbum();
+            await showAlbum(imageSource);
           }
         }
       }else{
-        final permissionStatus = await Permission.photos.status;
+        var permissionStatus;
+        if(imageSource == ImageSource.camera){
+          permissionStatus = await Permission.camera.status;
+        }else{
+          permissionStatus = await Permission.photos.status;
+        }
         if (permissionStatus != PermissionStatus.granted) {
-          if (permissionStatus.isPermanentlyDenied) {
-            await openAppSettings();
+          if (permissionStatus == PermissionStatus.permanentlyDenied || permissionStatus == PermissionStatus.denied) {
+            showPermissionDialog(imageSource);
           } else {
-            await Permission.photos.request();
+            if(imageSource == ImageSource.camera){
+              await Permission.camera.request();
+            }else{
+              await Permission.photos.request();
+            }
           }
         } else {
-          await showAlbum();
+          await showAlbum(imageSource);
         }
       }
   }
@@ -360,31 +406,58 @@ class _ReceiptPageState extends State<ReceiptPage>{
             )
          // }),
       ),
-      bottomNavigationBar: Container(
-          height: 60.0,
-            color: main_color,
-            padding: EdgeInsets.symmetric(vertical: 15.0,horizontal: 10.0),
-            child: InkWell(
-              onTap: () async {
-                await checkPermission();
-                //await showAlbum();
-              },
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(Icons.photo_album_outlined,color: styleWhiteCol,size: 32),
-                  CustomStyle.sizedBoxWidth(10.0),
-                  Text(
-                    "인수증 가져오기",
-                    textAlign: TextAlign.center,
-                    style: CustomStyle.CustomFont(styleFontSize16, Colors.white),
-                  )
-                ]
-            ),
-          )
-      ),
-    )
+          bottomNavigationBar: Container(
+              height: 60.0,
+              color: main_color,
+              padding:
+                  const EdgeInsets.symmetric(vertical: 15.0, horizontal: 10.0),
+              child: Row(
+                  children: [
+                    Expanded(
+                      child: InkWell(
+                        onTap: () async {
+                          await checkPermission(ImageSource.gallery);
+                          //await showAlbum();
+                        },
+                        child: Row(
+                            crossAxisAlignment: CrossAxisAlignment.center,
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(Icons.photo_camera_back,
+                                  color: styleWhiteCol, size: 32),
+                              CustomStyle.sizedBoxWidth(10.0),
+                              Text(
+                                "인수증 가져오기",
+                                textAlign: TextAlign.center,
+                                style: CustomStyle.CustomFont(
+                                    styleFontSize16, Colors.white),
+                              )
+                            ]),
+                      )),
+                    Expanded(
+                      child: InkWell(
+                        onTap: () async {
+                          await checkPermission(ImageSource.camera);
+                          //await showAlbum();
+                        },
+                        child: Row(
+                            crossAxisAlignment: CrossAxisAlignment.center,
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(Icons.camera_alt,
+                                  color: styleWhiteCol, size: 32),
+                              CustomStyle.sizedBoxWidth(10.0),
+                              Text(
+                                "인수증 촬영하기",
+                                textAlign: TextAlign.center,
+                                style: CustomStyle.CustomFont(
+                                    styleFontSize16, Colors.white),
+                              )
+                            ]),
+                      )
+                    ),
+              ])),
+        )
     );
   }
 
