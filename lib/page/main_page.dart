@@ -366,7 +366,12 @@ class _MainPageState extends State<MainPage> with CommonMainWidget,WidgetsBindin
           await checkCarInfo();
         }
       }else {
-
+        var locationPermission = await geolocation.Geolocator.checkPermission();
+        if(locationPermission != geolocation.LocationPermission.always) {
+          await showPermissionDialog();
+        }else{
+          await checkCarInfo();
+        }
       }
         var guest = await SP.getBoolean(Const.KEY_GUEST_MODE);
       if (guest) showGuestDialog();
