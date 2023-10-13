@@ -5,6 +5,7 @@ import 'package:device_info_plus/device_info_plus.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
+import 'package:flutter/services.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:get/get.dart';
 import 'package:logger/logger.dart';
@@ -25,8 +26,10 @@ import 'package:logislink_driver_flutter/provider/dio_service.dart';
 import 'package:logislink_driver_flutter/utils/sp.dart';
 import 'package:logislink_driver_flutter/utils/util.dart';
 import 'package:mobile_number/mobile_number.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:progress_dialog_null_safe/progress_dialog_null_safe.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../common/style_theme.dart';
 import 'login_page.dart';
 import 'package:dio/dio.dart';
@@ -139,20 +142,32 @@ class _BridgePageState extends State<BridgePage> {
     Logger logger = Logger();
     await DioService.dioClient(header: true).getVersion("D").then((it) async {
       ReturnMap _response = DioService.dioResponse(it);
+      PackageInfo packageInfo = await PackageInfo.fromPlatform();
       logger.d("checkVersion() _response -> ${_response.status} // ${_response.resultMap}");
       try {
         if (_response.status == "200") {
           var list = _response.resultMap?["data"] as List;
 
           if (list != null && list.isNotEmpty) {
+            VersionModel? appVersion = VersionModel.fromJSON(list[0]);
             VersionModel? codeVersion = VersionModel.fromJSON(list[1]);
             String? shareVersion = await SP.get(Const.CD_VERSION);
-            if (shareVersion != codeVersion.versionCode) {
-              await SP.putString(Const.CD_VERSION, codeVersion.versionCode ?? "");
-              await GetCodeTask();
+            if (appVersion.versionCode == packageInfo.version) {
+              if (shareVersion != codeVersion.versionCode) {
+                await SP.putString(
+                    Const.CD_VERSION, codeVersion.versionCode ?? "");
+                await GetCodeTask();
+              }
+              await checkLogin();
+            } else {
+              Util.toast("새로운 앱 버전이 있습니다.");
+              if (Platform.isAndroid) {
+                launch(Const.ANDROID_STORE);
+              } else if (Platform.isIOS) {
+                //launch(Const.IOS_STORE);
+              }
             }
           }
-          await checkLogin();
         }
       }catch(e) {
         print("checkVersion() Exection=>$e");
