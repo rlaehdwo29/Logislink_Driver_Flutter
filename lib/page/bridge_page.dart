@@ -349,14 +349,17 @@ class _BridgePageState extends State<BridgePage> {
     String? telNum = "";
     if(defaultTargetPlatform == TargetPlatform.android) {
       telNum = await Util.getPhoneNum();
-    }
-    if(!Const.userDebugger) {
-      if (telNum.isEmpty) {
-        Util.toast("단말기의 정보를 가져오는 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.");
-        Future.delayed(const Duration(milliseconds: 300), () {
-          exit(0);
-        });
+
+      if(!Const.userDebugger) {
+        if (telNum.isEmpty) {
+          Util.toast("단말기의 정보를 가져오는 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.");
+          Future.delayed(const Duration(milliseconds: 300), () {
+            exit(0);
+          });
+        }
       }
+    }else{
+      telNum = "";
     }
     Logger logger = Logger();
     var app = await App().getUserInfo();
