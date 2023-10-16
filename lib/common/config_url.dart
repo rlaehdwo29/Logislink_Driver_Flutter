@@ -36,6 +36,8 @@
 
   // 로그인
   const String URL_USER_LOGIN = "/drv/login";
+ // IOS 로그인
+ const String URL_USER_IOS_LOGIN = "/drv/login";
   // 차주 정보
   const String URL_USER_INFO = "/drv/user/info";
   // 차주 차량 정보

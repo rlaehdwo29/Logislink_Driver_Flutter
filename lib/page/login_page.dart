@@ -229,7 +229,13 @@ class _LoginPageState extends State<LoginPage> with CommonMainWidget {
             m_TermsMode= TERMS.INSERT;
           }
           await SP.putBool(Const.KEY_TERMS, true);
-          userLogin();
+          if(Platform.isAndroid) {
+            await userLogin();
+          }else if(Platform.isIOS) {
+            await userIosLogin();
+          }else{
+            Util.toast("사용할 수 없는 단말기입니다.");
+          }
       }else{
         openOkBox(context,_response.message??"",Strings.of(context)?.get("confirm")??"Error!!",() {Navigator.of(context).pop(false);});
       }
@@ -402,6 +408,56 @@ class _LoginPageState extends State<LoginPage> with CommonMainWidget {
     });
   }
 
+  Future<void> userIosLogin() async {
+    Logger logger = Logger();
+
+    var phone = await Util.encryption(mobileNumber.value);
+    phone.replaceAll("\n", "");
+    SP.putBool(Const.KEY_GUEST_MODE, false);
+    await pr?.show();
+    await DioService.dioClient(header: true).iosLogin(userName.value,phone).then((it) async {
+      await pr?.hide();
+      ReturnMap _response = DioService.dioResponse(it);
+      logger.i("userLogin() _response -> ${_response.status} // ${_response.resultMap}");
+      if (_response.status == "200") {
+        if(_response.resultMap?["data"] != null) {
+          var app = await controller.getUserInfo();
+          UserModel userInfo = UserModel.fromJSON(it.response.data["data"]);
+          if (userInfo != null) {
+            userInfo.authorization = it.response.headers["authorization"]?[0];
+            logger.i("userJson => $userInfo");
+            await controller.setUserInfo(userInfo);
+            logger.i("User Login => ${app.driverId}");
+            if ((app.vehicCnt ?? 0) > 1) {
+              await goToUserCar();
+            } else {
+              await sendDeviceInfo();
+            }
+          } else {
+            openOkBox(context, _response.message ?? "",
+                Strings.of(context)?.get("confirm") ?? "Error!!", () {
+                  Navigator.of(context).pop(false);
+                });
+          }
+        }
+      }else{
+        Util.snackbar(context, "등록된 사용자가 아닙니다.");
+      }
+    }).catchError((Object obj) async {
+      await pr?.hide();
+      switch (obj.runtimeType) {
+        case DioError:
+        // Here's the sample to get the failed response error code and message
+          final res = (obj as DioError).response;
+          logger.e("login_page.dart userLogin() error : ${res?.statusCode} -> ${res?.statusMessage}");
+          break;
+        default:
+          logger.e("login_page.dart userLogin() error222 :");
+          break;
+      }
+    });
+  }
+
   void goToGuestQuestion() {
     openCommonConfirmBox(
         context,
@@ -533,11 +589,15 @@ class _LoginPageState extends State<LoginPage> with CommonMainWidget {
                                         onPrimary: sub_color
                                     ),
                                     onPressed: () async {
-                                      //final fcmToken = await FirebaseMessaging.instance.getToken();
-                                      //print("FCM 토큰값 =>$fcmToken");
-                                      //openOkBox(context, "${fcmToken}", Strings.of(context)?.get("confirm")??"Error!!",() {Navigator.of(context).pop(false);});
-                                      if(validate()) await userLogin();
-                                      //print(Util.jumin_aes_Encrypt("1234566"));
+                                      if(validate()) {
+                                        if(Platform.isAndroid) {
+                                          userLogin();
+                                        }else if(Platform.isIOS) {
+                                          userIosLogin();
+                                        }else{
+                                          Util.toast("사용할 수 없는 단말기입니다.");
+                                        }
+                                      }
                                     },
                                     child:Text(
                                       Strings.of(context)?.get("login_btn")??"Not Found",
