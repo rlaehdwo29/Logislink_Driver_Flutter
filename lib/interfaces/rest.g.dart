@@ -116,7 +116,7 @@ class _Rest implements Rest {
     )
             .compose(
               _dio.options,
-              '/drv/login',
+              '/drv/ioslogin',
               queryParameters: queryParameters,
               data: _data,
             )

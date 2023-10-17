@@ -901,7 +901,7 @@ class _OrderDetailPageState extends State<OrderDetailPage>{
       tvTax.value = !(orderItem.value?.loadStatus == "0");
     }
     if(orderItem.value?.finishYn == "Y"){
-      tvPay.value = true;
+      tvPay.value = true; // true시 tvPay Enable처리
     }else{
       if(app_util.Util.ynToBoolean(orderItem.value?.reqPayYN)) {
         tvPay.value = true;
@@ -990,12 +990,59 @@ class _OrderDetailPageState extends State<OrderDetailPage>{
   Future<void> showPayConfirm(String? _result) async {
     if(_result == "200") {
       var result = await checkBankDate();
-      if( result != true) {
-        sendPay();
-      }else{
-        checkAccNm();
+      var validation_y_check = await validation_finishYn();
+      if(validation_y_check == "N"){
+        if(result != true) {
+          await sendPay();
+        }else{
+          await checkAccNm();
+        }
+      }else if(validation_y_check == "Y") {
+        openOkBox(context, "해당 오더는 마감처리 또는 빠른지급 신청이 완료된 건으로 \n 빠른지급 신청이 불가합니다.", Strings.of(context)?.get("confirm")??"Error!!", () { Navigator.of(context).pop(false);});
+      }else if(validation_y_check == "error" || validation_y_check == "non") {
+        openOkBox(context, "빠른지급 신청 중 오류가 발생하였습니다.", Strings.of(context)?.get("confirm")??"Error!!", () { Navigator.of(context).pop(false);});
       }
     }
+  }
+
+  Future<String> validation_finishYn() async {
+    var result = "non";
+    Logger logger = Logger();
+    var app = await controller.getUserInfo();
+    await DioService.dioClient(header: true).getOrderList2(app.authorization, orderItem.value?.allocId, orderItem.value?.orderId).then((it) async {
+      ReturnMap _response = DioService.dioResponse(it);
+      logger.d("validation_finishYn() _response -> ${_response.status} // ${_response.resultMap}");
+      if(_response.status == "200") {
+        if(_response.resultMap?["result"] == true) {
+
+          var list = _response.resultMap?["data"] as List;
+          List<OrderModel> itemsList = list.map((i) => OrderModel.fromJSON(i)).toList();
+          if(itemsList.isNotEmpty) {
+            if(itemsList[0].finishYn == "N" && itemsList[0].reqPayYN == "N") {
+              result = "N";
+            }else{
+              result = "Y";
+            }
+            orderItem.value = itemsList[0];
+            setCalcView();
+          }
+        }
+      }
+    }).catchError((Object obj) async {
+      switch (obj.runtimeType) {
+        case DioError:
+        // Here's the sample to get the failed response error code and message
+          final res = (obj as DioError).response;
+          logger.e("order_detail_page.dart validation_finishYn() Error Default: ${res?.statusCode} -> ${res?.statusMessage}");
+          result = "error";
+          break;
+        default:
+          logger.e("order_detail_page.dart validation_finishYn() Error Default:");
+          result = "error";
+          break;
+      }
+    });
+    return result;
   }
 
   Future<void> sendPay() async {
@@ -1087,7 +1134,7 @@ class _OrderDetailPageState extends State<OrderDetailPage>{
       UserModel user = await App().getUserInfo();
       user.bankchkDate = app_util.Util.getDateCalToStr(DateTime.now(), "yyyy-MM-dd HH:mm:ss");
         App().setUserInfo(user);
-        sendPay();
+        await sendPay();
         setState(() {});
       }else{
         app_util.Util.toast(_response.message);

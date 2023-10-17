@@ -157,7 +157,7 @@ class _ReceiptPageState extends State<ReceiptPage>{
       DeviceInfoPlugin deviceInfo = DeviceInfoPlugin();
       if (Platform.isAndroid) {
         AndroidDeviceInfo info = await deviceInfo.androidInfo;
-        if (info.version.sdkInt >= 33) {
+        if (info.version.sdkInt >= 29) {
           permission = "사진 및 동영상";
         }else{
           permission = "저장소";
@@ -183,7 +183,7 @@ class _ReceiptPageState extends State<ReceiptPage>{
       DeviceInfoPlugin deviceInfo = DeviceInfoPlugin();
       if (Platform.isAndroid) {
         AndroidDeviceInfo info = await deviceInfo.androidInfo;
-        if (info.version.sdkInt >= 33) {
+        if (info.version.sdkInt >= 29) {
           var permissionStatus;
           if(imageSource == ImageSource.camera){
             permissionStatus = await Permission.camera.status;
