@@ -543,9 +543,10 @@ class _LoginPageState extends State<LoginPage> with CommonMainWidget {
                 return Stack(
                   alignment: Alignment.center,
                   children:<Widget> [
-                    SizedBox(
-                      height: height * 0.6,
+                    Container(
+                      height: height * 0.8,
                       width: width*0.8,
+                      alignment: Alignment.center,
                       child: SingleChildScrollView(
                           child: Column(
                           crossAxisAlignment: CrossAxisAlignment.center,
