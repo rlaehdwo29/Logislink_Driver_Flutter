@@ -10,6 +10,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:geofence_service/geofence_service.dart';
 import 'package:geolocator/geolocator.dart' as geolocation;
 
@@ -751,6 +752,7 @@ class _MainPageState extends State<MainPage> with CommonMainWidget,WidgetsBindin
   Drawer getAppBarMenu() {
     return Drawer(
         backgroundColor: styleWhiteCol,
+        width: MediaQuery.of(context).size.width * 0.7.w,
         child: ListView(
           padding: EdgeInsets.zero,
           children: [
@@ -786,7 +788,7 @@ class _MainPageState extends State<MainPage> with CommonMainWidget,WidgetsBindin
                                 "${_nowUser.value.driverName} 차주님",
                                 style: CustomStyle.CustomFont(styleFontSize18, styleWhiteCol),
                               )),
-                          CustomStyle.sizedBoxHeight(10.0),
+                          CustomStyle.sizedBoxHeight(10.0.h),
                           Obx(()=>Text(
                             "${_nowUser.value.carNum}",
                             style: CustomStyle.CustomFont(styleFontSize16, styleWhiteCol),
@@ -944,10 +946,10 @@ class _MainPageState extends State<MainPage> with CommonMainWidget,WidgetsBindin
                                       padding: EdgeInsets.symmetric(
                                           vertical:
                                           CustomStyle.getHeight(
-                                              5.0),
+                                              5.0.h),
                                           horizontal:
                                           CustomStyle.getWidth(
-                                              10.0)),
+                                              10.0.w)),
                                       child: Text(
                                         "${item.allocStateName}",
                                         style: CustomStyle.CustomFont(
@@ -958,9 +960,9 @@ class _MainPageState extends State<MainPage> with CommonMainWidget,WidgetsBindin
                                   Container(
                                       padding: EdgeInsets.only(
                                           left: CustomStyle.getWidth(
-                                              10.0),
+                                              10.0.w),
                                           right: CustomStyle.getWidth(
-                                              5.0)),
+                                              5.0.w)),
                                       child: Text(
                                         "${item.sellCustName}",
                                         style: CustomStyle.CustomFont(
@@ -989,11 +991,11 @@ class _MainPageState extends State<MainPage> with CommonMainWidget,WidgetsBindin
                                 : const SizedBox()
                           ],
                         ),
-                        CustomStyle.sizedBoxHeight(5.0),
+                        CustomStyle.sizedBoxHeight(5.0.h),
                         Container(
                           padding: EdgeInsets.symmetric(
-                              vertical: CustomStyle.getHeight(10.0),
-                              horizontal: CustomStyle.getWidth(20.0)),
+                              vertical: CustomStyle.getHeight(10.0.h),
+                              horizontal: CustomStyle.getWidth(20.0.w)),
                           decoration:
                           CustomStyle.customBoxDeco(cancel_btn),
                           child: Row(
@@ -1020,7 +1022,7 @@ class _MainPageState extends State<MainPage> with CommonMainWidget,WidgetsBindin
                             ],
                           ),
                         ),
-                        CustomStyle.sizedBoxHeight(10.0),
+                        CustomStyle.sizedBoxHeight(10.0.h),
                         Row(
                           crossAxisAlignment:
                           CrossAxisAlignment.center,
@@ -1042,7 +1044,7 @@ class _MainPageState extends State<MainPage> with CommonMainWidget,WidgetsBindin
                                       font_weight: FontWeight.w600),
                                   textAlign: TextAlign.center,
                                 ),
-                                CustomStyle.sizedBoxHeight(5.0),
+                                CustomStyle.sizedBoxHeight(5.0.h),
                                 Text(
                                   Util.makeString(item.sDong)??"Error",
                                   style: CustomStyle.CustomFont(
@@ -1051,7 +1053,7 @@ class _MainPageState extends State<MainPage> with CommonMainWidget,WidgetsBindin
                                 ),
                               ]),
                             ),
-                            Expanded(
+                            const Expanded(
                               flex: 1,
                               child: Icon(Icons.arrow_forward),
                             ),
@@ -1072,7 +1074,7 @@ class _MainPageState extends State<MainPage> with CommonMainWidget,WidgetsBindin
                                         font_weight: FontWeight.w600),
                                     textAlign: TextAlign.center,
                                   ),
-                                  CustomStyle.sizedBoxHeight(5.0),
+                                  CustomStyle.sizedBoxHeight(5.0.h),
                                   Text(
                                     Util.makeString(item.eDong)??"Error",
                                     style: CustomStyle.CustomFont(
@@ -1082,7 +1084,7 @@ class _MainPageState extends State<MainPage> with CommonMainWidget,WidgetsBindin
                                 ]))
                           ],
                         ),
-                        CustomStyle.sizedBoxHeight(5.0),
+                        CustomStyle.sizedBoxHeight(5.0.h),
                         Row(
                           crossAxisAlignment:
                           CrossAxisAlignment.center,
@@ -1093,10 +1095,10 @@ class _MainPageState extends State<MainPage> with CommonMainWidget,WidgetsBindin
                               child: Container(
                                   padding: EdgeInsets.symmetric(
                                       vertical:
-                                      CustomStyle.getHeight(5.0),
+                                      CustomStyle.getHeight(5.0.h),
                                       horizontal:
                                       CustomStyle.getHeight(
-                                          10.0)),
+                                          10.0.h)),
                                   decoration:
                                   CustomStyle.baseBoxDecoWhite(),
                                   child: Text(
@@ -1121,10 +1123,10 @@ class _MainPageState extends State<MainPage> with CommonMainWidget,WidgetsBindin
                                     padding: EdgeInsets.symmetric(
                                         vertical:
                                         CustomStyle.getHeight(
-                                            5.0),
+                                            5.0.h),
                                         horizontal:
                                         CustomStyle.getHeight(
-                                            10.0)),
+                                            10.0.h)),
                                     decoration: CustomStyle
                                         .baseBoxDecoWhite(),
                                     child: Text(
@@ -1138,7 +1140,7 @@ class _MainPageState extends State<MainPage> with CommonMainWidget,WidgetsBindin
                         )
                       ])),
                   Container(
-                      padding: EdgeInsets.all(10.0),
+                      padding: const EdgeInsets.all(10.0),
                       child: Row(
                         children: [
                           Text(
@@ -1192,7 +1194,7 @@ class _MainPageState extends State<MainPage> with CommonMainWidget,WidgetsBindin
                     title: Center(
                       child: Image.asset(
                         "assets/image/ic_driver_header.png",
-                        width: CustomStyle.getWidth(170.0),
+                        width: CustomStyle.getWidth(170.0.w),
                       ),
                     ),
                     centerTitle: true,
@@ -1202,7 +1204,7 @@ class _MainPageState extends State<MainPage> with CommonMainWidget,WidgetsBindin
                           onPressed: () async {
                             await goToExit();
                           },
-                          icon: Image.asset("assets/image/ic_exit_hangul.png",width: CustomStyle.getWidth(32.0),height: CustomStyle.getHeight(32.0),)),
+                          icon: Image.asset("assets/image/ic_exit_hangul.png",width: CustomStyle.getWidth(32.0.w),height: CustomStyle.getHeight(32.0),)),
                       IconButton(
                           onPressed: () {
                             Navigator.of(context).push(MaterialPageRoute(
@@ -1214,8 +1216,8 @@ class _MainPageState extends State<MainPage> with CommonMainWidget,WidgetsBindin
                     leading: Builder(
                       builder: (context) => IconButton(
                         icon: Image.asset("assets/image/menu.png",
-                            width: CustomStyle.getWidth(20.0),
-                            height: CustomStyle.getHeight(20.0)),
+                            width: CustomStyle.getWidth(20.0.w),
+                            height: CustomStyle.getHeight(20.0.h)),
                         onPressed: () => Scaffold.of(context).openDrawer(),
                         tooltip: MaterialLocalizations.of(context).openAppDrawerTooltip,
                       ),
@@ -1244,7 +1246,7 @@ class _MainPageState extends State<MainPage> with CommonMainWidget,WidgetsBindin
                       })
                   ),
                   bottomNavigationBar:  SizedBox(
-                      height: CustomStyle.getHeight(60.0),
+                      height: CustomStyle.getHeight(60.0.h),
                       child: Row(
                         crossAxisAlignment: CrossAxisAlignment.center,
                         mainAxisAlignment: MainAxisAlignment.center,
@@ -1256,7 +1258,7 @@ class _MainPageState extends State<MainPage> with CommonMainWidget,WidgetsBindin
                                     goToHistory();
                                   },
                                   child: Container(
-                                      height: CustomStyle.getHeight(60.0),
+                                      height: CustomStyle.getHeight(60.0.h),
                                       alignment: Alignment.center,
                                       decoration: BoxDecoration(
                                           color: main_color
@@ -1266,7 +1268,7 @@ class _MainPageState extends State<MainPage> with CommonMainWidget,WidgetsBindin
                                           mainAxisAlignment: MainAxisAlignment.center,
                                           children: [
                                             Icon(Icons.library_add_check,size: 20,color: styleWhiteCol),
-                                            CustomStyle.sizedBoxWidth(5.0),
+                                            CustomStyle.sizedBoxWidth(5.0.w),
                                             Text(
                                               textAlign: TextAlign.center,
                                               Strings.of(context)?.get("history_title")??"Not Found",

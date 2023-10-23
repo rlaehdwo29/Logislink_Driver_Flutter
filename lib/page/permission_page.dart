@@ -3,6 +3,8 @@ import 'dart:io';
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_activity_recognition/flutter_activity_recognition.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:logislink_driver_flutter/common/strings.dart';
 import 'package:logislink_driver_flutter/common/style_theme.dart';
@@ -74,25 +76,16 @@ Future<bool> requestPermission() async {
         return Future.value(requiredPermission);
       }
     }else{
-      Map<Permission, PermissionStatus> statuses = await [
-        Permission.photos,
-        Permission.phone,
-        Permission.location,
-        Permission.activityRecognition,
-        Permission.camera
-      ].request();
+      final activityRecognition = FlutterActivityRecognition.instance;
+      PermissionRequestResult recognitionResult = await activityRecognition.checkPermission();
+      var activityRecognition_per = await activityRecognition.requestPermission();
+      var photos_per = await Permission.photos.request();
+      var location_per = await Permission.location.request();
+      var camera_per = await Permission.camera.request();
 
       var locationPermission = await Geolocator.checkPermission();
-      /* print("Notification => ${statuses[Permission.notification]}");
-      print("위치 => ${statuses[Permission.location]}");
-      print("위치 => ${await Geolocator.checkPermission()}");
-      print("저장소 => ${statuses[Permission.photos]}");
-      print("폰 => ${statuses[Permission.phone]}");
-      print("신체활동 => ${statuses[Permission.activityRecognition]}");*/
       var requiredPermission = true;
-      if (statuses[Permission.phone] != PermissionStatus.granted) {
-        requiredPermission = false;
-      } else if (statuses[Permission.activityRecognition] != PermissionStatus.granted) {
+      if (recognitionResult != PermissionRequestResult.GRANTED) {
         requiredPermission = false;
       }
       return Future.value(requiredPermission);
@@ -332,7 +325,7 @@ class _PermissionPageState extends State<PermissionPage>{
             }
           },
           child: Container(
-            height: 60.0,
+            height: 60.0.h,
             color: main_color,
             padding:
             const EdgeInsets.symmetric(vertical: 15.0, horizontal: 10.0),
