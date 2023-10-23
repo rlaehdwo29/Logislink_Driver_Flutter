@@ -113,15 +113,14 @@ class _BridgePageState extends State<BridgePage> {
         return true;
       }
     }else{
-      var phone_per = await Permission.phone.status;
-      var location_per = await Permission.location.status;
+      final activityRecognition = FlutterActivityRecognition.instance;
+      PermissionRequestResult recognitionResult = await activityRecognition.checkPermission();
+      var activityRecognition_per = await activityRecognition.requestPermission();
       var photos_per = await Permission.photos.status;
-      var activityRecognition_per = await Permission.activityRecognition.status;
+      var location_per = await Permission.location.status;
       if (location_per != PermissionStatus.granted) {
         return false;
       } else if (photos_per != PermissionStatus.granted) {
-        return false;
-      } else if (phone_per != PermissionStatus.granted) {
         return false;
       } else if (activityRecognition_per != PermissionStatus.granted) {
         return false;
