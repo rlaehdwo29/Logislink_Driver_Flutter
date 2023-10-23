@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
 import 'package:get/get.dart';
 import 'package:logger/logger.dart';
@@ -295,7 +296,7 @@ class _CarListPageState extends State<CarListPage> {
                   widget.onCallback(true, null);
                 },
                 color: styleWhiteCol,
-                icon: Icon(Icons.keyboard_arrow_left,size: 32,color: styleWhiteCol),
+                icon: Icon(Icons.keyboard_arrow_left,size: 32.w,color: styleWhiteCol),
               )
           )
       ),

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 import 'package:logger/logger.dart';
 import 'package:logislink_driver_flutter/common/app.dart';
@@ -1890,7 +1891,7 @@ class _CarBookRegPageState extends State<CarBookRegPage>{
                   Navigator.of(context).pop();
                 },
                 color: styleWhiteCol,
-                icon: Icon(Icons.keyboard_arrow_left_outlined,size: 32,color: styleWhiteCol),
+                icon: Icon(Icons.keyboard_arrow_left_outlined,size: 32.w,color: styleWhiteCol),
               )
           )
       ),

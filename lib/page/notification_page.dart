@@ -1,5 +1,6 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 import 'package:get/get_state_manager/src/rx_flutter/rx_obx_widget.dart';
 import 'package:logger/logger.dart';
@@ -152,7 +153,7 @@ class _NotificationPageState extends State<NotificationPage> {
                               ),
                               Expanded(
                                 flex: 1,
-                               child: Icon(Icons.arrow_forward_ios_outlined, size: 24, color: Colors.grey)
+                               child: Icon(Icons.arrow_forward_ios_outlined, size: 24.w, color: Colors.grey)
                               )
                             ],
                           )));

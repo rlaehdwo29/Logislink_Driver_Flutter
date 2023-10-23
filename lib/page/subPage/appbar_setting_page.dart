@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 import 'package:logger/logger.dart';
 import 'package:logislink_driver_flutter/common/app.dart';
@@ -196,8 +197,8 @@ class _AppBarSettingPageState extends State<AppBarSettingPage> {
                       style: CustomStyle.CustomFont(styleFontSize12, sub_color),
                     ),
                     Container(
-                      padding: EdgeInsets.only(left: CustomStyle.getWidth(10.0)),
-                      child: const Icon(Icons.keyboard_arrow_right,size: 24,color: Color(0xffACACAC))
+                      padding: EdgeInsets.only(left: CustomStyle.getWidth(10.0.w)),
+                      child: Icon(Icons.keyboard_arrow_right,size: 24.w,color: const Color(0xffACACAC))
                     )
                   ],
                 )
@@ -271,7 +272,7 @@ class _AppBarSettingPageState extends State<AppBarSettingPage> {
                     ),
                     Container(
                         padding: EdgeInsets.only(left: CustomStyle.getWidth(10.0)),
-                        child: const Icon(Icons.keyboard_arrow_right,size: 24,color: Color(0xffACACAC))
+                        child: Icon(Icons.keyboard_arrow_right,size: 24.w,color: const Color(0xffACACAC))
                     )
                   ],
                 )
@@ -404,7 +405,7 @@ class _AppBarSettingPageState extends State<AppBarSettingPage> {
                 ),
                 Container(
                     padding: EdgeInsets.only(left: CustomStyle.getWidth(10.0)),
-                    child: const Icon(Icons.keyboard_arrow_right,size: 24,color: Color(0xffACACAC))
+                    child: Icon(Icons.keyboard_arrow_right,size: 24.w,color: const Color(0xffACACAC))
                 )
               ],
             ),
@@ -437,7 +438,7 @@ class _AppBarSettingPageState extends State<AppBarSettingPage> {
                 ),
                 Container(
                     padding: EdgeInsets.only(left: CustomStyle.getWidth(10.0)),
-                    child: const Icon(Icons.keyboard_arrow_right,size: 24,color: Color(0xffACACAC))
+                    child: Icon(Icons.keyboard_arrow_right,size: 24.w,color: const Color(0xffACACAC))
                 )
               ],
             ),
@@ -470,7 +471,7 @@ class _AppBarSettingPageState extends State<AppBarSettingPage> {
                 ),
                 Container(
                     padding: EdgeInsets.only(left: CustomStyle.getWidth(10.0)),
-                    child: const Icon(Icons.keyboard_arrow_right,size: 24,color: Color(0xffACACAC))
+                    child: Icon(Icons.keyboard_arrow_right,size: 24.w,color: const Color(0xffACACAC))
                 )
               ],
             ),
@@ -503,7 +504,7 @@ class _AppBarSettingPageState extends State<AppBarSettingPage> {
                 ),
                 Container(
                     padding: EdgeInsets.only(left: CustomStyle.getWidth(10.0)),
-                    child: const Icon(Icons.keyboard_arrow_right,size: 24,color: Color(0xffACACAC))
+                    child: Icon(Icons.keyboard_arrow_right,size: 24.w,color: const Color(0xffACACAC))
                 )
               ],
             ),
@@ -536,7 +537,7 @@ class _AppBarSettingPageState extends State<AppBarSettingPage> {
                 ),
                 Container(
                     padding: EdgeInsets.only(left: CustomStyle.getWidth(10.0)),
-                    child: const Icon(Icons.keyboard_arrow_right,size: 24,color: Color(0xffACACAC))
+                    child: Icon(Icons.keyboard_arrow_right,size: 24.w,color: const Color(0xffACACAC))
                 )
               ],
             ),
@@ -587,7 +588,7 @@ class _AppBarSettingPageState extends State<AppBarSettingPage> {
                 ),
                 Container(
                     padding: EdgeInsets.only(left: CustomStyle.getWidth(10.0)),
-                    child: const Icon(Icons.keyboard_arrow_right,size: 24,color: Color(0xffACACAC))
+                    child: Icon(Icons.keyboard_arrow_right,size: 24.w,color: const Color(0xffACACAC))
                 )
               ],
             ),

@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 import 'package:logger/logger.dart';
 import 'package:logislink_driver_flutter/common/app.dart';
@@ -183,8 +184,8 @@ class _TermsPageState extends State<TermsPage> {
                             }
                           },
                             child: Container(
-                            padding: EdgeInsets.symmetric(horizontal: CustomStyle.getWidth(14.0)),
-                            child: Icon(Icons.keyboard_arrow_right_outlined,size: 32,color: text_color_03)
+                            padding: EdgeInsets.symmetric(horizontal: CustomStyle.getWidth(14.0.w)),
+                            child: Icon(Icons.keyboard_arrow_right_outlined,size: 32.w,color: text_color_03)
                           )
                         )
                       ),
@@ -233,8 +234,8 @@ class _TermsPageState extends State<TermsPage> {
                               }
                             },
                               child: Container(
-                              padding: EdgeInsets.symmetric(horizontal: CustomStyle.getWidth(14.0)),
-                              child: Icon(Icons.keyboard_arrow_right_outlined,size: 32,color: text_color_03)
+                              padding: EdgeInsets.symmetric(horizontal: CustomStyle.getWidth(14.0.w)),
+                              child: Icon(Icons.keyboard_arrow_right_outlined,size: 32.w,color: text_color_03)
                           )
                         )
                       ),
@@ -283,8 +284,8 @@ class _TermsPageState extends State<TermsPage> {
                                 }
                               },
                                 child: Container(
-                                padding: EdgeInsets.symmetric(horizontal: CustomStyle.getWidth(14.0)),
-                                child: Icon(Icons.keyboard_arrow_right_outlined,size: 32,color: text_color_03)
+                                padding: EdgeInsets.symmetric(horizontal: CustomStyle.getWidth(14.0.w)),
+                                child: Icon(Icons.keyboard_arrow_right_outlined,size: 32.w,color: text_color_03)
                             )
                          )
                       ),
@@ -333,8 +334,8 @@ class _TermsPageState extends State<TermsPage> {
                                 }
                               },
                                 child: Container(
-                                padding: EdgeInsets.symmetric(horizontal: CustomStyle.getWidth(14.0)),
-                                child: Icon(Icons.keyboard_arrow_right_outlined,size: 32,color: text_color_03)
+                                padding: EdgeInsets.symmetric(horizontal: CustomStyle.getWidth(14.0.w)),
+                                child: Icon(Icons.keyboard_arrow_right_outlined,size: 32.w,color: text_color_03)
                             )
                          )
                       ),
@@ -383,8 +384,8 @@ class _TermsPageState extends State<TermsPage> {
                                 }
                               },
                               child: Container(
-                              padding: EdgeInsets.symmetric(horizontal: CustomStyle.getWidth(14.0)),
-                              child: Icon(Icons.keyboard_arrow_right_outlined,size: 32,color: text_color_03)
+                              padding: EdgeInsets.symmetric(horizontal: CustomStyle.getWidth(14.0.w)),
+                              child: Icon(Icons.keyboard_arrow_right_outlined,size: 32.w,color: text_color_03)
                           )
                         )
                       ),

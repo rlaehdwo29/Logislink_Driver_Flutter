@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
 import 'package:logislink_driver_flutter/common/app.dart';
@@ -433,7 +434,7 @@ class _AppBarMonitorPageState extends State<AppBarMonitorPage> {
             flex: 1,
             child: IconButton(
               onPressed: (){backMonth();},
-              icon: Icon(Icons.keyboard_arrow_left_outlined,size: 32,color: text_color_01)
+              icon: Icon(Icons.keyboard_arrow_left_outlined,size: 32.w,color: text_color_01)
             )
           ),
           Expanded(
@@ -447,7 +448,7 @@ class _AppBarMonitorPageState extends State<AppBarMonitorPage> {
             flex: 1,
             child: IconButton(
                   onPressed: (){nextMonth();},
-                  icon: Icon(Icons.keyboard_arrow_right_outlined,size: 32,color: text_color_01)
+                  icon: Icon(Icons.keyboard_arrow_right_outlined,size: 32.w,color: text_color_01)
             )
           )
         ],

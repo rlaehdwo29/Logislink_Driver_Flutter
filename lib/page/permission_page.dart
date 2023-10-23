@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:logislink_driver_flutter/common/strings.dart';
 import 'package:logislink_driver_flutter/common/style_theme.dart';
@@ -332,7 +333,7 @@ class _PermissionPageState extends State<PermissionPage>{
             }
           },
           child: Container(
-            height: 60.0,
+            height: 60.0.h,
             color: main_color,
             padding:
             const EdgeInsets.symmetric(vertical: 15.0, horizontal: 10.0),
