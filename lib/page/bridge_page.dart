@@ -1,11 +1,13 @@
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:app_tracking_transparency/app_tracking_transparency.dart';
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_activity_recognition/flutter_activity_recognition.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:get/get.dart';
 import 'package:logger/logger.dart';
@@ -114,6 +116,7 @@ class _BridgePageState extends State<BridgePage> {
       }
     }else{
       final activityRecognition = FlutterActivityRecognition.instance;
+      var trackStatus = await AppTrackingTransparency.trackingAuthorizationStatus;
       PermissionRequestResult recognitionResult = await activityRecognition.checkPermission();
       var activityRecognition_per = await activityRecognition.requestPermission();
       var photos_per = await Permission.photos.status;
@@ -123,6 +126,10 @@ class _BridgePageState extends State<BridgePage> {
       } else if (photos_per != PermissionStatus.granted) {
         return false;
       } else if (activityRecognition_per != PermissionStatus.granted) {
+        return false;
+      }else if(recognitionResult != PermissionRequestResult.GRANTED){
+        return false;
+      }else if(trackStatus != TrackingStatus.authorized){
         return false;
       }
       return true;

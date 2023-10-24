@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:app_settings/app_settings.dart';
+import 'package:app_tracking_transparency/app_tracking_transparency.dart';
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:fbroadcast/fbroadcast.dart';
 import 'package:firebase_dynamic_links/firebase_dynamic_links.dart';
@@ -359,7 +360,7 @@ class _MainPageState extends State<MainPage> with CommonMainWidget,WidgetsBindin
         if (info.version.sdkInt >= 29) {
           var locationPermission = await geolocation.Geolocator.checkPermission();
           if(locationPermission != geolocation.LocationPermission.always) {
-            await showPermissionDialog();
+            await showLocationPermissionDialog();
           }else{
             await checkCarInfo();
           }
@@ -368,8 +369,21 @@ class _MainPageState extends State<MainPage> with CommonMainWidget,WidgetsBindin
         }
       }else {
         var locationPermission = await geolocation.Geolocator.checkPermission();
+        final activityRecognition = FlutterActivityRecognition.instance;
+        PermissionRequestResult recognitionResult = await activityRecognition.checkPermission();
+        var trackStatus = await AppTrackingTransparency.trackingAuthorizationStatus;
         if(locationPermission != geolocation.LocationPermission.always) {
-          await showPermissionDialog();
+          await showLocationPermissionDialog();
+        }else if(trackStatus != TrackingStatus.authorized){
+          var trackingStatus = await AppTrackingTransparency.requestTrackingAuthorization();
+          if(trackingStatus != TrackingStatus.authorized) {
+            await showTrackingPermissionDialog();
+          }
+        }else if(recognitionResult != PermissionStatus.granted){
+          var activityRecognition_per = await activityRecognition.requestPermission();
+          if(activityRecognition_per != PermissionStatus.granted) {
+            await showActivityPermissionDialog();
+          }
         }else{
           await checkCarInfo();
         }
@@ -447,7 +461,7 @@ class _MainPageState extends State<MainPage> with CommonMainWidget,WidgetsBindin
     }
   }
 
-  Future<void> showPermissionDialog() async {
+  Future<void> showLocationPermissionDialog() async {
     return openOkBox(
           context,
           Strings.of(context)?.get("location_permission_failed")??"Not Found",
@@ -458,6 +472,30 @@ class _MainPageState extends State<MainPage> with CommonMainWidget,WidgetsBindin
           }
       );
     }
+
+  Future<void> showActivityPermissionDialog() async {
+    return openOkBox(
+        context,
+        Strings.of(context)?.get("activity_permission_failed")??"Not Found",
+        Strings.of(context)?.get("confirm")??"Not Found",
+            () async {
+          Navigator.of(context).pop(false);
+          await AppSettings.openAppSettings();
+        }
+    );
+  }
+
+  Future<void> showTrackingPermissionDialog() async {
+    return openOkBox(
+        context,
+        Strings.of(context)?.get("tracking_permission_failed")??"Not Found",
+        Strings.of(context)?.get("confirm")??"Not Found",
+            () async {
+          Navigator.of(context).pop(false);
+          await AppTrackingTransparency.requestTrackingAuthorization();
+        }
+    );
+  }
 
   void onCallback(bool? result) {
     if(result == true) {
@@ -1211,7 +1249,7 @@ class _MainPageState extends State<MainPage> with CommonMainWidget,WidgetsBindin
                                 builder: (context) => NotificationPage()
                             ));
                           },
-                          icon: const Icon(Icons.notifications, size: 24.0,color: Colors.white,)),
+                          icon: Icon(Icons.notifications, size: 24.0.w,color: Colors.white,)),
                     ],
                     leading: Builder(
                       builder: (context) => IconButton(
