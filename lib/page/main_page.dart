@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:app_settings/app_settings.dart';
+import 'package:app_tracking_transparency/app_tracking_transparency.dart';
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:fbroadcast/fbroadcast.dart';
 import 'package:firebase_dynamic_links/firebase_dynamic_links.dart';
@@ -359,7 +360,7 @@ class _MainPageState extends State<MainPage> with CommonMainWidget,WidgetsBindin
         if (info.version.sdkInt >= 29) {
           var locationPermission = await geolocation.Geolocator.checkPermission();
           if(locationPermission != geolocation.LocationPermission.always) {
-            await showPermissionDialog();
+            await showLocationPermissionDialog();
           }else{
             await checkCarInfo();
           }
@@ -368,8 +369,21 @@ class _MainPageState extends State<MainPage> with CommonMainWidget,WidgetsBindin
         }
       }else {
         var locationPermission = await geolocation.Geolocator.checkPermission();
+        final activityRecognition = FlutterActivityRecognition.instance;
+        PermissionRequestResult recognitionResult = await activityRecognition.checkPermission();
+        var trackStatus = await AppTrackingTransparency.trackingAuthorizationStatus;
         if(locationPermission != geolocation.LocationPermission.always) {
-          await showPermissionDialog();
+          await showLocationPermissionDialog();
+        }else if(trackStatus != TrackingStatus.authorized){
+          var trackingStatus = await AppTrackingTransparency.requestTrackingAuthorization();
+          if(trackingStatus != TrackingStatus.authorized) {
+            await showTrackingPermissionDialog();
+          }
+        }else if(recognitionResult != PermissionStatus.granted){
+          var activityRecognition_per = await activityRecognition.requestPermission();
+          if(activityRecognition_per != PermissionStatus.granted) {
+            await showActivityPermissionDialog();
+          }
         }else{
           await checkCarInfo();
         }
@@ -447,7 +461,7 @@ class _MainPageState extends State<MainPage> with CommonMainWidget,WidgetsBindin
     }
   }
 
-  Future<void> showPermissionDialog() async {
+  Future<void> showLocationPermissionDialog() async {
     return openOkBox(
           context,
           Strings.of(context)?.get("location_permission_failed")??"Not Found",
@@ -458,6 +472,30 @@ class _MainPageState extends State<MainPage> with CommonMainWidget,WidgetsBindin
           }
       );
     }
+
+  Future<void> showActivityPermissionDialog() async {
+    return openOkBox(
+        context,
+        Strings.of(context)?.get("activity_permission_failed")??"Not Found",
+        Strings.of(context)?.get("confirm")??"Not Found",
+            () async {
+          Navigator.of(context).pop(false);
+          await AppSettings.openAppSettings();
+        }
+    );
+  }
+
+  Future<void> showTrackingPermissionDialog() async {
+    return openOkBox(
+        context,
+        Strings.of(context)?.get("tracking_permission_failed")??"Not Found",
+        Strings.of(context)?.get("confirm")??"Not Found",
+            () async {
+          Navigator.of(context).pop(false);
+          await AppTrackingTransparency.requestTrackingAuthorization();
+        }
+    );
+  }
 
   void onCallback(bool? result) {
     if(result == true) {
@@ -752,7 +790,7 @@ class _MainPageState extends State<MainPage> with CommonMainWidget,WidgetsBindin
   Drawer getAppBarMenu() {
     return Drawer(
         backgroundColor: styleWhiteCol,
-        width: MediaQuery.of(context).size.width * 0.7.w,
+        width: MediaQuery.of(context).size.width * 0.5,
         child: ListView(
           padding: EdgeInsets.zero,
           children: [
@@ -788,7 +826,7 @@ class _MainPageState extends State<MainPage> with CommonMainWidget,WidgetsBindin
                                 "${_nowUser.value.driverName} 차주님",
                                 style: CustomStyle.CustomFont(styleFontSize18, styleWhiteCol),
                               )),
-                          CustomStyle.sizedBoxHeight(10.0.h),
+                          CustomStyle.sizedBoxHeight(10.0),
                           Obx(()=>Text(
                             "${_nowUser.value.carNum}",
                             style: CustomStyle.CustomFont(styleFontSize16, styleWhiteCol),
@@ -918,7 +956,7 @@ class _MainPageState extends State<MainPage> with CommonMainWidget,WidgetsBindin
 
   Widget getListCardView(OrderModel item) {
     return Container(
-        padding: const EdgeInsets.all(10.0),
+        padding: EdgeInsets.symmetric(vertical: CustomStyle.getHeight(10.0.h),horizontal: CustomStyle.getWidth(10.0.w)),
         child: InkWell(
             onTap: () {
               goToOrderDetail(item);
@@ -930,7 +968,7 @@ class _MainPageState extends State<MainPage> with CommonMainWidget,WidgetsBindin
                 color: styleWhiteCol,
                 child: Column(children: [
                   Container(
-                      padding: const EdgeInsets.all(10.0),
+                      padding:  EdgeInsets.symmetric(vertical: CustomStyle.getHeight(10.0.h),horizontal: CustomStyle.getWidth(10.0.w)),
                       color: order_item_background,
                       child: Column(children: [
                         Row(
@@ -946,10 +984,10 @@ class _MainPageState extends State<MainPage> with CommonMainWidget,WidgetsBindin
                                       padding: EdgeInsets.symmetric(
                                           vertical:
                                           CustomStyle.getHeight(
-                                              5.0.h),
+                                              5.0),
                                           horizontal:
                                           CustomStyle.getWidth(
-                                              10.0.w)),
+                                              10.0)),
                                       child: Text(
                                         "${item.allocStateName}",
                                         style: CustomStyle.CustomFont(
@@ -960,9 +998,9 @@ class _MainPageState extends State<MainPage> with CommonMainWidget,WidgetsBindin
                                   Container(
                                       padding: EdgeInsets.only(
                                           left: CustomStyle.getWidth(
-                                              10.0.w),
+                                              10.0),
                                           right: CustomStyle.getWidth(
-                                              5.0.w)),
+                                              5.0)),
                                       child: Text(
                                         "${item.sellCustName}",
                                         style: CustomStyle.CustomFont(
@@ -991,11 +1029,11 @@ class _MainPageState extends State<MainPage> with CommonMainWidget,WidgetsBindin
                                 : const SizedBox()
                           ],
                         ),
-                        CustomStyle.sizedBoxHeight(5.0.h),
+                        CustomStyle.sizedBoxHeight(5.0),
                         Container(
                           padding: EdgeInsets.symmetric(
-                              vertical: CustomStyle.getHeight(10.0.h),
-                              horizontal: CustomStyle.getWidth(20.0.w)),
+                              vertical: CustomStyle.getHeight(10.0),
+                              horizontal: CustomStyle.getWidth(20.0)),
                           decoration:
                           CustomStyle.customBoxDeco(cancel_btn),
                           child: Row(
@@ -1022,7 +1060,7 @@ class _MainPageState extends State<MainPage> with CommonMainWidget,WidgetsBindin
                             ],
                           ),
                         ),
-                        CustomStyle.sizedBoxHeight(10.0.h),
+                        CustomStyle.sizedBoxHeight(10.0),
                         Row(
                           crossAxisAlignment:
                           CrossAxisAlignment.center,
@@ -1044,7 +1082,7 @@ class _MainPageState extends State<MainPage> with CommonMainWidget,WidgetsBindin
                                       font_weight: FontWeight.w600),
                                   textAlign: TextAlign.center,
                                 ),
-                                CustomStyle.sizedBoxHeight(5.0.h),
+                                CustomStyle.sizedBoxHeight(5.0),
                                 Text(
                                   Util.makeString(item.sDong)??"Error",
                                   style: CustomStyle.CustomFont(
@@ -1074,7 +1112,7 @@ class _MainPageState extends State<MainPage> with CommonMainWidget,WidgetsBindin
                                         font_weight: FontWeight.w600),
                                     textAlign: TextAlign.center,
                                   ),
-                                  CustomStyle.sizedBoxHeight(5.0.h),
+                                  CustomStyle.sizedBoxHeight(5.0),
                                   Text(
                                     Util.makeString(item.eDong)??"Error",
                                     style: CustomStyle.CustomFont(
@@ -1084,7 +1122,7 @@ class _MainPageState extends State<MainPage> with CommonMainWidget,WidgetsBindin
                                 ]))
                           ],
                         ),
-                        CustomStyle.sizedBoxHeight(5.0.h),
+                        CustomStyle.sizedBoxHeight(5.0),
                         Row(
                           crossAxisAlignment:
                           CrossAxisAlignment.center,
@@ -1095,10 +1133,10 @@ class _MainPageState extends State<MainPage> with CommonMainWidget,WidgetsBindin
                               child: Container(
                                   padding: EdgeInsets.symmetric(
                                       vertical:
-                                      CustomStyle.getHeight(5.0.h),
+                                      CustomStyle.getHeight(5.0),
                                       horizontal:
                                       CustomStyle.getHeight(
-                                          10.0.h)),
+                                          10.0)),
                                   decoration:
                                   CustomStyle.baseBoxDecoWhite(),
                                   child: Text(
@@ -1123,10 +1161,10 @@ class _MainPageState extends State<MainPage> with CommonMainWidget,WidgetsBindin
                                     padding: EdgeInsets.symmetric(
                                         vertical:
                                         CustomStyle.getHeight(
-                                            5.0.h),
+                                            5.0),
                                         horizontal:
                                         CustomStyle.getHeight(
-                                            10.0.h)),
+                                            10.0)),
                                     decoration: CustomStyle
                                         .baseBoxDecoWhite(),
                                     child: Text(
@@ -1194,7 +1232,8 @@ class _MainPageState extends State<MainPage> with CommonMainWidget,WidgetsBindin
                     title: Center(
                       child: Image.asset(
                         "assets/image/ic_driver_header.png",
-                        width: CustomStyle.getWidth(170.0.w),
+                        width: CustomStyle.getWidth(150.0),
+                        height: CustomStyle.getHeight(60.0),
                       ),
                     ),
                     centerTitle: true,
@@ -1204,20 +1243,20 @@ class _MainPageState extends State<MainPage> with CommonMainWidget,WidgetsBindin
                           onPressed: () async {
                             await goToExit();
                           },
-                          icon: Image.asset("assets/image/ic_exit_hangul.png",width: CustomStyle.getWidth(32.0.w),height: CustomStyle.getHeight(32.0),)),
+                          icon: Image.asset("assets/image/ic_exit_hangul.png",width: CustomStyle.getWidth(32.0.w),height: CustomStyle.getHeight(32.0.h),)),
                       IconButton(
                           onPressed: () {
                             Navigator.of(context).push(MaterialPageRoute(
                                 builder: (context) => NotificationPage()
                             ));
                           },
-                          icon: const Icon(Icons.notifications, size: 24.0,color: Colors.white,)),
+                          icon: Icon(Icons.notifications, size: 24.0.h,color: Colors.white,)),
                     ],
                     leading: Builder(
                       builder: (context) => IconButton(
                         icon: Image.asset("assets/image/menu.png",
-                            width: CustomStyle.getWidth(20.0.w),
-                            height: CustomStyle.getHeight(20.0.h)),
+                            width: CustomStyle.getWidth(20.0),
+                            height: CustomStyle.getHeight(20.0)),
                         onPressed: () => Scaffold.of(context).openDrawer(),
                         tooltip: MaterialLocalizations.of(context).openAppDrawerTooltip,
                       ),
@@ -1246,7 +1285,7 @@ class _MainPageState extends State<MainPage> with CommonMainWidget,WidgetsBindin
                       })
                   ),
                   bottomNavigationBar:  SizedBox(
-                      height: CustomStyle.getHeight(60.0.h),
+                      height: CustomStyle.getHeight(60.0),
                       child: Row(
                         crossAxisAlignment: CrossAxisAlignment.center,
                         mainAxisAlignment: MainAxisAlignment.center,
@@ -1258,7 +1297,7 @@ class _MainPageState extends State<MainPage> with CommonMainWidget,WidgetsBindin
                                     goToHistory();
                                   },
                                   child: Container(
-                                      height: CustomStyle.getHeight(60.0.h),
+                                      height: CustomStyle.getHeight(60.0),
                                       alignment: Alignment.center,
                                       decoration: BoxDecoration(
                                           color: main_color
@@ -1268,7 +1307,7 @@ class _MainPageState extends State<MainPage> with CommonMainWidget,WidgetsBindin
                                           mainAxisAlignment: MainAxisAlignment.center,
                                           children: [
                                             Icon(Icons.library_add_check,size: 20,color: styleWhiteCol),
-                                            CustomStyle.sizedBoxWidth(5.0.w),
+                                            CustomStyle.sizedBoxWidth(5.0),
                                             Text(
                                               textAlign: TextAlign.center,
                                               Strings.of(context)?.get("history_title")??"Not Found",

@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:app_tracking_transparency/app_tracking_transparency.dart';
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -77,13 +78,15 @@ Future<bool> requestPermission() async {
       }
     }else{
       final activityRecognition = FlutterActivityRecognition.instance;
+      await AppTrackingTransparency.requestTrackingAuthorization();
       PermissionRequestResult recognitionResult = await activityRecognition.checkPermission();
-      var activityRecognition_per = await activityRecognition.requestPermission();
-      var photos_per = await Permission.photos.request();
-      var location_per = await Permission.location.request();
-      var camera_per = await Permission.camera.request();
+      await activityRecognition.requestPermission();
+      await Permission.photos.request();
+      await Permission.location.request();
+      await Permission.camera.request();
 
       var locationPermission = await Geolocator.checkPermission();
+
       var requiredPermission = true;
       if (recognitionResult != PermissionRequestResult.GRANTED) {
         requiredPermission = false;
@@ -92,8 +95,6 @@ Future<bool> requestPermission() async {
     }
   }
 }
-
-
 
 class _PermissionPageState extends State<PermissionPage>{
   @override
