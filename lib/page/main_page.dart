@@ -379,9 +379,9 @@ class _MainPageState extends State<MainPage> with CommonMainWidget,WidgetsBindin
           if(trackingStatus != TrackingStatus.authorized) {
             await showTrackingPermissionDialog();
           }
-        }else if(recognitionResult != PermissionStatus.granted){
+        }else if(recognitionResult != PermissionRequestResult.GRANTED){
           var activityRecognition_per = await activityRecognition.requestPermission();
-          if(activityRecognition_per != PermissionStatus.granted) {
+          if(activityRecognition_per != PermissionRequestResult.GRANTED) {
             await showActivityPermissionDialog();
           }
         }else{
@@ -492,7 +492,7 @@ class _MainPageState extends State<MainPage> with CommonMainWidget,WidgetsBindin
         Strings.of(context)?.get("confirm")??"Not Found",
             () async {
           Navigator.of(context).pop(false);
-          await AppTrackingTransparency.requestTrackingAuthorization();
+          await AppSettings.openAppSettings();
         }
     );
   }
@@ -1205,6 +1205,7 @@ class _MainPageState extends State<MainPage> with CommonMainWidget,WidgetsBindin
   Widget build(BuildContext context) {
     Util.notificationDialog(context,"기본",webViewKey);
     return MaterialApp(
+      debugShowCheckedModeBanner:false,
         // A widget used when you want to start a foreground task when trying to minimize or close the app.
         // Declare on top of the [Scaffold] widget.
         home: WillStartForegroundTask(

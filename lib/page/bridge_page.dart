@@ -97,7 +97,7 @@ class _BridgePageState extends State<BridgePage> {
           return false;
         }else if(locationPermission != LocationPermission.always) {
           return false;
-        } else if (activityRecognition_per != PermissionStatus.granted) {
+        } else if (activityRecognition_per != PermissionRequestResult.GRANTED) {
           return false;
         }
         return true;
@@ -109,7 +109,7 @@ class _BridgePageState extends State<BridgePage> {
           return false;
         } else if (phone_per != PermissionStatus.granted) {
           return false;
-        } else if (activityRecognition_per != PermissionStatus.granted) {
+        } else if (activityRecognition_per != PermissionRequestResult.GRANTED) {
           return false;
         }
         return true;
@@ -125,9 +125,7 @@ class _BridgePageState extends State<BridgePage> {
         return false;
       } else if (photos_per != PermissionStatus.granted) {
         return false;
-      } else if (activityRecognition_per != PermissionStatus.granted) {
-        return false;
-      }else if(recognitionResult != PermissionRequestResult.GRANTED){
+      } else if(recognitionResult != PermissionRequestResult.GRANTED){
         return false;
       }else if(trackStatus != TrackingStatus.authorized){
         return false;

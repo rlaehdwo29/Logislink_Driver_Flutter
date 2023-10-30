@@ -101,7 +101,7 @@ class _LoginPageState extends State<LoginPage> with CommonMainWidget {
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
         SizedBox(
-          height: CustomStyle.getHeight(70.0.h),
+          height: CustomStyle.getHeight(70.0),
           child: TextField(
             style: CustomStyle.baseFont(),
             textAlign: TextAlign.start,
@@ -114,15 +114,15 @@ class _LoginPageState extends State<LoginPage> with CommonMainWidget {
                 counterText: '',
                 hintText: "전화번호를 입력해주세요.",
                 hintStyle:CustomStyle.whiteFont(),
-                contentPadding: EdgeInsets.symmetric(horizontal: CustomStyle.getWidth(15.0.w)),
+                contentPadding: EdgeInsets.symmetric(horizontal: CustomStyle.getWidth(15.0)),
               enabledBorder: UnderlineInputBorder(
-                borderSide: BorderSide(color: line, width: CustomStyle.getWidth(0.5.w))
+                borderSide: BorderSide(color: line, width: CustomStyle.getWidth(0.5))
               ),
               disabledBorder: UnderlineInputBorder(
-                  borderSide: BorderSide(color: line, width: CustomStyle.getWidth(0.5.w))
+                  borderSide: BorderSide(color: line, width: CustomStyle.getWidth(0.5))
               ),
               focusedBorder: UnderlineInputBorder(
-                  borderSide: BorderSide(color: line, width: CustomStyle.getWidth(0.5.w))
+                  borderSide: BorderSide(color: line, width: CustomStyle.getWidth(0.5))
               )
 
             ),
@@ -138,7 +138,7 @@ class _LoginPageState extends State<LoginPage> with CommonMainWidget {
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
         SizedBox(
-            height: CustomStyle.getHeight(70.h),
+            height: CustomStyle.getHeight(70),
             child: TextField(
               style: CustomStyle.baseFont(),
               textAlign: TextAlign.start,
@@ -151,23 +151,23 @@ class _LoginPageState extends State<LoginPage> with CommonMainWidget {
                   counterText: '',
                   hintText: "성함을 입력해주세요.",
                   hintStyle:CustomStyle.greyDefFont(),
-                  contentPadding: EdgeInsets.symmetric(horizontal: CustomStyle.getWidth(15.0.w)),
+                  contentPadding: EdgeInsets.symmetric(horizontal: CustomStyle.getWidth(15.0)),
                   enabledBorder: UnderlineInputBorder(
-                      borderSide: BorderSide(color: line, width: CustomStyle.getWidth(0.5.w))
+                      borderSide: BorderSide(color: line, width: CustomStyle.getWidth(0.5))
                   ),
                   disabledBorder: UnderlineInputBorder(
-                      borderSide: BorderSide(color: line, width: CustomStyle.getWidth(0.5.w))
+                      borderSide: BorderSide(color: line, width: CustomStyle.getWidth(0.5))
                   ),
                   focusedBorder: UnderlineInputBorder(
-                      borderSide: BorderSide(color: line, width: CustomStyle.getWidth(0.5.w))
+                      borderSide: BorderSide(color: line, width: CustomStyle.getWidth(0.5))
                   )
 
               ),
             )
         ),
-        CustomStyle.sizedBoxHeight(5.0.h),
+        CustomStyle.sizedBoxHeight(5.0),
         SizedBox(
-            height: CustomStyle.getHeight(70.h),
+            height: CustomStyle.getHeight(70),
             child: TextField(
               style: CustomStyle.baseFont(),
               textAlign: TextAlign.start,
@@ -180,15 +180,15 @@ class _LoginPageState extends State<LoginPage> with CommonMainWidget {
                   counterText: '',
                   hintText: "전화번호를 입력해주세요.",
                   hintStyle:CustomStyle.greyDefFont(),
-                  contentPadding: EdgeInsets.symmetric(horizontal: CustomStyle.getWidth(15.0.w)),
+                  contentPadding: EdgeInsets.symmetric(horizontal: CustomStyle.getWidth(15.0)),
                   enabledBorder: UnderlineInputBorder(
-                      borderSide: BorderSide(color: line, width: CustomStyle.getWidth(0.5.w))
+                      borderSide: BorderSide(color: line, width: CustomStyle.getWidth(0.5))
                   ),
                   disabledBorder: UnderlineInputBorder(
-                      borderSide: BorderSide(color: line, width: CustomStyle.getWidth(0.5.w))
+                      borderSide: BorderSide(color: line, width: CustomStyle.getWidth(0.5))
                   ),
                   focusedBorder: UnderlineInputBorder(
-                      borderSide: BorderSide(color: line, width: CustomStyle.getWidth(0.5.w))
+                      borderSide: BorderSide(color: line, width: CustomStyle.getWidth(0.5))
                   )
 
               ),
@@ -545,8 +545,8 @@ class _LoginPageState extends State<LoginPage> with CommonMainWidget {
                   alignment: Alignment.center,
                   children:<Widget> [
                     Container(
-                      height: height * 0.8.h,
-                      width: width*0.8.w,
+                      height: height * 0.8,
+                      width: width*0.8,
                       alignment: Alignment.center,
                       child: SingleChildScrollView(
                           child: Column(
@@ -554,15 +554,15 @@ class _LoginPageState extends State<LoginPage> with CommonMainWidget {
                           mainAxisAlignment: MainAxisAlignment.start,
                           children: [
                             Image.asset("assets/image/ic_top_logo.png"),
-                            CustomStyle.sizedBoxHeight(100.0.h),
+                            CustomStyle.sizedBoxHeight(100.0),
                             (defaultTargetPlatform != TargetPlatform.android)?_entryFieldNotAndroid():
                             Const.userDebugger? _entryField():
                             Obx(() {
                             return Container(
                               alignment: Alignment.centerLeft,
                               width: width,
-                              height: CustomStyle.getHeight(50.0.h),
-                              padding: EdgeInsets.symmetric(horizontal: 15.w),
+                              height: CustomStyle.getHeight(50.0),
+                              padding: EdgeInsets.symmetric(horizontal: 15),
                               decoration: BoxDecoration(
                                 color: styleWhiteCol,
                                 border: CustomStyle.borderAllBase()
@@ -574,17 +574,17 @@ class _LoginPageState extends State<LoginPage> with CommonMainWidget {
                               );
                             }),
                             Container(
-                              padding: EdgeInsets.only(top: 15.h),
+                              padding: EdgeInsets.only(top: CustomStyle.getHeight(15)),
                               alignment: Alignment.centerLeft,
                               child:Text(
                                 Strings.of(context)?.get("login_info")??"Error",
                                 style: CustomStyle.CustomFont(styleFontSize11,styleBlackCol1),
                               )
                             ),
-                            CustomStyle.sizedBoxHeight(50.0.h),
+                            CustomStyle.sizedBoxHeight(50.0),
                             SizedBox(
                                 width: width,
-                                height: CustomStyle.getHeight(50.0.h),
+                                height: CustomStyle.getHeight(50.0),
                                 child: ElevatedButton(
                                     style: ElevatedButton.styleFrom(
                                         primary: main_color,
@@ -607,7 +607,7 @@ class _LoginPageState extends State<LoginPage> with CommonMainWidget {
                                     )
                                 )
                             ),
-                            CustomStyle.sizedBoxHeight(20.0.h),
+                            CustomStyle.sizedBoxHeight(20.0),
                             InkWell(
                               onTap: () {
                                 goToGuestQuestion();
