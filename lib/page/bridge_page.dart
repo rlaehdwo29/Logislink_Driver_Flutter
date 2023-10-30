@@ -146,7 +146,11 @@ class _BridgePageState extends State<BridgePage> {
 
   Future<void> checkVersion() async {
     Logger logger = Logger();
-    await DioService.dioClient(header: true).getVersion("D").then((it) async {
+    var type = "D";
+     if(Platform.isIOS){
+      type = "DI";
+    }
+    await DioService.dioClient(header: true).getVersion(type).then((it) async {
       ReturnMap _response = DioService.dioResponse(it);
       PackageInfo packageInfo = await PackageInfo.fromPlatform();
       logger.d("checkVersion() _response -> ${_response.status} // ${_response.resultMap}");

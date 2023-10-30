@@ -608,6 +608,11 @@ class _MainPageState extends State<MainPage> with CommonMainWidget,WidgetsBindin
 
   Future<void> logout() async {
     await stopService();
+    if(Const.userDebugger == true) {
+      UserModel? _user = await controller.getUserInfo();
+      _user = UserModel();
+      controller.setUserInfo(_user);
+    }
     Future.delayed(const Duration(milliseconds: 300), () {
       Navigator.pushNamedAndRemoveUntil(context, '/', (route) => false);
       exit(0);
@@ -1205,6 +1210,7 @@ class _MainPageState extends State<MainPage> with CommonMainWidget,WidgetsBindin
   Widget build(BuildContext context) {
     Util.notificationDialog(context,"기본",webViewKey);
     return MaterialApp(
+      debugShowCheckedModeBanner: false,
         // A widget used when you want to start a foreground task when trying to minimize or close the app.
         // Declare on top of the [Scaffold] widget.
         home: WillStartForegroundTask(
