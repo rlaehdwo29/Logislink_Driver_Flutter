@@ -318,6 +318,7 @@ class ShowBankCheckWidget{
                                         child: InkWell(
                                             onTap: () async {
                                               if(isChecked.value) await bank_check_confirm();
+                                              else Util.toast("예금주 확인을 진행해주세요.");
                                             },
                                             child: Container(
                                                 height:CustomStyle.getHeight(50.0),

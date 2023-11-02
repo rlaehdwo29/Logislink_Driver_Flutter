@@ -7,7 +7,7 @@ class Const {
  static final bool userDebugger = false;
 
  // 버전명
- static final APP_VERSION = "1.1.54";
+ static final APP_VERSION = "1.1.55";
 
  //스토어 주소
  static final ANDROID_STORE = "https://play.google.com/store/apps/details?id=com.logislink.driver";

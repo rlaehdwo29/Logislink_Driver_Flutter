@@ -162,20 +162,33 @@ class _BridgePageState extends State<BridgePage> {
             VersionModel? codeVersion = VersionModel.fromJSON(list[0]);
             VersionModel? appVersion = VersionModel.fromJSON(list[1]);
             String? shareVersion = await SP.get(Const.CD_VERSION);
-            if (appVersion.versionCode == packageInfo.version) {
+            var server_version_arr = appVersion.versionCode?.split('.');
+            String server_version = server_version_arr!.elementAt(0) + "." + server_version_arr!.elementAt(1) + server_version_arr!.elementAt(2);
+            var app_version_arr = packageInfo.version?.split('.');
+            String app_version = app_version_arr!.elementAt(0) + "." + app_version_arr!.elementAt(1) + app_version_arr!.elementAt(2);
+            if (appVersion.updateCode == "1") {
+              if(double.parse(app_version) < double.parse(server_version)){
+                Util.toast("새로운 앱 버전이 있습니다.");
+                if (Platform.isAndroid) {
+                  launch(Const.ANDROID_STORE);
+                } else if (Platform.isIOS) {
+                  launch(Const.IOS_STORE);
+                }
+              }else{
+                if (shareVersion != codeVersion.versionCode) {
+                  await SP.putString(
+                      Const.CD_VERSION, codeVersion.versionCode ?? "");
+                  await GetCodeTask();
+                }
+                await checkLogin();
+              }
+            } else{
               if (shareVersion != codeVersion.versionCode) {
                 await SP.putString(
                     Const.CD_VERSION, codeVersion.versionCode ?? "");
                 await GetCodeTask();
               }
               await checkLogin();
-            } else {
-              Util.toast("새로운 앱 버전이 있습니다.");
-              if (Platform.isAndroid) {
-                launch(Const.ANDROID_STORE);
-              } else if (Platform.isIOS) {
-                launch(Const.IOS_STORE);
-              }
             }
           }
         }

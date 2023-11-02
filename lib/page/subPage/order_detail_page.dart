@@ -97,6 +97,7 @@ class _OrderDetailPageState extends State<OrderDetailPage>{
       user.bankCnnm = acctNm;
       user.bankAccount = acctNo;
       controller.setUserInfo(user);
+      var app_user = await controller.getUserInfo();
       setState(() {});
   }
 
@@ -1088,8 +1089,8 @@ class _OrderDetailPageState extends State<OrderDetailPage>{
         Strings.of(context)?.get("confirm")??"Not Found",
             () => Navigator.of(context).pop(false),
             () async {
-              Navigator.of(context).pop(false);
               await goToReceipt();
+              //Navigator.of(context).pop(false);
             }
     );
   }
@@ -1129,9 +1130,11 @@ class _OrderDetailPageState extends State<OrderDetailPage>{
     await DioService.dioClient(header: true).updateBank(app.authorization, app.bankCode, app.bankCnnm, app.bankAccount).then((it) async {
     await pr?.hide();
     ReturnMap _response = DioService.dioResponse(it);
+    logger.d("updateBank() _response -> ${_response.status} // ${_response.resultMap}");
     if(_response.status == "200") {
       UserModel user = await App().getUserInfo();
-      user.bankchkDate = app_util.Util.getDateCalToStr(DateTime.now(), "yyyy-MM-dd HH:mm:ss");
+      //user.bankchkDate = app_util.Util.getDateCalToStr(DateTime.now(), "yyyy-MM-dd HH:mm:ss");
+      user.bankchkDate = app_util.Util.getCurrentDate("yyyy-MM-dd HH:mm:ss");
         App().setUserInfo(user);
         await sendPay();
         setState(() {});
@@ -1398,12 +1401,13 @@ class _OrderDetailPageState extends State<OrderDetailPage>{
                               )
                           ),
                           Container(
-                              margin: EdgeInsets.only(left: CustomStyle.getWidth(10.0)),
+                            margin: EdgeInsets.symmetric(horizontal: CustomStyle.getWidth(10.w)),
                               child: Row(
                                   mainAxisAlignment: MainAxisAlignment.spaceAround,
+                                  crossAxisAlignment: CrossAxisAlignment.center,
                                   children :[
                                     Expanded(
-                                        flex: 4,
+                                        flex: 7,
                                         child: Wrap(
                                             direction: Axis.horizontal,
                                             alignment: WrapAlignment.start,
@@ -1428,7 +1432,7 @@ class _OrderDetailPageState extends State<OrderDetailPage>{
                                         )
                                     ),
                                     Expanded(
-                                        flex: 1,
+                                        flex: 2,
                                         child: Row(
                                             children:[
                                               Text(

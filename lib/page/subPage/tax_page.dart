@@ -41,7 +41,7 @@ class _TaxPageState extends State<TaxPage> {
   var mCalendar = DateTime.now();
   int deadLine = 10;
   String writeDate = "";
-  
+
   DateTime _focusedDay = DateTime.now();
   CalendarFormat _calendarFormat = CalendarFormat.month;
   final _selectDay = DateTime.now().obs;
@@ -56,12 +56,49 @@ class _TaxPageState extends State<TaxPage> {
     initView();
   }
 
+  Future<void> getUserInfo() async {
+    Logger logger = Logger();
+    UserModel? nowUser = await controller.getUserInfo();
+    await pr?.show();
+    await DioService.dioClient(header: true).getUserInfo(nowUser?.authorization, nowUser?.vehicId).then((it) async {
+      await pr?.hide();
+      ReturnMap _response = DioService.dioResponse(it);
+      logger.i("getUserInfo() _response -> ${_response.status} // ${_response.resultMap}");
+      if (_response.status == "200") {
+        if(_response.resultMap?["data"] != null) {
+          try {
+            UserModel newUser = UserModel.fromJSON(it.response.data["data"]);
+            newUser.authorization = nowUser?.authorization;
+            controller.setUserInfo(newUser);
+            app.value = newUser;
+          }catch(e) {
+            print(e);
+          }
+        }
+      }
+    }).catchError((Object obj) async {
+      await pr?.hide();
+      switch (obj.runtimeType) {
+        case DioError:
+        // Here's the sample to get the failed response error code and message
+          final res = (obj as DioError).response;
+          print("tax_page.dart getUserInfo() Exeption=> ${res?.statusCode} // ${res?.statusMessage}");
+          break;
+        default:
+          print("tax_page.dart getUserInfo() Default Exeption => ");
+          break;
+      }
+    });
+
+  }
+
   void _callback(String? bankCd, String? acctNm, String? acctNo) async {
-      UserModel user = await controller.getUserInfo();
-      user?.bankCode = bankCd;
-      user?.bankCnnm = acctNm;
-      user?.bankAccount = acctNo;
-      controller.setUserInfo(user);
+    UserModel user = await controller.getUserInfo();
+    user?.bankCode = bankCd;
+    user?.bankCnnm = acctNm;
+    user?.bankAccount = acctNo;
+    controller.setUserInfo(user);
+    await getUserInfo();
   }
 
   void onCallback(bool? refresh) {
@@ -83,65 +120,65 @@ class _TaxPageState extends State<TaxPage> {
           return false;
         } ,
         child: Scaffold(
-        backgroundColor: Theme
-            .of(context)
-            .backgroundColor,
-        appBar: PreferredSize(
-            preferredSize: Size.fromHeight(CustomStyle.getHeight(50.0)),
-            child: AppBar(
-              centerTitle: true,
-              title: Text(Strings.of(context)?.get("tax_title") ?? "Not Found",
-                  style: CustomStyle.appBarTitleFont(
-                      styleFontSize18, styleWhiteCol)),
-              leading: IconButton(
-                onPressed: () {
-                  Navigator.of(context).pop({'code':100});
-                },
-                color: styleWhiteCol,
-                icon: const Icon(Icons.arrow_back),
-              ),
-            )),
-        body: Obx((){
-        return SafeArea(
-            child: SingleChildScrollView(
-              child: Container(
+            backgroundColor: Theme
+                .of(context)
+                .backgroundColor,
+            appBar: PreferredSize(
+                preferredSize: Size.fromHeight(CustomStyle.getHeight(50.0)),
+                child: AppBar(
+                  centerTitle: true,
+                  title: Text(Strings.of(context)?.get("tax_title") ?? "Not Found",
+                      style: CustomStyle.appBarTitleFont(
+                          styleFontSize18, styleWhiteCol)),
+                  leading: IconButton(
+                    onPressed: () {
+                      Navigator.of(context).pop({'code':100});
+                    },
                     color: styleWhiteCol,
-                    padding: const EdgeInsets.all(16.0),
-                    child: Column(
-                      children: [
-                        topWidget(context),
-                        businessInfoWidget(context),
-                        priceInfoWidget(context),
-                        accountInfo(context),
-                        Container(
-                          padding: EdgeInsets.only(top: CustomStyle.getHeight(10.0)),
-                          child: Text(
-                            Strings.of(context)?.get("tax_info")??"Not Found",
-                            style: CustomStyle.CustomFont(styleFontSize10, addr_zip_no),
+                    icon: const Icon(Icons.arrow_back),
+                  ),
+                )),
+            body: Obx((){
+              return SafeArea(
+                  child: SingleChildScrollView(
+                      child: Container(
+                          color: styleWhiteCol,
+                          padding: const EdgeInsets.all(16.0),
+                          child: Column(
+                              children: [
+                                topWidget(context),
+                                businessInfoWidget(context),
+                                priceInfoWidget(context),
+                                accountInfo(context),
+                                Container(
+                                    padding: EdgeInsets.only(top: CustomStyle.getHeight(10.0)),
+                                    child: Text(
+                                      Strings.of(context)?.get("tax_info")??"Not Found",
+                                      style: CustomStyle.CustomFont(styleFontSize10, addr_zip_no),
+                                    )
+                                )
+                              ]
                           )
-                        )
-                      ]
-                )
-              )
-            )
-        );
-        }),
-        bottomNavigationBar: InkWell(
-          onTap: () async {
-            sendTax();
-          },
-          child: Container(
-            height: 60.0,
-            color: main_color,
-            padding:
+                      )
+                  )
+              );
+            }),
+            bottomNavigationBar: InkWell(
+              onTap: () async {
+                await sendTax();
+              },
+              child: Container(
+                height: 60.0,
+                color: main_color,
+                padding:
                 const EdgeInsets.symmetric(vertical: 15.0, horizontal: 10.0),
-            child: Text(
-              Strings.of(context)?.get("tax_btn") ?? "Not Found",
-              textAlign: TextAlign.center,
-              style: CustomStyle.CustomFont(styleFontSize16, Colors.white),
-            ),
-          ),
-        )));
+                child: Text(
+                  Strings.of(context)?.get("tax_btn") ?? "Not Found",
+                  textAlign: TextAlign.center,
+                  style: CustomStyle.CustomFont(styleFontSize16, Colors.white),
+                ),
+              ),
+            )));
   }
 
   void initView() {
@@ -175,27 +212,27 @@ class _TaxPageState extends State<TaxPage> {
     }
 
     writeDate = Util.getDateCalToStr(mCalendar, "yyyyMMdd");
-    
+
     int max = int.parse(Util.getDateCalToStr(maxCal, "yyyyMMdd"));
     if(int.parse(writeDate) > max) {
       _selectDay.value = maxCal;
     }else {
       _selectDay.value = mCalendar;
     }
-    
+
   }
 
   Future<int> getDeadLine(int? sDate) async {
     Logger logger = Logger();
     await pr?.show();
-    var app = await controller.getUserInfo();
-    await DioService.dioClient(header: true).getDeadLine(app.authorization,"${sDate}01").then((it) async {
+    var user = await controller.getUserInfo();
+    await DioService.dioClient(header: true).getDeadLine(user.authorization,"${sDate}01").then((it) async {
       await pr?.hide();
       ReturnMap _response = DioService.dioResponse(it);
       logger.d("getDeadLine() _response -> ${_response.status} // ${_response.resultMap}");
       if(_response.status == "200") {
         if (_response.resultMap?["result"] == true) {
-            deadLine = int.parse(_response.resultMap?["data"]["closingDate"]);
+          deadLine = int.parse(_response.resultMap?["data"]["closingDate"]);
         }
       }
     }).catchError((Object obj) async {
@@ -215,7 +252,7 @@ class _TaxPageState extends State<TaxPage> {
     return deadLine;
   }
 
-  bool validation() {
+  Future<bool> validation() async {
     if(app.value.driverEmail?.isEmpty == true) {
       Util.toast("등록된 이메일이 없습니다.");
       return false;
@@ -241,8 +278,9 @@ class _TaxPageState extends State<TaxPage> {
     return true;
   }
 
-  void sendTax() {
-    if(validation()) {
+  Future<void> sendTax() async {
+    var _validation = await validation();
+    if(_validation) {
       if(widget.item?.payType == "Y") {
         if(widget.item?.reqPayYN == "N") {
           showIsPayDialog();
@@ -262,10 +300,10 @@ class _TaxPageState extends State<TaxPage> {
             () {
           Navigator.of(context).pop(false);
           showTax();
-          },
+        },
             () async {
           Navigator.of(context).pop(false);
-          showPayDialog(await showPayConfirm);
+          showPayDialog(showPayConfirm);
         }
     );
   }
@@ -280,7 +318,7 @@ class _TaxPageState extends State<TaxPage> {
           Navigator.of(context).pop(false);
         },
             () async {
-              Navigator.of(context).pop(false);
+          Navigator.of(context).pop(false);
           if(widget.item?.invId?.isNotEmpty == true) {
             if(widget.item?.loadStatus == "0") {
               await issueTax();
@@ -297,15 +335,15 @@ class _TaxPageState extends State<TaxPage> {
   Future<void> writeTax() async {
     Logger logger = Logger();
     await pr?.show();
-    var app = await controller.getUserInfo();
-    await DioService.dioClient(header: true).writeTax(app.authorization, widget.item?.orderId, widget.item?.allocId, "02", app.vehicId, writeDate).then((it) async {
+    var user = await controller.getUserInfo();
+    await DioService.dioClient(header: true).writeTax(user.authorization, widget.item?.orderId, widget.item?.allocId, "02", user.vehicId, writeDate).then((it) async {
       await pr?.hide();
       ReturnMap _response = DioService.dioResponse(it);
       logger.d("writeTax() _response -> ${_response.status} // ${_response.resultMap}");
       if(_response.status == "200") {
         if (_response.resultMap?["result"] == true) {
-            widget.item?.invId = it.response.data["invId"];
-            issueTax();
+          widget.item?.invId = it.response.data["invId"];
+          issueTax();
         } else {
           Util.toast(_response.resultMap?["msg"]);
         }
@@ -332,8 +370,8 @@ class _TaxPageState extends State<TaxPage> {
   Future<void> issueTax() async {
     Logger logger = Logger();
     await pr?.show();
-    var app = await controller.getUserInfo();
-    await DioService.dioClient(header: true).issueTax(app.authorization, widget.item?.invId, app.vehicId).then((it) async {
+    var user = await controller.getUserInfo();
+    await DioService.dioClient(header: true).issueTax(user.authorization, widget.item?.invId, user.vehicId).then((it) async {
       await pr?.hide();
       ReturnMap _response = DioService.dioResponse(it);
       if(_response.status == "200") {
@@ -362,7 +400,7 @@ class _TaxPageState extends State<TaxPage> {
     if(_result == "200") {
       var result = await checkBankDate();
       if(result != true) {
-        sendPay();
+        await sendPay();
       }else{
         checkAccNm();
       }
@@ -372,68 +410,68 @@ class _TaxPageState extends State<TaxPage> {
   Future<void> checkAccNm() async {
     Logger logger = Logger();
     await pr?.show();
-    var app = await controller.getUserInfo();
-    await DioService.dioClient(header: true).checkAccNm(app.authorization, app.vehicId, app.bankCode,app.bankAccount, app.bankCnnm).then((it) async {
-    await pr?.hide();
-    ReturnMap _response = DioService.dioResponse(it);
-    if(_response.status == "200") {
-      if (_response.resultMap?["result"] == true) {
-        updateBank();
-      } else {
-        openOkBox(context, _response.resultMap?["msg"], Strings.of(context)?.get("close") ?? "Not Found", () => Navigator.of(context).pop(false));
+    var user = await controller.getUserInfo();
+    await DioService.dioClient(header: true).checkAccNm(user.authorization, user.vehicId, user.bankCode,user.bankAccount, user.bankCnnm).then((it) async {
+      await pr?.hide();
+      ReturnMap _response = DioService.dioResponse(it);
+      if(_response.status == "200") {
+        if (_response.resultMap?["result"] == true) {
+          await updateBank();
+        } else {
+          openOkBox(context, _response.resultMap?["msg"], Strings.of(context)?.get("close") ?? "Not Found", () => Navigator.of(context).pop(false));
+        }
+      }else{
+        Util.toast(_response.message);
       }
-    }else{
-      Util.toast(_response.message);
-    }
 
     }).catchError((Object obj) async {
-    await pr?.hide();
-    switch (obj.runtimeType) {
-    case DioError:
-    // Here's the sample to get the failed response error code and message
-    final res = (obj as DioError).response;
-    logger.e("tax_page.dart issueTax() Error Default: ${res?.statusCode} -> ${res?.statusMessage}");
-    openOkBox(context,"${res?.statusCode} / ${res?.statusMessage}",Strings.of(context)?.get("confirm")??"Error!!",() {Navigator.of(context).pop(false);});
-    break;
-    default:
-    logger.e("tax_page.dart issueTax() Error Default:");
-    break;
-    }
+      await pr?.hide();
+      switch (obj.runtimeType) {
+        case DioError:
+        // Here's the sample to get the failed response error code and message
+          final res = (obj as DioError).response;
+          logger.e("tax_page.dart issueTax() Error Default: ${res?.statusCode} -> ${res?.statusMessage}");
+          openOkBox(context,"${res?.statusCode} / ${res?.statusMessage}",Strings.of(context)?.get("confirm")??"Error!!",() {Navigator.of(context).pop(false);});
+          break;
+        default:
+          logger.e("tax_page.dart issueTax() Error Default:");
+          break;
+      }
     });
   }
 
   Future<void> updateBank() async {
     Logger logger = Logger();
-    var app = await controller.getUserInfo();
+    var user = await controller.getUserInfo();
     await pr?.show();
-    await DioService.dioClient(header: true).updateBank(app.authorization, app.bankCode, app.bankCnnm, app.bankAccount).then((it) async {
-    await pr?.hide();
-    ReturnMap _response = DioService.dioResponse(it);
-    if(_response.status == "200") {
-      if (_response.resultMap?["result"] == true) {
-        UserModel user = await controller.getUserInfo();
-        user.bankchkDate = Util.getCurrentDate("yyyy-MM-dd HH:mm:ss");
-        controller.setUserInfo(user);
-        sendPay();
-      } else {
-        openOkBox(context, _response.resultMap?["msg"], Strings.of(context)?.get("close") ?? "Not Found", () => Navigator.of(context).pop(false));
+    await DioService.dioClient(header: true).updateBank(user.authorization, user.bankCode, user.bankCnnm, user.bankAccount).then((it) async {
+      await pr?.hide();
+      ReturnMap _response = DioService.dioResponse(it);
+      if(_response.status == "200") {
+        if (_response.resultMap?["result"] == true) {
+          UserModel user = await controller.getUserInfo();
+          user.bankchkDate = Util.getCurrentDate("yyyy-MM-dd HH:mm:ss");
+          controller.setUserInfo(user);
+          await sendPay();
+        } else {
+          openOkBox(context, _response.resultMap?["msg"], Strings.of(context)?.get("close") ?? "Not Found", () => Navigator.of(context).pop(false));
+        }
+      }else{
+        Util.toast(_response.message);
       }
-    }else{
-      Util.toast(_response.message);
-    }
     }).catchError((Object obj) async {
-    await pr?.hide();
-    switch (obj.runtimeType) {
-    case DioError:
-    // Here's the sample to get the failed response error code and message
-    final res = (obj as DioError).response;
-    logger.e("tax_page.dart issueTax() Error Default: ${res?.statusCode} -> ${res?.statusMessage}");
-    openOkBox(context,"${res?.statusCode} / ${res?.statusMessage}",Strings.of(context)?.get("confirm")??"Error!!",() {Navigator.of(context).pop(false);});
-    break;
-    default:
-    logger.e("tax_page.dart issueTax() Error Default:");
-    break;
-    }
+      await pr?.hide();
+      switch (obj.runtimeType) {
+        case DioError:
+        // Here's the sample to get the failed response error code and message
+          final res = (obj as DioError).response;
+          logger.e("tax_page.dart issueTax() Error Default: ${res?.statusCode} -> ${res?.statusMessage}");
+          openOkBox(context,"${res?.statusCode} / ${res?.statusMessage}",Strings.of(context)?.get("confirm")??"Error!!",() {Navigator.of(context).pop(false);});
+          break;
+        default:
+          logger.e("tax_page.dart issueTax() Error Default:");
+          break;
+      }
     });
   }
 
@@ -455,9 +493,9 @@ class _TaxPageState extends State<TaxPage> {
 
   Future<void> sendPay() async {
     Logger logger = Logger();
-    var app = await controller.getUserInfo();
+    var user = await controller.getUserInfo();
     await pr?.show();
-    await DioService.dioClient(header: true).sendPay(app.authorization, app.vehicId, widget.item?.orderId, widget.item?.allocId).then((it) async {
+    await DioService.dioClient(header: true).sendPay(user.authorization, user.vehicId, widget.item?.orderId, widget.item?.allocId).then((it) async {
       await pr?.hide();
       ReturnMap _response = DioService.dioResponse(it);
       if(_response.status == "200") {
@@ -724,7 +762,7 @@ class _TaxPageState extends State<TaxPage> {
                             Container(
                                 margin: EdgeInsets.only(left: CustomStyle.getWidth(10.0)),
                                 child: Row(
-                                    mainAxisAlignment: MainAxisAlignment.spaceAround,
+                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                     children :[
                                       Expanded(
                                           flex: 4,
@@ -833,163 +871,163 @@ class _TaxPageState extends State<TaxPage> {
           return StatefulBuilder(
               builder: (BuildContext context, StateSetter setState) {
                 return AlertDialog(
-                  contentPadding: EdgeInsets.all(CustomStyle.getWidth(0.0)),
-                  titlePadding: EdgeInsets.all(CustomStyle.getWidth(0.0)),
+                    contentPadding: EdgeInsets.all(CustomStyle.getWidth(0.0)),
+                    titlePadding: EdgeInsets.all(CustomStyle.getWidth(0.0)),
                     shape: const RoundedRectangleBorder(
                         borderRadius: BorderRadius.all(Radius.circular(0.0))
                     ),
-                  title: Container(
+                    title: Container(
                       width: MediaQuery.of(context).size.width,
                       padding: EdgeInsets.symmetric(vertical: CustomStyle.getHeight(15.0),horizontal: CustomStyle.getWidth(15.0)),
                       color: main_color,
                       child: Text(
-                              "선택 날짜 : ${_tempSelectedDay == null?"-":"${_tempSelectedDay?.year}년 ${_tempSelectedDay?.month}월 ${_tempSelectedDay?.day}일"}",
-                              style: CustomStyle.CustomFont(
-                                  styleFontSize16, styleWhiteCol),
-                            ),
-                  ),
-                  content: SingleChildScrollView(
-                    child: SizedBox(
-                      width: MediaQuery.of(context).size.width,
-                      child: Column(
-                        children: [
-                          TableCalendar(
-                              focusedDay: _focusedDay,
-                              firstDay:  DateTime.utc(2010, 1, 1),
-                              lastDay: DateTime.utc(DateTime.now().year, DateTime.now().month, DateTime.now().day),
-                            headerStyle: const HeaderStyle(
-                              // default로 설정 돼 있는 2 weeks 버튼을 없애줌 (아마 2주단위로 보기 버튼인듯?)
-                              formatButtonVisible: false,
-                              // 달력 타이틀을 센터로
-                              titleCentered: true,
-                              // 말 그대로 타이틀 텍스트 스타일링
-                              titleTextStyle: TextStyle(
-                                fontWeight: FontWeight.w700,
-                                fontSize: 16.0,
-                              ),
-                            ),
-                            calendarStyle: CalendarStyle(
-                              // 오늘 날짜에 하이라이팅의 유무
-                              isTodayHighlighted: false,
-                              // 캘린더의 평일 배경 스타일링(default면 평일을 의미)
-                              defaultDecoration: BoxDecoration(
-                                color: order_item_background,
-                                shape: BoxShape.rectangle,
-                              ),
-                              // 캘린더의 주말 배경 스타일링
-                              weekendDecoration:  BoxDecoration(
-                                color: order_item_background,
-                                shape: BoxShape.rectangle,
-                              ),
-                              // 선택한 날짜 배경 스타일링
-                              selectedDecoration: BoxDecoration(
-                                  color: styleWhiteCol,
-                                  shape: BoxShape.rectangle,
-                                  border: Border.all(color: sub_color)
-                              ),
-                              defaultTextStyle: CustomStyle.CustomFont(
-                                  styleFontSize14, Colors.black),
-                              weekendTextStyle:
-                              CustomStyle.CustomFont(styleFontSize14, Colors.red),
-                              selectedTextStyle: CustomStyle.CustomFont(
-                                  styleFontSize14, Colors.black),
-                              // range 크기 조절
-                              rangeHighlightScale: 1.0,
-
-                              // range 색상 조정
-                              rangeHighlightColor: const Color(0xFFBBDDFF),
-
-                              // rangeStartDay 글자 조정
-                              rangeStartTextStyle: CustomStyle.CustomFont(
-                                  styleFontSize14, Colors.black),
-
-                              // rangeStartDay 모양 조정
-                              rangeStartDecoration: BoxDecoration(
-                                  color: styleWhiteCol,
-                                  shape: BoxShape.rectangle,
-                                  border: Border.all(color: sub_color)
-                              ),
-
-                              // rangeEndDay 글자 조정
-                              rangeEndTextStyle: CustomStyle.CustomFont(
-                                  styleFontSize14, Colors.black),
-
-                              // rangeEndDay 모양 조정
-                              rangeEndDecoration: BoxDecoration(
-                                  color: styleWhiteCol,
-                                  shape: BoxShape.rectangle,
-                                  border: Border.all(color: sub_color)
-                              ),
-
-                              // startDay, endDay 사이의 글자 조정
-                              withinRangeTextStyle: const TextStyle(),
-
-                              // startDay, endDay 사이의 모양 조정
-                              withinRangeDecoration:
-                              const BoxDecoration(),
-                            ),
-                            selectedDayPredicate: (day) {
-                              return isSameDay(_tempSelectedDay, day);
-                            },
-                            calendarFormat: _calendarFormat,
-                            onDaySelected: (selectedDay, focusedDay) {
-                              print("onDaySelected => ${selectedDay} // ${focusedDay}");
-                              if (!isSameDay(_tempSelectedDay, selectedDay)) {
-                                setState(() {
-                                  _tempSelectedDay = selectedDay;
-                                  _focusedDay = focusedDay;
-                                });
-                              }
-                            },
-                            onFormatChanged: (format) {
-                              print("onFormatChanged => ${format}");
-                              if (_calendarFormat != format) {
-                                setState(() {
-                                  _calendarFormat = format;
-                                });
-                              }
-                            },
-                            onPageChanged: (focusedDay) {
-                              print("onPageChanged => ${focusedDay}");
-                              _focusedDay = focusedDay;
-                            },
-                          ),
-                          Container(
-                            margin: EdgeInsets.symmetric(vertical: CustomStyle.getHeight(10.0)),
-                            child: Row(
-                              crossAxisAlignment: CrossAxisAlignment.center,
-                              mainAxisAlignment: MainAxisAlignment.end,
-                              children: [
-                                TextButton(
-                                    onPressed: (){
-                                      Navigator.of(context).pop();
-                                    },
-                                    child: Text(
-                                      Strings.of(context)?.get("cancel")??"Not Found",
-                                      style: CustomStyle.CustomFont(styleFontSize14, styleBlackCol1),
-                                    )
-                                ),
-                                CustomStyle.sizedBoxWidth(CustomStyle.getWidth(15.0)),
-                                TextButton(
-                                    onPressed: () async {
-                                      mCalendar = DateTime(_tempSelectedDay!.year,_tempSelectedDay!.month,_tempSelectedDay!.day);
-                                      writeDate = Util.getDateCalToStr(mCalendar, "yyyyMMdd");
-                                      _selectDay.value = _tempSelectedDay!;
-                                      Navigator.of(context).pop(false);
-                                      setState((){});
-                                    },
-                                    child: Text(
-                                      Strings.of(context)?.get("confirm")??"Not Found",
-                                      style: CustomStyle.CustomFont(styleFontSize14, styleBlackCol1),
-                                    )
-                                )
-                              ],
-                            ),
-                          )
-                        ]
-                      )
+                        "선택 날짜 : ${_tempSelectedDay == null?"-":"${_tempSelectedDay?.year}년 ${_tempSelectedDay?.month}월 ${_tempSelectedDay?.day}일"}",
+                        style: CustomStyle.CustomFont(
+                            styleFontSize16, styleWhiteCol),
+                      ),
                     ),
-                  )
+                    content: SingleChildScrollView(
+                      child: SizedBox(
+                          width: MediaQuery.of(context).size.width,
+                          child: Column(
+                              children: [
+                                TableCalendar(
+                                  focusedDay: _focusedDay,
+                                  firstDay:  DateTime.utc(2010, 1, 1),
+                                  lastDay: DateTime.utc(DateTime.now().year, DateTime.now().month, DateTime.now().day),
+                                  headerStyle: const HeaderStyle(
+                                    // default로 설정 돼 있는 2 weeks 버튼을 없애줌 (아마 2주단위로 보기 버튼인듯?)
+                                    formatButtonVisible: false,
+                                    // 달력 타이틀을 센터로
+                                    titleCentered: true,
+                                    // 말 그대로 타이틀 텍스트 스타일링
+                                    titleTextStyle: TextStyle(
+                                      fontWeight: FontWeight.w700,
+                                      fontSize: 16.0,
+                                    ),
+                                  ),
+                                  calendarStyle: CalendarStyle(
+                                    // 오늘 날짜에 하이라이팅의 유무
+                                    isTodayHighlighted: false,
+                                    // 캘린더의 평일 배경 스타일링(default면 평일을 의미)
+                                    defaultDecoration: BoxDecoration(
+                                      color: order_item_background,
+                                      shape: BoxShape.rectangle,
+                                    ),
+                                    // 캘린더의 주말 배경 스타일링
+                                    weekendDecoration:  BoxDecoration(
+                                      color: order_item_background,
+                                      shape: BoxShape.rectangle,
+                                    ),
+                                    // 선택한 날짜 배경 스타일링
+                                    selectedDecoration: BoxDecoration(
+                                        color: styleWhiteCol,
+                                        shape: BoxShape.rectangle,
+                                        border: Border.all(color: sub_color)
+                                    ),
+                                    defaultTextStyle: CustomStyle.CustomFont(
+                                        styleFontSize14, Colors.black),
+                                    weekendTextStyle:
+                                    CustomStyle.CustomFont(styleFontSize14, Colors.red),
+                                    selectedTextStyle: CustomStyle.CustomFont(
+                                        styleFontSize14, Colors.black),
+                                    // range 크기 조절
+                                    rangeHighlightScale: 1.0,
+
+                                    // range 색상 조정
+                                    rangeHighlightColor: const Color(0xFFBBDDFF),
+
+                                    // rangeStartDay 글자 조정
+                                    rangeStartTextStyle: CustomStyle.CustomFont(
+                                        styleFontSize14, Colors.black),
+
+                                    // rangeStartDay 모양 조정
+                                    rangeStartDecoration: BoxDecoration(
+                                        color: styleWhiteCol,
+                                        shape: BoxShape.rectangle,
+                                        border: Border.all(color: sub_color)
+                                    ),
+
+                                    // rangeEndDay 글자 조정
+                                    rangeEndTextStyle: CustomStyle.CustomFont(
+                                        styleFontSize14, Colors.black),
+
+                                    // rangeEndDay 모양 조정
+                                    rangeEndDecoration: BoxDecoration(
+                                        color: styleWhiteCol,
+                                        shape: BoxShape.rectangle,
+                                        border: Border.all(color: sub_color)
+                                    ),
+
+                                    // startDay, endDay 사이의 글자 조정
+                                    withinRangeTextStyle: const TextStyle(),
+
+                                    // startDay, endDay 사이의 모양 조정
+                                    withinRangeDecoration:
+                                    const BoxDecoration(),
+                                  ),
+                                  selectedDayPredicate: (day) {
+                                    return isSameDay(_tempSelectedDay, day);
+                                  },
+                                  calendarFormat: _calendarFormat,
+                                  onDaySelected: (selectedDay, focusedDay) {
+                                    print("onDaySelected => ${selectedDay} // ${focusedDay}");
+                                    if (!isSameDay(_tempSelectedDay, selectedDay)) {
+                                      setState(() {
+                                        _tempSelectedDay = selectedDay;
+                                        _focusedDay = focusedDay;
+                                      });
+                                    }
+                                  },
+                                  onFormatChanged: (format) {
+                                    print("onFormatChanged => ${format}");
+                                    if (_calendarFormat != format) {
+                                      setState(() {
+                                        _calendarFormat = format;
+                                      });
+                                    }
+                                  },
+                                  onPageChanged: (focusedDay) {
+                                    print("onPageChanged => ${focusedDay}");
+                                    _focusedDay = focusedDay;
+                                  },
+                                ),
+                                Container(
+                                  margin: EdgeInsets.symmetric(vertical: CustomStyle.getHeight(10.0)),
+                                  child: Row(
+                                    crossAxisAlignment: CrossAxisAlignment.center,
+                                    mainAxisAlignment: MainAxisAlignment.end,
+                                    children: [
+                                      TextButton(
+                                          onPressed: (){
+                                            Navigator.of(context).pop();
+                                          },
+                                          child: Text(
+                                            Strings.of(context)?.get("cancel")??"Not Found",
+                                            style: CustomStyle.CustomFont(styleFontSize14, styleBlackCol1),
+                                          )
+                                      ),
+                                      CustomStyle.sizedBoxWidth(CustomStyle.getWidth(15.0)),
+                                      TextButton(
+                                          onPressed: () async {
+                                            mCalendar = DateTime(_tempSelectedDay!.year,_tempSelectedDay!.month,_tempSelectedDay!.day);
+                                            writeDate = Util.getDateCalToStr(mCalendar, "yyyyMMdd");
+                                            _selectDay.value = _tempSelectedDay!;
+                                            Navigator.of(context).pop(false);
+                                            setState((){});
+                                          },
+                                          child: Text(
+                                            Strings.of(context)?.get("confirm")??"Not Found",
+                                            style: CustomStyle.CustomFont(styleFontSize14, styleBlackCol1),
+                                          )
+                                      )
+                                    ],
+                                  ),
+                                )
+                              ]
+                          )
+                      ),
+                    )
                 );
               }
           );
@@ -1029,61 +1067,61 @@ class _TaxPageState extends State<TaxPage> {
         margin: EdgeInsets.only(top: CustomStyle.getHeight(20.0)),
         child: Column(
             children: [
-          Container(
-              margin: EdgeInsets.only(bottom: CustomStyle.getHeight(10.0)),
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.center,
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    Strings.of(context)?.get("tax_sub_title_02") ?? "Not Found",
-                    textAlign: TextAlign.center,
-                    style:
+              Container(
+                  margin: EdgeInsets.only(bottom: CustomStyle.getHeight(10.0)),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        Strings.of(context)?.get("tax_sub_title_02") ?? "Not Found",
+                        textAlign: TextAlign.center,
+                        style:
                         CustomStyle.CustomFont(styleFontSize16, text_color_01),
-                  ),
-                  ElevatedButton(
-                      style: ElevatedButton.styleFrom(
-                        primary: sub_color,
-                        onPrimary: main_color,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(15.0),
-                        ),
                       ),
-                      onPressed: () async {
-                        var app = await App().getUserInfo();
-                        ShowBankCheckWidget(context: context,callback: _callback).showBankCheckDialog(app);
-                      },
-                      child: Text(
-                        Strings.of(context)?.get("tax_bank_edit") ??
-                            "Not Fount",
-                        style: CustomStyle.CustomFont(
-                            styleFontSize10, styleWhiteCol),
-                      ))
-                ],
-              )),
+                      ElevatedButton(
+                          style: ElevatedButton.styleFrom(
+                            primary: sub_color,
+                            onPrimary: main_color,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(15.0),
+                            ),
+                          ),
+                          onPressed: () async {
+                            var app = await App().getUserInfo();
+                            ShowBankCheckWidget(context: context,callback: _callback).showBankCheckDialog(app);
+                          },
+                          child: Text(
+                            Strings.of(context)?.get("tax_bank_edit") ??
+                                "Not Fount",
+                            style: CustomStyle.CustomFont(
+                                styleFontSize10, styleWhiteCol),
+                          ))
+                    ],
+                  )),
               Container(
                 decoration: CustomStyle.customBoxDeco(styleWhiteCol,radius: 0,border_color: line),
                 child: Column(
                   children: [
                     Container(
                       decoration: BoxDecoration(
-                        border: Border(
-                          bottom: BorderSide(
-                            width: CustomStyle.getWidth(0.5),color: line
+                          border: Border(
+                              bottom: BorderSide(
+                                  width: CustomStyle.getWidth(0.5),color: line
+                              )
                           )
-                        )
                       ),
                       child: Row(
                         children: [
                           Expanded(
-                            flex: 1,
+                              flex: 1,
                               child: Container(
                                 decoration: BoxDecoration(
-                                  border: Border(
-                                    right: BorderSide(
-                                      width: CustomStyle.getWidth(0.5),color: line
+                                    border: Border(
+                                        right: BorderSide(
+                                            width: CustomStyle.getWidth(0.5),color: line
+                                        )
                                     )
-                                  )
                                 ),
                                 padding: const EdgeInsets.all(10.0),
                                 child: Text(
@@ -1191,7 +1229,7 @@ class _TaxPageState extends State<TaxPage> {
                   ],
                 ),
               )
-        ]));
+            ]));
   }
 
   String? makeBizNum(String num){
@@ -1204,53 +1242,53 @@ class _TaxPageState extends State<TaxPage> {
 
   Widget priceInfoWidget(BuildContext context) {
     return Container(
-      padding: EdgeInsets.symmetric(vertical: CustomStyle.getHeight(10.0)),
-      child: Column(
-        children: [
-          Container(
-            padding: EdgeInsets.symmetric(vertical: CustomStyle.getHeight(10.0)),
-          decoration: BoxDecoration(
-            border: Border(
-              bottom: BorderSide(
-                color: line, width: CustomStyle.getWidth(0.5)
-              )
-            )
-          ),
-          child: Row(
-            children: [
-              Expanded(
-                flex: 1,
-                  child: Text(
-                    "작성일자",
-                    textAlign: TextAlign.start,
-                    style: CustomStyle.CustomFont(styleFontSize14, text_color_01),
-                  )
-              ),
-              Expanded(
-                flex: 3,
-                  child: InkWell(
-                    onTap: (){
-                      openCalendarDialog();
-                    },
-                    child: Text(
-                      Util.getDateCalToStr(_selectDay.value, 'yyyy-MM-dd'),
-                      textAlign: TextAlign.center,
-                      style: CustomStyle.CustomFont(styleFontSize14, text_color_01),
+        padding: EdgeInsets.symmetric(vertical: CustomStyle.getHeight(10.0)),
+        child: Column(
+          children: [
+            Container(
+                padding: EdgeInsets.symmetric(vertical: CustomStyle.getHeight(10.0)),
+                decoration: BoxDecoration(
+                    border: Border(
+                        bottom: BorderSide(
+                            color: line, width: CustomStyle.getWidth(0.5)
+                        )
+                    )
+                ),
+                child: Row(
+                  children: [
+                    Expanded(
+                        flex: 1,
+                        child: Text(
+                          "작성일자",
+                          textAlign: TextAlign.start,
+                          style: CustomStyle.CustomFont(styleFontSize14, text_color_01),
+                        )
                     ),
-                  )
-              ),
-              InkWell(
-                onTap: (){
-                  openCalendarDialog();
-                },
-                child: Icon(Icons.calendar_today_rounded,color: styleDefaultGrey, size: 24,)
-              )
-            ],
-          )
-          ),
+                    Expanded(
+                        flex: 3,
+                        child: InkWell(
+                          onTap: (){
+                            openCalendarDialog();
+                          },
+                          child: Text(
+                            Util.getDateCalToStr(_selectDay.value, 'yyyy-MM-dd'),
+                            textAlign: TextAlign.center,
+                            style: CustomStyle.CustomFont(styleFontSize14, text_color_01),
+                          ),
+                        )
+                    ),
+                    InkWell(
+                        onTap: (){
+                          openCalendarDialog();
+                        },
+                        child: Icon(Icons.calendar_today_rounded,color: styleDefaultGrey, size: 24,)
+                    )
+                  ],
+                )
+            ),
             Container(
               padding:
-                  EdgeInsets.symmetric(vertical: CustomStyle.getHeight(10.0)),
+              EdgeInsets.symmetric(vertical: CustomStyle.getHeight(10.0)),
               decoration: BoxDecoration(
                   border: Border(
                       bottom: BorderSide(
@@ -1264,72 +1302,72 @@ class _TaxPageState extends State<TaxPage> {
                 ],
               ),
             ),
-          pay.value ? Container(
-            padding:
-            EdgeInsets.symmetric(vertical: CustomStyle.getHeight(10.0)),
-            decoration: BoxDecoration(
-                border: Border(
-                    bottom: BorderSide(
-                        color: line, width: CustomStyle.getWidth(0.5)))),
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.center,
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text("서비스 사용료", textAlign: TextAlign.center, style: CustomStyle.CustomFont(styleFontSize14, text_color_01)),
-                Text("${tvFee.value}원",textAlign: TextAlign.center,style: CustomStyle.CustomFont(styleFontSize14, text_color_01),)
-              ],
+            pay.value ? Container(
+              padding:
+              EdgeInsets.symmetric(vertical: CustomStyle.getHeight(10.0)),
+              decoration: BoxDecoration(
+                  border: Border(
+                      bottom: BorderSide(
+                          color: line, width: CustomStyle.getWidth(0.5)))),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text("서비스 사용료", textAlign: TextAlign.center, style: CustomStyle.CustomFont(styleFontSize14, text_color_01)),
+                  Text("${tvFee.value}원",textAlign: TextAlign.center,style: CustomStyle.CustomFont(styleFontSize14, text_color_01),)
+                ],
+              ),
+            ):Container(),
+            Container(
+              padding:
+              EdgeInsets.symmetric(vertical: CustomStyle.getHeight(10.0)),
+              decoration: BoxDecoration(
+                  border: Border(
+                      bottom: BorderSide(
+                          color: line, width: CustomStyle.getWidth(0.5)))),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text("공급가액", textAlign: TextAlign.center, style: CustomStyle.CustomFont(styleFontSize14, text_color_01)),
+                  Text("${tvPrice.value}원",textAlign: TextAlign.center,style: CustomStyle.CustomFont(styleFontSize14, text_color_01),)
+                ],
+              ),
             ),
-          ):Container(),
-          Container(
-            padding:
-            EdgeInsets.symmetric(vertical: CustomStyle.getHeight(10.0)),
-            decoration: BoxDecoration(
-                border: Border(
-                    bottom: BorderSide(
-                        color: line, width: CustomStyle.getWidth(0.5)))),
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.center,
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text("공급가액", textAlign: TextAlign.center, style: CustomStyle.CustomFont(styleFontSize14, text_color_01)),
-                Text("${tvPrice.value}원",textAlign: TextAlign.center,style: CustomStyle.CustomFont(styleFontSize14, text_color_01),)
-              ],
+            Container(
+              padding:
+              EdgeInsets.symmetric(vertical: CustomStyle.getHeight(10.0)),
+              decoration: BoxDecoration(
+                  border: Border(
+                      bottom: BorderSide(
+                          color: line, width: CustomStyle.getWidth(0.5)))),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text("세액", textAlign: TextAlign.center, style: CustomStyle.CustomFont(styleFontSize14, text_color_01)),
+                  Text("${tvTax.value}원",textAlign: TextAlign.center,style: CustomStyle.CustomFont(styleFontSize14, text_color_01),)
+                ],
+              ),
             ),
-          ),
-          Container(
-            padding:
-            EdgeInsets.symmetric(vertical: CustomStyle.getHeight(10.0)),
-            decoration: BoxDecoration(
-                border: Border(
-                    bottom: BorderSide(
-                        color: line, width: CustomStyle.getWidth(0.5)))),
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.center,
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text("세액", textAlign: TextAlign.center, style: CustomStyle.CustomFont(styleFontSize14, text_color_01)),
-                Text("${tvTax.value}원",textAlign: TextAlign.center,style: CustomStyle.CustomFont(styleFontSize14, text_color_01),)
-              ],
-            ),
-          ),
-          Container(
-            padding:
-            EdgeInsets.symmetric(vertical: CustomStyle.getHeight(10.0)),
-            decoration: BoxDecoration(
-                border: Border(
-                    bottom: BorderSide(
-                        color: line, width: CustomStyle.getWidth(0.5)))),
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.center,
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text("총액", textAlign: TextAlign.center, style: CustomStyle.CustomFont(styleFontSize14, text_color_01)),
-                Text("${tvTotalPrice.value}원",textAlign: TextAlign.center,style: CustomStyle.CustomFont(styleFontSize14, text_color_01),)
-              ],
-            ),
-          )
+            Container(
+              padding:
+              EdgeInsets.symmetric(vertical: CustomStyle.getHeight(10.0)),
+              decoration: BoxDecoration(
+                  border: Border(
+                      bottom: BorderSide(
+                          color: line, width: CustomStyle.getWidth(0.5)))),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text("총액", textAlign: TextAlign.center, style: CustomStyle.CustomFont(styleFontSize14, text_color_01)),
+                  Text("${tvTotalPrice.value}원",textAlign: TextAlign.center,style: CustomStyle.CustomFont(styleFontSize14, text_color_01),)
+                ],
+              ),
+            )
           ],
-      )
+        )
     );
   }
 
@@ -1724,5 +1762,5 @@ class _TaxPageState extends State<TaxPage> {
         )
     );
   }
-  
+
 }
