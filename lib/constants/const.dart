@@ -7,11 +7,11 @@ class Const {
  static final bool userDebugger = false;
 
  // 버전명
- static final APP_VERSION = "1.1.53";
+ static final APP_VERSION = "1.1.54";
 
  //스토어 주소
  static final ANDROID_STORE = "https://play.google.com/store/apps/details?id=com.logislink.driver";
- //static final IOS_STORE = "http://apps.apple.com/kr/app/$appName/id${ConstantString.APP_STORE_ID}";
+ static final IOS_STORE = "https://apps.apple.com/app/id6467700597";
 
  static final int CONNECT_TIMEOUT = 15;
  static final int WRITE_TIMEOUT = 15;

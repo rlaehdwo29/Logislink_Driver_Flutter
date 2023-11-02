@@ -16,7 +16,7 @@ import io.flutter.plugins.GeneratedPluginRegistrant;
 
 public class MainActivity extends FlutterActivity {
 
-    private static final String CHANNEL = "testing.flutter.android";
+    private static final String CHANNEL = "logis.flutter.tmap";
 
     @Override
     public void configureFlutterEngine(FlutterEngine flutterEngine) {

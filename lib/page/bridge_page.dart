@@ -125,6 +125,8 @@ class _BridgePageState extends State<BridgePage> {
         return false;
       } else if (photos_per != PermissionStatus.granted) {
         return false;
+      } else if (activityRecognition_per != PermissionRequestResult.GRANTED) {
+        return false;
       } else if(recognitionResult != PermissionRequestResult.GRANTED){
         return false;
       }else if(trackStatus != TrackingStatus.authorized){
@@ -144,7 +146,11 @@ class _BridgePageState extends State<BridgePage> {
 
   Future<void> checkVersion() async {
     Logger logger = Logger();
-    await DioService.dioClient(header: true).getVersion("D").then((it) async {
+    var type = "D";
+     if(Platform.isIOS){
+      type = "DI";
+    }
+    await DioService.dioClient(header: true).getVersion(type).then((it) async {
       ReturnMap _response = DioService.dioResponse(it);
       PackageInfo packageInfo = await PackageInfo.fromPlatform();
       logger.d("checkVersion() _response -> ${_response.status} // ${_response.resultMap}");
@@ -153,8 +159,8 @@ class _BridgePageState extends State<BridgePage> {
           var list = _response.resultMap?["data"] as List;
 
           if (list != null && list.isNotEmpty) {
-            VersionModel? appVersion = VersionModel.fromJSON(list[0]);
-            VersionModel? codeVersion = VersionModel.fromJSON(list[1]);
+            VersionModel? codeVersion = VersionModel.fromJSON(list[0]);
+            VersionModel? appVersion = VersionModel.fromJSON(list[1]);
             String? shareVersion = await SP.get(Const.CD_VERSION);
             if (appVersion.versionCode == packageInfo.version) {
               if (shareVersion != codeVersion.versionCode) {
@@ -168,7 +174,7 @@ class _BridgePageState extends State<BridgePage> {
               if (Platform.isAndroid) {
                 launch(Const.ANDROID_STORE);
               } else if (Platform.isIOS) {
-                //launch(Const.IOS_STORE);
+                launch(Const.IOS_STORE);
               }
             }
           }

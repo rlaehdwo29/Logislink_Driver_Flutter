@@ -97,14 +97,14 @@ class _Rest implements Rest {
 
   @override
   Future<HttpResponse<dynamic>> iosLogin(
-    driver_name,
+    driverName,
     cid,
   ) async {
     const _extra = <String, dynamic>{};
     final queryParameters = <String, dynamic>{};
     final _headers = <String, dynamic>{};
     final _data = {
-      'driver_name': driver_name,
+      'driverName': driverName,
       'cid': cid,
     };
     final _result =

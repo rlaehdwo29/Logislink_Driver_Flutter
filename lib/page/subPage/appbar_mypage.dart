@@ -911,7 +911,7 @@ class _AppBarMyPageState extends State<AppBarMyPage> {
                             autofocus: false,
                             enabled: editMode.value,
                             maxLengthEnforcement: MaxLengthEnforcement.enforced,
-                            keyboardType: TextInputType.number,
+                            keyboardType: TextInputType.text,
                             onChanged: (bizCondText) {
                                 if(bizCondText.isNotEmpty) {
                                   bizCondController.selection = TextSelection.fromPosition(TextPosition(offset: bizCondController.text.length));
@@ -963,7 +963,7 @@ class _AppBarMyPageState extends State<AppBarMyPage> {
                             autofocus: false,
                             enabled: editMode.value,
                             maxLengthEnforcement: MaxLengthEnforcement.enforced,
-                            keyboardType: TextInputType.number,
+                            keyboardType: TextInputType.text,
                             onChanged: (bizKindText) {
                                 if(bizKindText.isNotEmpty) {
                                   bizKindController.selection = TextSelection.fromPosition(TextPosition(offset: bizKindController.text.length));

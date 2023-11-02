@@ -61,7 +61,7 @@ class _OrderDetailPageState extends State<OrderDetailPage>{
   String initStatus = "Unknown";
 
   late KakaoMapController? mapController;
-  final platform = const MethodChannel("testing.flutter.android");
+  final platform = const MethodChannel("logis.flutter.tmap");
   Set<Marker> markers = {};
   final app = UserModel().obs;
   final orderItem = OrderModel().obs;
@@ -1053,12 +1053,11 @@ class _OrderDetailPageState extends State<OrderDetailPage>{
     await pr?.hide();
     ReturnMap _response = DioService.dioResponse(it);
     if(_response.status == "200") {
-      Navigator.of(context).pop(false);
       orderItem.value?.reqPayYN = "Y";
       setCalcView();
       app_util.Util.toast("빠른지급 신청이 완료되었습니다.");
       if(orderItem.value?.receiptYn == "N") {
-        showNextReceiptDialog();
+        await showNextReceiptDialog();
       }
     }else{
       app_util.Util.toast(_response.message);
@@ -1081,7 +1080,7 @@ class _OrderDetailPageState extends State<OrderDetailPage>{
 
   }
 
-  void showNextReceiptDialog() {
+  Future<void> showNextReceiptDialog() async {
     openCommonConfirmBox(
         context,
         "이어서 인수증을 등록하시겠습니까?",

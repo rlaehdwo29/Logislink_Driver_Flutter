@@ -35,7 +35,7 @@ abstract class Rest {
    */
   @FormUrlEncoded()
   @POST(URL_USER_IOS_LOGIN)
-  Future<HttpResponse> iosLogin(@Field("driver_name") String driver_name,@Field("cid") String cid);
+  Future<HttpResponse> iosLogin(@Field("driverName") String driverName, @Field("cid") String cid);
 
   /**
    * 차주 정보
