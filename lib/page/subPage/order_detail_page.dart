@@ -1,10 +1,13 @@
 import 'dart:developer';
+import 'dart:io' as io;
 
+import 'package:device_info_plus/device_info_plus.dart';
 import 'package:fbroadcast/fbroadcast.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 import 'package:kakao_flutter_sdk_navi/kakao_flutter_sdk_navi.dart';
@@ -27,11 +30,11 @@ import 'package:logislink_driver_flutter/provider/order_service.dart';
 import 'package:logislink_driver_flutter/utils/sp.dart';
 import 'package:logislink_driver_flutter/utils/util.dart' as app_util;
 import 'package:logislink_driver_flutter/widget/show_bank_check_widget.dart';
-import 'package:webview_flutter/webview_flutter.dart';
+import 'package:phone_call/phone_call.dart';
 import 'package:progress_dialog_null_safe/progress_dialog_null_safe.dart';
 import 'package:provider/provider.dart';
-import 'package:url_launcher/url_launcher.dart';
 import 'package:dio/dio.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class OrderDetailPage extends StatefulWidget {
   OrderModel? item;
@@ -41,7 +44,7 @@ class OrderDetailPage extends StatefulWidget {
   _OrderDetailPageState createState() => _OrderDetailPageState();
 }
 
-class _OrderDetailPageState extends State<OrderDetailPage>{
+class _OrderDetailPageState extends State<OrderDetailPage> with WidgetsBindingObserver {
 
   final controller = Get.find<App>();
   final isExpanded = [].obs;
@@ -67,6 +70,8 @@ class _OrderDetailPageState extends State<OrderDetailPage>{
   final orderItem = OrderModel().obs;
   final stopPointList = List.empty(growable: true).obs;
 
+  late AppLifecycleState _notification;
+
   @override
   void initState() {
     FBroadcast.instance().register(Const.INTENT_DETAIL_REFRESH, (value, callback) async {
@@ -91,14 +96,19 @@ class _OrderDetailPageState extends State<OrderDetailPage>{
     super.initState();
   }
 
+  @override
+  void dispose() {
+    super.dispose();
+  }
+
   void _callback(String? bankCd, String? acctNm, String? acctNo) async {
-      UserModel user = await controller.getUserInfo();
-      user.bankCode = bankCd;
-      user.bankCnnm = acctNm;
-      user.bankAccount = acctNo;
-      controller.setUserInfo(user);
-      var app_user = await controller.getUserInfo();
-      setState(() {});
+    UserModel user = await controller.getUserInfo();
+    user.bankCode = bankCd;
+    user.bankCnnm = acctNm;
+    user.bankAccount = acctNo;
+    controller.setUserInfo(user);
+    var app_user = await controller.getUserInfo();
+    setState(() {});
   }
 
 
@@ -156,191 +166,202 @@ class _OrderDetailPageState extends State<OrderDetailPage>{
     isExpanded.value = List.filled(stopPointList.length, false);
 
     return SingleChildScrollView(
-      child: Flex(
-        direction: Axis.vertical,
-        children: List.generate(stopPointList.length, (index) {
-          var iData = stopPointList[index];
-          return ExpansionPanelList.radio(
-            animationDuration: const Duration(milliseconds: 500),
-            dividerColor: const Color(0xfffafafa),
-            expandedHeaderPadding: EdgeInsets.only(bottom: 0.0.h),
-            elevation: 0,
-            children: [
-              ExpansionPanelRadio(
-                value: index,
-                headerBuilder: (BuildContext context, bool isExpanded) {
-                  return Container(
-                      margin: EdgeInsets.symmetric(
-                          horizontal: CustomStyle.getWidth(10.0),
-                          vertical: CustomStyle.getHeight(10.0)),
-                      child: Row(
-                        crossAxisAlignment: CrossAxisAlignment.center,
-                        children: [
-                          Flexible(
-                            flex:2,
-                            child: Container(
-                              decoration: CustomStyle.customBoxDeco(styleWhiteCol,
-                                  border_color: !app_util.Util.ynToBoolean(iData.finishYn)? sub_color:text_color_02),
-                              padding: EdgeInsets.symmetric(
-                                  vertical: CustomStyle.getHeight(5.0),
-                                  horizontal: CustomStyle.getWidth(10.0)),
-                              child: Text(
-                                "경유지 ${iData.stopNo}",
-                                style: CustomStyle.CustomFont(
-                                    styleFontSize10, !app_util.Util.ynToBoolean(iData.finishYn)? sub_color:text_color_02),
-                              ),
-                            )
-                          ),
-                          Flexible(
-                            flex: 6,
-                            child: Container(
-                            margin: EdgeInsets.symmetric(horizontal: CustomStyle.getWidth(5.0)),
-                            child: RichText(
-                                  overflow: TextOverflow.ellipsis,
-                                  maxLines: 5,
-                                  text: TextSpan(
-                                    text: "${iData.eComName}",
-                                    style: CustomStyle.CustomFont(styleFontSize12, text_color_01),
-                                )
-                              )
-                            ),
-                          ),
-                          Flexible(
-                            flex: 1,
-                            child: Text(
-                              iData.stopSe == "S"?"상차":"하차",
-                              style: CustomStyle.CustomFont(styleFontSize12, order_state_04),
-                            )
-                          )
-                        ],
-                      ));
-                },
-                body: Container(
-                    decoration: BoxDecoration(
-                        border: Border(
-                            bottom: BorderSide(
-                                color: line,
-                                width: CustomStyle.getWidth(1.0)
-                            )
-                        )
-                    ),
-                  padding: EdgeInsets.only(top: CustomStyle.getHeight(5.0),right: CustomStyle.getWidth(10.0),left: CustomStyle.getWidth(10.0)),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Row(
-                        crossAxisAlignment: CrossAxisAlignment.center,
-                        mainAxisAlignment: MainAxisAlignment.start,
-                        children: [
-                          Text(
-                            "${iData.eStaff}",
-                            style: CustomStyle.CustomFont(styleFontSize12, text_color_01),
-                          ),
-                          iData.eStaff.isEmpty != true && iData.eTel.isEmpty != true? Text(
-                           "  /  ",
-                           style: CustomStyle.CustomFont(styleFontSize12, text_color_01),
-                         ): const SizedBox(),
-                          InkWell(
-                            onTap: (){
-                              launch("tel://${iData.eTel}");
-                            },
-                            child: Text(
-                              "${iData.eTel}",
-                              style: CustomStyle.CustomFont(styleFontSize12, sub_color),
-                            )
-                          )
-                        ],
-                      ),
-                      Container(
-                        margin: EdgeInsets.only(top: CustomStyle.getHeight(5.0)),
-                        child: Text(
-                          "${iData.eAddr}",
-                          style: CustomStyle.CustomFont(styleFontSize12, text_color_01),
-                        )
-                      ),
-                      iData.eAddrDetail.isEmpty != true ? Container(
-                          margin: EdgeInsets.only(top: CustomStyle.getHeight(5.0)),
-                          child: Text(
-                            "${iData.eAddrDetail}",
-                            style: CustomStyle.CustomFont(styleFontSize12, text_color_01),
-                          )
-                      ):const SizedBox(),
-                      Container(
-                        margin: EdgeInsets.only(top: CustomStyle.getHeight(10.0)),
+        child: Flex(
+          direction: Axis.vertical,
+          children: List.generate(stopPointList.length, (index) {
+            var iData = stopPointList[index];
+            return ExpansionPanelList.radio(
+              animationDuration: const Duration(milliseconds: 500),
+              dividerColor: const Color(0xfffafafa),
+              expandedHeaderPadding: EdgeInsets.only(bottom: 0.0.h),
+              elevation: 0,
+              children: [
+                ExpansionPanelRadio(
+                  value: index,
+                  headerBuilder: (BuildContext context, bool isExpanded) {
+                    return Container(
+                        margin: EdgeInsets.symmetric(
+                            horizontal: CustomStyle.getWidth(10.0),
+                            vertical: CustomStyle.getHeight(10.0)),
                         child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.center,
                           children: [
-                            !(app_util.Util.ynToBoolean(iData.finishYn)) ? Expanded(
-                              flex: 1,
-                              child: InkWell(
-                                onTap: (){
-                                  initNavi(iData.eComName, iData.eLat, iData.eLon);
-                                },
+                            Flexible(
+                                flex:2,
                                 child: Container(
-                                decoration: CustomStyle.customBoxDeco(sub_color,radius: styleRadius5),
-                                padding: const EdgeInsets.all(5.0),
-                                margin: EdgeInsets.only(right: CustomStyle.getWidth(5.0)),
+                                  decoration: CustomStyle.customBoxDeco(styleWhiteCol,
+                                      border_color: !app_util.Util.ynToBoolean(iData.finishYn)? sub_color:text_color_02),
+                                  padding: EdgeInsets.symmetric(
+                                      vertical: CustomStyle.getHeight(5.0),
+                                      horizontal: CustomStyle.getWidth(10.0)),
+                                  child: Text(
+                                    "경유지 ${iData.stopNo}",
+                                    style: CustomStyle.CustomFont(
+                                        styleFontSize10, !app_util.Util.ynToBoolean(iData.finishYn)? sub_color:text_color_02),
+                                  ),
+                                )
+                            ),
+                            Flexible(
+                              flex: 6,
+                              child: Container(
+                                  margin: EdgeInsets.symmetric(horizontal: CustomStyle.getWidth(5.0)),
+                                  child: RichText(
+                                      overflow: TextOverflow.ellipsis,
+                                      maxLines: 5,
+                                      text: TextSpan(
+                                        text: "${iData.eComName}",
+                                        style: CustomStyle.CustomFont(styleFontSize12, text_color_01),
+                                      )
+                                  )
+                              ),
+                            ),
+                            Flexible(
+                                flex: 1,
                                 child: Text(
-                                  textAlign: TextAlign.center,
-                                  Strings.of(context)?.get("order_detail_stop_nevi")??"Not Found",
-                                  style: CustomStyle.CustomFont(styleFontSize12, styleWhiteCol),
+                                  iData.stopSe == "S"?"상차":"하차",
+                                  style: CustomStyle.CustomFont(styleFontSize12, order_state_04),
                                 )
-                                )
-                              ),
-                            ) : const SizedBox(),
-                            Expanded(
-                              flex: 1,
-                              child: InkWell(
-                                onTap: (){
-                                  if(!app_util.Util.ynToBoolean(iData.finishYn)) onFinishStopPoint(iData);
-                                },
-                                child: Container(
-                                  decoration: CustomStyle.customBoxDeco(!app_util.Util.ynToBoolean(iData.finishYn) ?sub_color:text_color_02,radius: styleRadius5),
-                                  padding: const EdgeInsets.all(5.0),
-                                  margin: EdgeInsets.only(right: CustomStyle.getWidth(5.0)),
-                                  child: Text(
-                                    textAlign: TextAlign.center,
-                                    "${Strings.of(context)?.get("order_end")??"Not Found"}${iData.finishDate != null?" (${app_util.Util.getDateStrToStr(iData.finishDate, "MM.dd HH:mm")})":""}",
-                                    style: CustomStyle.CustomFont(styleFontSize12, styleWhiteCol),
-                                  )
-                                )
-                              ),
-                            ),
-                            Expanded(
-                              flex: 1,
-                              child: InkWell(
-                                onTap: (){
-                                  if(!app_util.Util.ynToBoolean(iData.beginYn)) onBeginStartPoint(iData);
-                                },
-                                  child: Container(
-                                  decoration: CustomStyle.customBoxDeco(!app_util.Util.ynToBoolean(iData.beginYn) ?sub_color:text_color_02,radius: styleRadius5),
-                                  padding: EdgeInsets.symmetric(vertical: CustomStyle.getHeight(5.0)),
-                                  child: Text(
-                                    textAlign: TextAlign.center,
-                                    "${Strings.of(context)?.get("order_start")??"Not Found"}${iData.beginDate != null?" (${app_util.Util.getDateStrToStr(iData.beginDate, "MM.dd HH:mm")})":""}",
-                                    style: CustomStyle.CustomFont(styleFontSize12, styleWhiteCol),
-                                  )
-                                )
-                              ),
-                            ),
+                            )
                           ],
-                        )
+                        ));
+                  },
+                  body: Container(
+                      decoration: BoxDecoration(
+                          border: Border(
+                              bottom: BorderSide(
+                                  color: line,
+                                  width: CustomStyle.getWidth(1.0)
+                              )
+                          )
                       ),
-                      CustomStyle.sizedBoxHeight(10.0)
-                    ],
-                  )
-                ),
-                canTapOnHeader: true,
-              )
-            ],
-            expansionCallback: (int _index, bool status) {
-              isExpanded[index] = !isExpanded[index];
-              for (int i = 0; i < isExpanded.length; i++)
-                if (i != index) isExpanded[i] = false;
-            },
-          );
-        }),
-      )
+                      padding: EdgeInsets.only(top: CustomStyle.getHeight(5.0),right: CustomStyle.getWidth(10.0),left: CustomStyle.getWidth(10.0)),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Row(
+                            crossAxisAlignment: CrossAxisAlignment.center,
+                            mainAxisAlignment: MainAxisAlignment.start,
+                            children: [
+                              Text(
+                                "${iData.eStaff}",
+                                style: CustomStyle.CustomFont(styleFontSize12, text_color_01),
+                              ),
+                              iData.eStaff.isEmpty != true && iData.eTel.isEmpty != true? Text(
+                                "  /  ",
+                                style: CustomStyle.CustomFont(styleFontSize12, text_color_01),
+                              ): const SizedBox(),
+                              InkWell(
+                                  onTap: () async {
+                                    if(io.Platform.isAndroid) {
+                                      DeviceInfoPlugin deviceInfo = DeviceInfoPlugin();
+                                      AndroidDeviceInfo info = await deviceInfo.androidInfo;
+                                      if (info.version.sdkInt >= 23) {
+                                        await PhoneCall.calling("${iData.eTel}");
+                                      }else{
+                                        await launch("tel://${iData.eTel}");
+                                      }
+                                    }else{
+                                      await launch("tel://${iData.eTel}");
+                                    }
+
+                                  },
+                                  child: Text(
+                                    "${iData.eTel}",
+                                    style: CustomStyle.CustomFont(styleFontSize12, sub_color),
+                                  )
+                              )
+                            ],
+                          ),
+                          Container(
+                              margin: EdgeInsets.only(top: CustomStyle.getHeight(5.0)),
+                              child: Text(
+                                "${iData.eAddr}",
+                                style: CustomStyle.CustomFont(styleFontSize12, text_color_01),
+                              )
+                          ),
+                          iData.eAddrDetail.isEmpty != true ? Container(
+                              margin: EdgeInsets.only(top: CustomStyle.getHeight(5.0)),
+                              child: Text(
+                                "${iData.eAddrDetail}",
+                                style: CustomStyle.CustomFont(styleFontSize12, text_color_01),
+                              )
+                          ):const SizedBox(),
+                          Container(
+                              margin: EdgeInsets.only(top: CustomStyle.getHeight(10.0)),
+                              child: Row(
+                                children: [
+                                  !(app_util.Util.ynToBoolean(iData.finishYn)) ? Expanded(
+                                    flex: 1,
+                                    child: InkWell(
+                                        onTap: (){
+                                          initNavi(iData.eComName, iData.eLat, iData.eLon);
+                                        },
+                                        child: Container(
+                                            decoration: CustomStyle.customBoxDeco(sub_color,radius: styleRadius5),
+                                            padding: const EdgeInsets.all(5.0),
+                                            margin: EdgeInsets.only(right: CustomStyle.getWidth(5.0)),
+                                            child: Text(
+                                              textAlign: TextAlign.center,
+                                              Strings.of(context)?.get("order_detail_stop_nevi")??"Not Found",
+                                              style: CustomStyle.CustomFont(styleFontSize12, styleWhiteCol),
+                                            )
+                                        )
+                                    ),
+                                  ) : const SizedBox(),
+                                  Expanded(
+                                    flex: 1,
+                                    child: InkWell(
+                                        onTap: (){
+                                          if(!app_util.Util.ynToBoolean(iData.finishYn)) onFinishStopPoint(iData);
+                                        },
+                                        child: Container(
+                                            decoration: CustomStyle.customBoxDeco(!app_util.Util.ynToBoolean(iData.finishYn) ?sub_color:text_color_02,radius: styleRadius5),
+                                            padding: const EdgeInsets.all(5.0),
+                                            margin: EdgeInsets.only(right: CustomStyle.getWidth(5.0)),
+                                            child: Text(
+                                              textAlign: TextAlign.center,
+                                              "${Strings.of(context)?.get("order_end")??"Not Found"}${iData.finishDate != null?" (${app_util.Util.getDateStrToStr(iData.finishDate, "MM.dd HH:mm")})":""}",
+                                              style: CustomStyle.CustomFont(styleFontSize12, styleWhiteCol),
+                                            )
+                                        )
+                                    ),
+                                  ),
+                                  Expanded(
+                                    flex: 1,
+                                    child: InkWell(
+                                        onTap: (){
+                                          if(!app_util.Util.ynToBoolean(iData.beginYn)) onBeginStartPoint(iData);
+                                        },
+                                        child: Container(
+                                            decoration: CustomStyle.customBoxDeco(!app_util.Util.ynToBoolean(iData.beginYn) ?sub_color:text_color_02,radius: styleRadius5),
+                                            padding: EdgeInsets.symmetric(vertical: CustomStyle.getHeight(5.0)),
+                                            child: Text(
+                                              textAlign: TextAlign.center,
+                                              "${Strings.of(context)?.get("order_start")??"Not Found"}${iData.beginDate != null?" (${app_util.Util.getDateStrToStr(iData.beginDate, "MM.dd HH:mm")})":""}",
+                                              style: CustomStyle.CustomFont(styleFontSize12, styleWhiteCol),
+                                            )
+                                        )
+                                    ),
+                                  ),
+                                ],
+                              )
+                          ),
+                          CustomStyle.sizedBoxHeight(10.0)
+                        ],
+                      )
+                  ),
+                  canTapOnHeader: true,
+                )
+              ],
+              expansionCallback: (int _index, bool status) {
+                isExpanded[index] = !isExpanded[index];
+                for (int i = 0; i < isExpanded.length; i++)
+                  if (i != index) isExpanded[i] = false;
+              },
+            );
+          }),
+        )
     );
   }
 
@@ -403,7 +424,7 @@ class _OrderDetailPageState extends State<OrderDetailPage>{
       await pr?.hide();
       switch (obj.runtimeType) {
         case DioError:
-          // Here's the sample to get the failed response error code and message
+        // Here's the sample to get the failed response error code and message
           final res = (obj as DioError).response;
           logger.e(
               "order_detail_page.dart finishStopPoint() Error Default: ${res?.statusCode} -> ${res?.statusCode} // ${res?.statusMessage} // ${res}");
@@ -507,42 +528,42 @@ class _OrderDetailPageState extends State<OrderDetailPage>{
         mainAxisAlignment: MainAxisAlignment.spaceAround,
         children: [
           InkWell(
-            onTap: (){
-              naviCheck("S");
-            },
-            child: Container(
-              padding:EdgeInsets.symmetric(vertical: CustomStyle.getHeight(5.0),horizontal: CustomStyle.getWidth(30.0 )),
-              decoration: CustomStyle.customBoxDeco(sub_color,radius: styleRadius5),
-              child: Row(
-                children: [
-                  Text(
-                    Strings.of(context)?.get("order_detail_start_nevi")??"Not Found",
-                    style: CustomStyle.CustomFont(styleFontSize12, styleWhiteCol),
-                  ),
-                  CustomStyle.sizedBoxWidth(5.0),
-                  Icon(Icons.location_on,color: styleWhiteCol,)
-                ],
-              ),
-            )
+              onTap: (){
+                naviCheck("S");
+              },
+              child: Container(
+                padding:EdgeInsets.symmetric(vertical: CustomStyle.getHeight(5.0),horizontal: CustomStyle.getWidth(30.0 )),
+                decoration: CustomStyle.customBoxDeco(sub_color,radius: styleRadius5),
+                child: Row(
+                  children: [
+                    Text(
+                      Strings.of(context)?.get("order_detail_start_nevi")??"Not Found",
+                      style: CustomStyle.CustomFont(styleFontSize12, styleWhiteCol),
+                    ),
+                    CustomStyle.sizedBoxWidth(5.0),
+                    Icon(Icons.location_on,color: styleWhiteCol,)
+                  ],
+                ),
+              )
           ),
           InkWell(
-            onTap: (){
-              naviCheck("E");
-            },
-            child: Container(
-              padding:EdgeInsets.symmetric(vertical: CustomStyle.getHeight(5.0),horizontal: CustomStyle.getWidth(30.0 )),
-              decoration: CustomStyle.customBoxDeco(sub_color,radius: styleRadius5),
-              child: Row(
-                children: [
-                  Text(
-                    Strings.of(context)?.get("order_detail_end_nevi")??"Not Found",
-                    style: CustomStyle.CustomFont(styleFontSize12, styleWhiteCol),
-                  ),
-                  CustomStyle.sizedBoxWidth(5.0),
-                  Icon(Icons.location_on,color: styleWhiteCol,)
-                ],
-              ),
-            )
+              onTap: (){
+                naviCheck("E");
+              },
+              child: Container(
+                padding:EdgeInsets.symmetric(vertical: CustomStyle.getHeight(5.0),horizontal: CustomStyle.getWidth(30.0 )),
+                decoration: CustomStyle.customBoxDeco(sub_color,radius: styleRadius5),
+                child: Row(
+                  children: [
+                    Text(
+                      Strings.of(context)?.get("order_detail_end_nevi")??"Not Found",
+                      style: CustomStyle.CustomFont(styleFontSize12, styleWhiteCol),
+                    ),
+                    CustomStyle.sizedBoxWidth(5.0),
+                    Icon(Icons.location_on,color: styleWhiteCol,)
+                  ],
+                ),
+              )
           )
         ],
       ),
@@ -561,18 +582,18 @@ class _OrderDetailPageState extends State<OrderDetailPage>{
               style: CustomStyle.CustomFont(styleFontSize14, app_util.Util.getOrderStateColor(orderItem.value?.allocState)),
             ),
             InkWell(
-              onTap: (){
+                onTap: (){
                   goToPay();
-              },
-              child: orderItem.value?.allocState == "05" && app_util.Util.ynToBoolean(orderItem.value?.payType)?
-               Container(
-                padding: EdgeInsets.symmetric(vertical: CustomStyle.getHeight(5.0),horizontal: CustomStyle.getWidth(10.0)),
-                decoration: tvPay.value ? CustomStyle.customBoxDeco(styleWhiteCol,border_color: text_color_02) : CustomStyle.customBoxDeco(sub_color),
-                child: Text(
-                  Strings.of(context)?.get("pay_title")??"Not Found",
-                  style: CustomStyle.CustomFont(styleFontSize10, tvPay.value ? text_color_02 : styleWhiteCol),
-                ),
-              ) : const SizedBox()
+                },
+                child: orderItem.value?.allocState == "05" && app_util.Util.ynToBoolean(orderItem.value?.payType)?
+                Container(
+                  padding: EdgeInsets.symmetric(vertical: CustomStyle.getHeight(5.0),horizontal: CustomStyle.getWidth(10.0)),
+                  decoration: tvPay.value ? CustomStyle.customBoxDeco(styleWhiteCol,border_color: text_color_02) : CustomStyle.customBoxDeco(sub_color),
+                  child: Text(
+                    Strings.of(context)?.get("pay_title")??"Not Found",
+                    style: CustomStyle.CustomFont(styleFontSize10, tvPay.value ? text_color_02 : styleWhiteCol),
+                  ),
+                ) : const SizedBox()
             )
           ],
         )
@@ -584,49 +605,49 @@ class _OrderDetailPageState extends State<OrderDetailPage>{
         margin: EdgeInsets.only(bottom: CustomStyle.getHeight(10.0)),
         alignment: Alignment.centerLeft,
         child: Row(
-          crossAxisAlignment: CrossAxisAlignment.center,
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children:[
-            Text(
-              "${orderItem.value?.returnYn == "Y"?"왕복":"편도"}  /  ${orderItem.value?.mixYn == "Y"?"혼적":"독차"}",
-              style: CustomStyle.CustomFont(styleFontSize12, text_color_02),
-            ),
-            orderItem.value?.allocState == "05"?
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisAlignment: MainAxisAlignment.center,
-              children:[
-                InkWell(
-                  onTap: () async {
-                    await goToReceipt();
-                  },
-                  child: Container(
-                    decoration: tvReceipt.value ? CustomStyle.customBoxDeco(styleWhiteCol,border_color: text_color_02) : CustomStyle.customBoxDeco(sub_color),
-                    padding: EdgeInsets.symmetric(vertical: CustomStyle.getHeight(5.0),horizontal: CustomStyle.getWidth(10.0)),
-                    margin: EdgeInsets.only(right: CustomStyle.getWidth(10.0)),
-                    child:Text(
-                        Strings.of(context)?.get("receipt_reg_title")??"Not Found",
-                      style: CustomStyle.CustomFont(styleFontSize10, tvReceipt.value ? text_color_02 : styleWhiteCol),
-                    )
-                  ),
-                ),
-                orderItem.value?.chargeType == "01" ?
-                InkWell(
-                  onTap: () async {
-                    await goToTax();
-                  },
-                  child: Container(
-                      decoration: tvTax.value ? CustomStyle.customBoxDeco(styleWhiteCol,border_color: text_color_02) : CustomStyle.customBoxDeco(sub_color),
-                      padding: EdgeInsets.symmetric(vertical: CustomStyle.getHeight(5.0),horizontal: CustomStyle.getWidth(10.0)),
-                      child:Text(
-                          Strings.of(context)?.get("tax_title")??"Not Found",
-                        style: CustomStyle.CustomFont(styleFontSize10, tvTax.value ? text_color_02 : styleWhiteCol),
-                      )
-                  ),
-                ):const SizedBox(),
-              ]
-            ) : const SizedBox()
-          ]
+            crossAxisAlignment: CrossAxisAlignment.center,
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children:[
+              Text(
+                "${orderItem.value?.returnYn == "Y"?"왕복":"편도"}  /  ${orderItem.value?.mixYn == "Y"?"혼적":"독차"}",
+                style: CustomStyle.CustomFont(styleFontSize12, text_color_02),
+              ),
+              orderItem.value?.allocState == "05"?
+              Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children:[
+                    InkWell(
+                      onTap: () async {
+                        await goToReceipt();
+                      },
+                      child: Container(
+                          decoration: tvReceipt.value ? CustomStyle.customBoxDeco(styleWhiteCol,border_color: text_color_02) : CustomStyle.customBoxDeco(sub_color),
+                          padding: EdgeInsets.symmetric(vertical: CustomStyle.getHeight(5.0),horizontal: CustomStyle.getWidth(10.0)),
+                          margin: EdgeInsets.only(right: CustomStyle.getWidth(10.0)),
+                          child:Text(
+                            Strings.of(context)?.get("receipt_reg_title")??"Not Found",
+                            style: CustomStyle.CustomFont(styleFontSize10, tvReceipt.value ? text_color_02 : styleWhiteCol),
+                          )
+                      ),
+                    ),
+                    orderItem.value?.chargeType == "01" ?
+                    InkWell(
+                      onTap: () async {
+                        await goToTax();
+                      },
+                      child: Container(
+                          decoration: tvTax.value ? CustomStyle.customBoxDeco(styleWhiteCol,border_color: text_color_02) : CustomStyle.customBoxDeco(sub_color),
+                          padding: EdgeInsets.symmetric(vertical: CustomStyle.getHeight(5.0),horizontal: CustomStyle.getWidth(10.0)),
+                          child:Text(
+                            Strings.of(context)?.get("tax_title")??"Not Found",
+                            style: CustomStyle.CustomFont(styleFontSize10, tvTax.value ? text_color_02 : styleWhiteCol),
+                          )
+                      ),
+                    ):const SizedBox(),
+                  ]
+              ) : const SizedBox()
+            ]
         )
     );
   }
@@ -751,36 +772,46 @@ class _OrderDetailPageState extends State<OrderDetailPage>{
         children :[
           Container(
             width: MediaQuery.of(context).size.width,
-              padding: EdgeInsets.fromLTRB(CustomStyle.getWidth(20.0),CustomStyle.getHeight(5.0),CustomStyle.getWidth(20.0),CustomStyle.getWidth(0.0)),
-                child: Wrap(
-                  spacing: 5,
-                  runSpacing: 1,
-                  children: [
-                    (_type == "wayon"?orderItem.value?.sComName:orderItem.value?.eComName)?.isEmpty == false?
-                    Text(
-                        "${_type == "wayon"?orderItem.value?.sComName:orderItem.value?.eComName}  ",
-                        style: CustomStyle.CustomFont(styleFontSize12, text_color_01),
-                      overflow: TextOverflow.ellipsis,
-                    ):const SizedBox(),
-                    (_type == "wayon"?orderItem.value?.sStaff:orderItem.value?.eStaff)?.isEmpty == false?
-                    Text(
-                        "/  ${_type == "wayon" ? orderItem.value?.sStaff : orderItem.value?.eStaff}  ",
-                        style: CustomStyle.CustomFont(styleFontSize12, text_color_01),
-                      overflow: TextOverflow.ellipsis,
-                    ): const SizedBox(),
-                    (_type == "wayon" ? orderItem.value?.sTel : orderItem.value?.eTel)?.isEmpty == false?
-                    InkWell(
-                        onTap: (){
-                          launch("tel://${_type == "wayon" ? orderItem.value?.sTel : orderItem.value?.eTel}");
-                        },
-                        child: Text(
-                          "/  ${_type == "wayon" ? orderItem.value?.sTel : orderItem.value?.eTel}",
-                          style: CustomStyle.CustomFont(styleFontSize12, sub_color),
-                        )
-                    ): const SizedBox()
-                  ],
-                ),
+            padding: EdgeInsets.fromLTRB(CustomStyle.getWidth(20.0),CustomStyle.getHeight(5.0),CustomStyle.getWidth(20.0),CustomStyle.getWidth(0.0)),
+            child: Wrap(
+              spacing: 5,
+              runSpacing: 1,
+              children: [
+                (_type == "wayon"?orderItem.value?.sComName:orderItem.value?.eComName)?.isEmpty == false?
+                Text(
+                  "${_type == "wayon"?orderItem.value?.sComName:orderItem.value?.eComName}  ",
+                  style: CustomStyle.CustomFont(styleFontSize12, text_color_01),
+                  overflow: TextOverflow.ellipsis,
+                ):const SizedBox(),
+                (_type == "wayon"?orderItem.value?.sStaff:orderItem.value?.eStaff)?.isEmpty == false?
+                Text(
+                  "/  ${_type == "wayon" ? orderItem.value?.sStaff : orderItem.value?.eStaff}  ",
+                  style: CustomStyle.CustomFont(styleFontSize12, text_color_01),
+                  overflow: TextOverflow.ellipsis,
+                ): const SizedBox(),
+                (_type == "wayon" ? orderItem.value?.sTel : orderItem.value?.eTel)?.isEmpty == false?
+                InkWell(
+                    onTap: () async {
+                      if(io.Platform.isAndroid) {
+                        DeviceInfoPlugin deviceInfo = DeviceInfoPlugin();
+                        AndroidDeviceInfo info = await deviceInfo.androidInfo;
+                        if (info.version.sdkInt >= 23) {
+                          await PhoneCall.calling("${_type == "wayon" ? orderItem.value?.sTel : orderItem.value?.eTel}");
+                        }else{
+                          await launch("tel://${_type == "wayon" ? orderItem.value?.sTel : orderItem.value?.eTel}");
+                        }
+                      }else{
+                        await launch("tel://${_type == "wayon" ? orderItem.value?.sTel : orderItem.value?.eTel}");
+                      }
+                    },
+                    child: Text(
+                      "/  ${_type == "wayon" ? orderItem.value?.sTel : orderItem.value?.eTel}",
+                      style: CustomStyle.CustomFont(styleFontSize12, sub_color),
+                    )
+                ): const SizedBox()
+              ],
             ),
+          ),
 
           Container(
               padding:EdgeInsets.only(top: CustomStyle.getHeight(5.0),left: CustomStyle.getWidth(20.0)),
@@ -825,32 +856,32 @@ class _OrderDetailPageState extends State<OrderDetailPage>{
                 ),
                 const SizedBox(width: 10),
                 Expanded(
-                  flex: 1,
-                   child:ElevatedButton(
-                    style: ElevatedButton.styleFrom(
-                        primary: orderItem.value?.allocState != "04" && orderItem.value?.allocState != "05" && orderItem.value?.allocState != "20"? sub_color : text_color_02,
-                        onPrimary: orderItem.value?.allocState != "04" && orderItem.value?.allocState != "05" && orderItem.value?.allocState != "20"? sub_color : text_color_02,
-                        padding: EdgeInsets.symmetric(vertical: CustomStyle.getHeight(5.0)),
-                      shape: const RoundedRectangleBorder(
-                          borderRadius: BorderRadius.all(Radius.circular(5.0))
-                      ),
-                    ),
-                    onPressed: () {
-                      if(orderItem.value?.allocState != "04" && orderItem.value?.allocState != "05" && orderItem.value?.allocState != "20") showStartOrder();
-                    },
-                    child: Text(
-                      orderItem.value?.allocState == "04"? "출발 (${app_util.Util.getDateStrToStr(orderItem.value?.startDate, "MM.dd HH:mm")})"
-                      : orderItem.value?.allocState == "05"? "출발 (${app_util.Util.getDateStrToStr(orderItem.value?.startDate, "MM.dd HH:mm")})"
-                      : Strings.of(context)?.get("order_start")??"Not Found",
-                      style: CustomStyle.loginTitleFont(),
+                    flex: 1,
+                    child:ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                          primary: orderItem.value?.allocState != "04" && orderItem.value?.allocState != "05" && orderItem.value?.allocState != "20"? sub_color : text_color_02,
+                          onPrimary: orderItem.value?.allocState != "04" && orderItem.value?.allocState != "05" && orderItem.value?.allocState != "20"? sub_color : text_color_02,
+                          padding: EdgeInsets.symmetric(vertical: CustomStyle.getHeight(5.0)),
+                          shape: const RoundedRectangleBorder(
+                              borderRadius: BorderRadius.all(Radius.circular(5.0))
+                          ),
+                        ),
+                        onPressed: () {
+                          if(orderItem.value?.allocState != "04" && orderItem.value?.allocState != "05" && orderItem.value?.allocState != "20") showStartOrder();
+                        },
+                        child: Text(
+                          orderItem.value?.allocState == "04"? "출발 (${app_util.Util.getDateStrToStr(orderItem.value?.startDate, "MM.dd HH:mm")})"
+                              : orderItem.value?.allocState == "05"? "출발 (${app_util.Util.getDateStrToStr(orderItem.value?.startDate, "MM.dd HH:mm")})"
+                              : Strings.of(context)?.get("order_start")??"Not Found",
+                          style: CustomStyle.loginTitleFont(),
+                        )
                     )
-                )
                 )
               ]) : ElevatedButton(
               style: ElevatedButton.styleFrom(
-                  primary: orderItem.value?.allocState != "05" ? sub_color : text_color_02,
-                  onPrimary: orderItem.value?.allocState != "05" ? sub_color : text_color_02,
-                  padding: EdgeInsets.symmetric(vertical: CustomStyle.getHeight(5.0)),
+                primary: orderItem.value?.allocState != "05" ? sub_color : text_color_02,
+                onPrimary: orderItem.value?.allocState != "05" ? sub_color : text_color_02,
+                padding: EdgeInsets.symmetric(vertical: CustomStyle.getHeight(5.0)),
                 shape: const RoundedRectangleBorder(
                     borderRadius: BorderRadius.all(Radius.circular(5.0))
                 ),
@@ -863,9 +894,9 @@ class _OrderDetailPageState extends State<OrderDetailPage>{
                 }
               },
               child: Text(
-              orderItem.value?.allocState == "05"?
-              "도착 (${app_util.Util.getDateStrToStr(orderItem.value?.finishDate, "MM.dd HH:mm")})"
-                  :Strings.of(context)?.get("order_end")??"Not Found",
+                orderItem.value?.allocState == "05"?
+                "도착 (${app_util.Util.getDateStrToStr(orderItem.value?.finishDate, "MM.dd HH:mm")})"
+                    :Strings.of(context)?.get("order_end")??"Not Found",
                 style: CustomStyle.loginTitleFont(),
               )
           ),
@@ -922,39 +953,39 @@ class _OrderDetailPageState extends State<OrderDetailPage>{
     await pr?.show();
     var app = await controller.getUserInfo();
     await DioService.dioClient(header: true).getOrderList2(app.authorization, orderItem.value?.allocId, orderItem.value?.orderId).then((it) async {
-    ReturnMap _response = DioService.dioResponse(it);
-    await pr?.hide();
-        logger.d("goToPay() _response -> ${_response.status} // ${_response.resultMap}");
-        if(_response.status == "200") {
-          var list;
-          list = _response.resultMap?["data"] as List;
-          if(list != null && list.isNotEmpty) {
-            OrderModel? gData = OrderModel.fromJSON(list[0]);
-            if(gData?.finishYn == "N") {
-              if(!tvPay.value) {
-                if (app.bankchkDate == null) {
-                  app_util.Util.snackbar(context, "계좌정보를 확인해 주세요. 등록된 계좌정보가 없거나 확인되지 않은 계좌입니다.");
-                } else {
-                  showPay(showPayConfirm);
-                }
-              }else{
-                if(!(gData.loadStatus == "0")) {
-                  if(!(gData.reqPayYN == "N")) {
-                    showFastClear();
-                  }else{
-                    showFastGoing();
-                  }
-                }else if(!(gData.reqPayYN == "N")) {
-                  showFastClear();
-                }
+      ReturnMap _response = DioService.dioResponse(it);
+      await pr?.hide();
+      logger.d("goToPay() _response -> ${_response.status} // ${_response.resultMap}");
+      if(_response.status == "200") {
+        var list;
+        list = _response.resultMap?["data"] as List;
+        if(list != null && list.isNotEmpty) {
+          OrderModel? gData = OrderModel.fromJSON(list[0]);
+          if(gData?.finishYn == "N") {
+            if(!tvPay.value) {
+              if (app.bankchkDate == null) {
+                app_util.Util.snackbar(context, "계좌정보를 확인해 주세요. 등록된 계좌정보가 없거나 확인되지 않은 계좌입니다.");
+              } else {
+                showPay(showPayConfirm);
               }
             }else{
-              showNotFast();
+              if(!(gData.loadStatus == "0")) {
+                if(!(gData.reqPayYN == "N")) {
+                  showFastClear();
+                }else{
+                  showFastGoing();
+                }
+              }else if(!(gData.reqPayYN == "N")) {
+                showFastClear();
+              }
             }
           }else{
-            showNotDetail();
+            showNotFast();
           }
+        }else{
+          showNotDetail();
         }
+      }
     }).catchError((Object obj) async {
       await pr?.hide();
       switch (obj.runtimeType) {
@@ -1051,18 +1082,18 @@ class _OrderDetailPageState extends State<OrderDetailPage>{
     var app = await controller.getUserInfo();
     await pr?.show();
     await DioService.dioClient(header: true).sendPay(app.authorization, app.vehicId, orderItem.value?.orderId, orderItem.value?.allocId).then((it) async {
-    await pr?.hide();
-    ReturnMap _response = DioService.dioResponse(it);
-    if(_response.status == "200") {
-      orderItem.value?.reqPayYN = "Y";
-      setCalcView();
-      app_util.Util.toast("빠른지급 신청이 완료되었습니다.");
-      if(orderItem.value?.receiptYn == "N") {
-        await showNextReceiptDialog();
+      await pr?.hide();
+      ReturnMap _response = DioService.dioResponse(it);
+      if(_response.status == "200") {
+        orderItem.value?.reqPayYN = "Y";
+        setCalcView();
+        app_util.Util.toast("빠른지급 신청이 완료되었습니다.");
+        if(orderItem.value?.receiptYn == "N") {
+          await showNextReceiptDialog();
+        }
+      }else{
+        app_util.Util.toast(_response.message);
       }
-    }else{
-      app_util.Util.toast(_response.message);
-    }
 
     }).catchError((Object obj) async {
       await pr?.hide();
@@ -1089,9 +1120,9 @@ class _OrderDetailPageState extends State<OrderDetailPage>{
         Strings.of(context)?.get("confirm")??"Not Found",
             () => Navigator.of(context).pop(false),
             () async {
-              await goToReceipt();
-              //Navigator.of(context).pop(false);
-            }
+          await goToReceipt();
+          //Navigator.of(context).pop(false);
+        }
     );
   }
 
@@ -1100,26 +1131,26 @@ class _OrderDetailPageState extends State<OrderDetailPage>{
     var app = await App().getUserInfo();
     await pr?.show();
     await DioService.dioClient(header: true).checkAccNm(app.authorization, app.vehicId, app.bankCode, app.bankAccount,app.bankCnnm).then((it) async {
-    await pr?.hide();
-    ReturnMap _response = DioService.dioResponse(it);
+      await pr?.hide();
+      ReturnMap _response = DioService.dioResponse(it);
       if(_response.status == "200") {
         updateBank();
       }else{
         app_util.Util.toast(_response.message);
       }
     }).catchError((Object obj) async {
-    await pr?.hide();
-    switch (obj.runtimeType) {
-    case DioError:
-    // Here's the sample to get the failed response error code and message
-    final res = (obj as DioError).response;
-    logger.e("order_detail_page.dart checkAccNm() Error Default: ${res?.statusCode} -> ${res?.statusMessage}");
-    openOkBox(context,"${res?.statusCode} / ${res?.statusMessage}",Strings.of(context)?.get("confirm")??"Error!!",() {Navigator.of(context).pop(false);});
-    break;
-    default:
-    logger.e("order_detail_page.dart checkAccNm() Error Default:");
-    break;
-    }
+      await pr?.hide();
+      switch (obj.runtimeType) {
+        case DioError:
+        // Here's the sample to get the failed response error code and message
+          final res = (obj as DioError).response;
+          logger.e("order_detail_page.dart checkAccNm() Error Default: ${res?.statusCode} -> ${res?.statusMessage}");
+          openOkBox(context,"${res?.statusCode} / ${res?.statusMessage}",Strings.of(context)?.get("confirm")??"Error!!",() {Navigator.of(context).pop(false);});
+          break;
+        default:
+          logger.e("order_detail_page.dart checkAccNm() Error Default:");
+          break;
+      }
     });
   }
 
@@ -1128,13 +1159,13 @@ class _OrderDetailPageState extends State<OrderDetailPage>{
     var app = await App().getUserInfo();
     await pr?.show();
     await DioService.dioClient(header: true).updateBank(app.authorization, app.bankCode, app.bankCnnm, app.bankAccount).then((it) async {
-    await pr?.hide();
-    ReturnMap _response = DioService.dioResponse(it);
-    logger.d("updateBank() _response -> ${_response.status} // ${_response.resultMap}");
-    if(_response.status == "200") {
-      UserModel user = await App().getUserInfo();
-      //user.bankchkDate = app_util.Util.getDateCalToStr(DateTime.now(), "yyyy-MM-dd HH:mm:ss");
-      user.bankchkDate = app_util.Util.getCurrentDate("yyyy-MM-dd HH:mm:ss");
+      await pr?.hide();
+      ReturnMap _response = DioService.dioResponse(it);
+      logger.d("updateBank() _response -> ${_response.status} // ${_response.resultMap}");
+      if(_response.status == "200") {
+        UserModel user = await App().getUserInfo();
+        //user.bankchkDate = app_util.Util.getDateCalToStr(DateTime.now(), "yyyy-MM-dd HH:mm:ss");
+        user.bankchkDate = app_util.Util.getCurrentDate("yyyy-MM-dd HH:mm:ss");
         App().setUserInfo(user);
         await sendPay();
         setState(() {});
@@ -1142,18 +1173,18 @@ class _OrderDetailPageState extends State<OrderDetailPage>{
         app_util.Util.toast(_response.message);
       }
     }).catchError((Object obj) async {
-    await pr?.hide();
-    switch (obj.runtimeType) {
-    case DioError:
-    // Here's the sample to get the failed response error code and message
-    final res = (obj as DioError).response;
-      logger.e("order_detail_page.dart updateBank() Error Default: ${res?.statusCode} -> ${res?.statusMessage}");
-      openOkBox(context,"${res?.statusCode} / ${res?.statusMessage}",Strings.of(context)?.get("confirm")??"Error!!",() {Navigator.of(context).pop(false);});
-    break;
-    default:
-      logger.e("order_detail_page.dart updateBank() Error Default:");
-    break;
-    }
+      await pr?.hide();
+      switch (obj.runtimeType) {
+        case DioError:
+        // Here's the sample to get the failed response error code and message
+          final res = (obj as DioError).response;
+          logger.e("order_detail_page.dart updateBank() Error Default: ${res?.statusCode} -> ${res?.statusMessage}");
+          openOkBox(context,"${res?.statusCode} / ${res?.statusMessage}",Strings.of(context)?.get("confirm")??"Error!!",() {Navigator.of(context).pop(false);});
+          break;
+        default:
+          logger.e("order_detail_page.dart updateBank() Error Default:");
+          break;
+      }
     });
   }
 
@@ -1181,324 +1212,324 @@ class _OrderDetailPageState extends State<OrderDetailPage>{
                   borderRadius: BorderRadius.all(Radius.circular(0.0))
               ),
               title: Container(
-                padding: EdgeInsets.symmetric(vertical: CustomStyle.getHeight(15.0),horizontal: CustomStyle.getWidth(15.0)),
-                decoration: CustomStyle.customBoxDeco(main_color,radius: 0),
-                child: Text(
-                '${Strings.of(context)?.get("pay_title")}',
-                  style: CustomStyle.CustomFont(styleFontSize16, styleWhiteCol),
-                )
+                  padding: EdgeInsets.symmetric(vertical: CustomStyle.getHeight(15.0),horizontal: CustomStyle.getWidth(15.0)),
+                  decoration: CustomStyle.customBoxDeco(main_color,radius: 0),
+                  child: Text(
+                    '${Strings.of(context)?.get("pay_title")}',
+                    style: CustomStyle.CustomFont(styleFontSize16, styleWhiteCol),
+                  )
               ),
               content: Obx((){
                 return SingleChildScrollView(
-                  child: SizedBox(
-                      width: MediaQuery.of(context).size.width,
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.center,
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Container(
-                            padding:EdgeInsets.symmetric(horizontal: CustomStyle.getWidth(5.0)),
-                            margin: EdgeInsets.only(top: CustomStyle.getHeight(10.0)),
-                            child: Row(
-                              children: [
-                                Expanded(
-                                  flex: 3,
-                                  child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
+                    child: SizedBox(
+                        width: MediaQuery.of(context).size.width,
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.center,
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Container(
+                                padding:EdgeInsets.symmetric(horizontal: CustomStyle.getWidth(5.0)),
+                                margin: EdgeInsets.only(top: CustomStyle.getHeight(10.0)),
+                                child: Row(
+                                  children: [
+                                    Expanded(
+                                      flex: 3,
+                                      child: Column(
+                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                        children: [
+                                          Text(
+                                            "빠른 운임 : $charge원",
+                                            style: CustomStyle.CustomFont(styleFontSize12, addr_zip_no),
+                                          ),
+                                          Text(
+                                            "(사용료 ${app_util.Util.getInCodeCommaWon(app_util.Util.getPayFee(orderItem.value?.sellCharge, orderItem.value?.reqPayFee))}원 제외)",
+                                            style: CustomStyle.CustomFont(styleFontSize12, addr_zip_no),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                    Expanded(
+                                      flex: 1,
+                                      child: Text(
+                                        " / ",
+                                        textAlign: TextAlign.center,
+                                        style: CustomStyle.CustomFont(styleFontSize18, text_color_01),
+                                      ),
+                                    ),
+                                    Expanded(
+                                      flex: 3,
+                                      child: Text(
+                                        "일반운임 : ${app_util.Util.getInCodeCommaWon(orderItem.value?.sellCharge)}원",
+                                        style: CustomStyle.CustomFont(styleFontSize12, text_color_01),
+                                      ),
+                                    )
+                                  ],
+                                )
+                            ),
+                            CustomStyle.sizedBoxHeight(CustomStyle.getHeight(10.0)),
+                            Container(
+                                padding:EdgeInsets.symmetric(horizontal: CustomStyle.getWidth(5.0)),
+                                child: Row(
+                                    crossAxisAlignment: CrossAxisAlignment.center,
+                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                     children: [
                                       Text(
-                                        "빠른 운임 : $charge원",
-                                        style: CustomStyle.CustomFont(styleFontSize12, addr_zip_no),
+                                        "계좌정보",
+                                        style: CustomStyle.CustomFont(styleFontSize12, text_color_01),
                                       ),
-                                      Text(
-                                        "(사용료 ${app_util.Util.getInCodeCommaWon(app_util.Util.getPayFee(orderItem.value?.sellCharge, orderItem.value?.reqPayFee))}원 제외)",
-                                        style: CustomStyle.CustomFont(styleFontSize12, addr_zip_no),
+                                      InkWell(
+                                          onTap: () async {
+                                            var app = await App().getUserInfo();
+                                            ShowBankCheckWidget(context: context,callback: _callback).showBankCheckDialog(app);
+                                          },
+                                          child: Container(
+                                              decoration: CustomStyle.customBoxDeco(sub_color),
+                                              padding: EdgeInsets.symmetric(vertical: CustomStyle.getHeight(5.0),horizontal: CustomStyle.getWidth(10.0)),
+                                              child:Text(
+                                                  "계좌정보변경",
+                                                  style: CustomStyle.CustomFont(styleFontSize10, styleWhiteCol)
+                                              )
+                                          )
                                       ),
-                                    ],
-                                  ),
+                                    ]
+                                )
+                            ),
+                            Container(
+                                margin: const EdgeInsets.all(10.0),
+                                decoration: BoxDecoration(
+                                  border: CustomStyle.borderAllBase(),
+                                ),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                                  children: [
+                                    Row(
+                                        children: [
+                                          Expanded(
+                                              flex: 1,
+                                              child: Container(
+                                                padding: const EdgeInsets.all(10.0),
+                                                decoration: BoxDecoration(
+                                                    border: Border(
+                                                        bottom: BorderSide(
+                                                            color: line,
+                                                            width: CustomStyle.getWidth(1.0)
+                                                        ),
+                                                        right: BorderSide(
+                                                            color: line,
+                                                            width: CustomStyle.getWidth(1.0)
+                                                        )
+                                                    )
+                                                ),
+                                                child: Text(
+                                                  "은행명",
+                                                  textAlign: TextAlign.center,
+                                                  style: CustomStyle.CustomFont(styleFontSize12, text_color_01),
+                                                ),
+                                              )
+                                          ),
+                                          Expanded(
+                                              flex: 3,
+                                              child: Container(
+                                                  padding: const EdgeInsets.all(10.0),
+                                                  decoration: BoxDecoration(
+                                                      border: Border(
+                                                        bottom: BorderSide(
+                                                            color: line,
+                                                            width: CustomStyle.getWidth(1.0)
+                                                        ),
+                                                      )
+                                                  ),
+                                                  child: Text(
+                                                    "${getBankName(app.value.bankCode??"")} ",
+                                                    textAlign: TextAlign.center,
+                                                    style: CustomStyle.CustomFont(styleFontSize12, text_color_01),
+                                                  )
+                                              )
+                                          )
+                                        ]
+                                    ),
+                                    Row(
+                                        children: [
+                                          Expanded(
+                                              flex: 1,
+                                              child: Container(
+                                                padding: const EdgeInsets.all(10.0),
+                                                decoration: BoxDecoration(
+                                                    border: Border(
+                                                        bottom: BorderSide(
+                                                            color: line,
+                                                            width: CustomStyle.getWidth(1.0)
+                                                        ),
+                                                        right: BorderSide(
+                                                            color: line,
+                                                            width: CustomStyle.getWidth(1.0)
+                                                        )
+                                                    )
+                                                ),
+                                                child: Text(
+                                                  "계좌번호",
+                                                  textAlign: TextAlign.center,
+                                                  style: CustomStyle.CustomFont(styleFontSize12, text_color_01),
+                                                ),
+                                              )
+                                          ),
+                                          Expanded(
+                                              flex: 3,
+                                              child: Container(
+                                                  padding: const EdgeInsets.all(10.0),
+                                                  decoration: BoxDecoration(
+                                                      border: Border(
+                                                        bottom: BorderSide(
+                                                            color: line,
+                                                            width: CustomStyle.getWidth(1.0)
+                                                        ),
+                                                      )
+                                                  ),
+                                                  child: Text(
+                                                    "${app.value.bankAccount??"-"} ",
+                                                    textAlign: TextAlign.center,
+                                                    style: CustomStyle.CustomFont(styleFontSize12, text_color_01),
+                                                  )
+                                              )
+                                          )
+                                        ]
+                                    ),
+                                    Row(
+                                        children: [
+                                          Expanded(
+                                              flex: 1,
+                                              child: Container(
+                                                padding: const EdgeInsets.all(10.0),
+                                                decoration: BoxDecoration(
+                                                    border: Border(
+                                                        right: BorderSide(
+                                                            color: line,
+                                                            width: CustomStyle.getWidth(1.0)
+                                                        )
+                                                    )
+                                                ),
+                                                child: Text(
+                                                  "예금주",
+                                                  textAlign: TextAlign.center,
+                                                  style: CustomStyle.CustomFont(styleFontSize12, text_color_01),
+                                                ),
+                                              )
+                                          ),
+                                          Expanded(
+                                              flex: 3,
+                                              child: Container(
+                                                  padding: const EdgeInsets.all(10.0),
+                                                  child: Text(
+                                                    "${app.value.bankCnnm??"-"} ",
+                                                    textAlign: TextAlign.center,
+                                                    style: CustomStyle.CustomFont(styleFontSize12, text_color_01),
+                                                  )
+                                              )
+                                          )
+                                        ]
+                                    ),
+                                  ],
+                                )
+                            ),
+                            Container(
+                                margin: EdgeInsets.symmetric(horizontal: CustomStyle.getWidth(10.w)),
+                                child: Row(
+                                    mainAxisAlignment: MainAxisAlignment.spaceAround,
+                                    crossAxisAlignment: CrossAxisAlignment.center,
+                                    children :[
+                                      Expanded(
+                                          flex: 7,
+                                          child: Wrap(
+                                              direction: Axis.horizontal,
+                                              alignment: WrapAlignment.start,
+                                              crossAxisAlignment: WrapCrossAlignment.center,
+                                              children: [
+                                                Text(
+                                                  "위와 같이 로지스링크에 빠른운임 ",
+                                                  textAlign: TextAlign.center,
+                                                  style: CustomStyle.CustomFont(styleFontSize12, text_color_01),
+                                                ),
+                                                Text(
+                                                  charge,
+                                                  textAlign: TextAlign.center,
+                                                  style: CustomStyle.CustomFont(styleFontSize12, addr_zip_no),
+                                                ),
+                                                Text(
+                                                  "원을 신청합니다.",
+                                                  textAlign: TextAlign.center,
+                                                  style: CustomStyle.CustomFont(styleFontSize12, text_color_01),
+                                                )
+                                              ]
+                                          )
+                                      ),
+                                      Expanded(
+                                          flex: 2,
+                                          child: Row(
+                                              children:[
+                                                Text(
+                                                  "동의",
+                                                  style: CustomStyle.CustomFont(styleFontSize10, sub_color),
+                                                ),
+                                                Checkbox(
+                                                    value: _isChecked.value,
+                                                    materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                                                    onChanged: (value) {
+                                                      setState(() {
+                                                        _isChecked.value = value!;
+                                                      });
+                                                    }
+                                                )
+                                              ]
+                                          )
+                                      )
+                                    ]
+                                )
+                            ),
+                            CustomStyle.sizedBoxHeight(10.0),
+                            Row(
+                              children: [
+                                Expanded(
+                                    flex: 2,
+                                    child: InkWell(
+                                        onTap: (){
+                                          Navigator.of(context).pop();
+                                        },
+                                        child: Container(
+                                            decoration: CustomStyle.customBoxDeco(cancel_btn,radius: 0),
+                                            padding: EdgeInsets.symmetric(vertical: CustomStyle.getHeight(15.0)),
+                                            child:Text(
+                                              "취소",
+                                              textAlign: TextAlign.center,
+                                              style: CustomStyle.CustomFont(styleFontSize16, styleWhiteCol),
+                                            )
+                                        )
+                                    )
                                 ),
                                 Expanded(
-                                  flex: 1,
-                                  child: Text(
-                                    " / ",
-                                    textAlign: TextAlign.center,
-                                    style: CustomStyle.CustomFont(styleFontSize18, text_color_01),
-                                  ),
-                                ),
-                                Expanded(
-                                  flex: 3,
-                                  child: Text(
-                                    "일반운임 : ${app_util.Util.getInCodeCommaWon(orderItem.value?.sellCharge)}원",
-                                    style: CustomStyle.CustomFont(styleFontSize12, text_color_01),
-                                  ),
+                                    flex: 4,
+                                    child: InkWell(
+                                        onTap: (){
+                                          confirm(_showPayCallback);
+                                        },
+                                        child: Container(
+                                            decoration: CustomStyle.customBoxDeco(main_color,radius: 0),
+                                            padding: EdgeInsets.symmetric(vertical: CustomStyle.getHeight(15.0)),
+                                            child:Text(
+                                              "빠른지급신청",
+                                              textAlign: TextAlign.center,
+                                              style: CustomStyle.CustomFont(styleFontSize16, styleWhiteCol),
+                                            )
+                                        )
+                                    )
                                 )
                               ],
                             )
-                          ),
-                          CustomStyle.sizedBoxHeight(CustomStyle.getHeight(10.0)),
-                          Container(
-                              padding:EdgeInsets.symmetric(horizontal: CustomStyle.getWidth(5.0)),
-                            child: Row(
-                                crossAxisAlignment: CrossAxisAlignment.center,
-                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                children: [
-                                  Text(
-                                    "계좌정보",
-                                    style: CustomStyle.CustomFont(styleFontSize12, text_color_01),
-                                  ),
-                                  InkWell(
-                                    onTap: () async {
-                                      var app = await App().getUserInfo();
-                                      ShowBankCheckWidget(context: context,callback: _callback).showBankCheckDialog(app);
-                                    },
-                                    child: Container(
-                                        decoration: CustomStyle.customBoxDeco(sub_color),
-                                        padding: EdgeInsets.symmetric(vertical: CustomStyle.getHeight(5.0),horizontal: CustomStyle.getWidth(10.0)),
-                                        child:Text(
-                                            "계좌정보변경",
-                                            style: CustomStyle.CustomFont(styleFontSize10, styleWhiteCol)
-                                        )
-                                    )
-                                  ),
-                                ]
-                            )
-                          ),
-                          Container(
-                              margin: const EdgeInsets.all(10.0),
-                              decoration: BoxDecoration(
-                                border: CustomStyle.borderAllBase(),
-                              ),
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.stretch,
-                                children: [
-                                  Row(
-                                      children: [
-                                        Expanded(
-                                            flex: 1,
-                                            child: Container(
-                                              padding: const EdgeInsets.all(10.0),
-                                              decoration: BoxDecoration(
-                                                  border: Border(
-                                                      bottom: BorderSide(
-                                                          color: line,
-                                                          width: CustomStyle.getWidth(1.0)
-                                                      ),
-                                                      right: BorderSide(
-                                                          color: line,
-                                                          width: CustomStyle.getWidth(1.0)
-                                                      )
-                                                  )
-                                              ),
-                                              child: Text(
-                                                "은행명",
-                                                textAlign: TextAlign.center,
-                                                style: CustomStyle.CustomFont(styleFontSize12, text_color_01),
-                                              ),
-                                            )
-                                        ),
-                                        Expanded(
-                                            flex: 3,
-                                            child: Container(
-                                                padding: const EdgeInsets.all(10.0),
-                                                decoration: BoxDecoration(
-                                                    border: Border(
-                                                      bottom: BorderSide(
-                                                          color: line,
-                                                          width: CustomStyle.getWidth(1.0)
-                                                      ),
-                                                    )
-                                                ),
-                                                child: Text(
-                                                  "${getBankName(app.value.bankCode??"")} ",
-                                                  textAlign: TextAlign.center,
-                                                  style: CustomStyle.CustomFont(styleFontSize12, text_color_01),
-                                                )
-                                            )
-                                        )
-                                      ]
-                                  ),
-                                  Row(
-                                      children: [
-                                        Expanded(
-                                            flex: 1,
-                                            child: Container(
-                                              padding: const EdgeInsets.all(10.0),
-                                              decoration: BoxDecoration(
-                                                  border: Border(
-                                                      bottom: BorderSide(
-                                                          color: line,
-                                                          width: CustomStyle.getWidth(1.0)
-                                                      ),
-                                                      right: BorderSide(
-                                                          color: line,
-                                                          width: CustomStyle.getWidth(1.0)
-                                                      )
-                                                  )
-                                              ),
-                                              child: Text(
-                                                "계좌번호",
-                                                textAlign: TextAlign.center,
-                                                style: CustomStyle.CustomFont(styleFontSize12, text_color_01),
-                                              ),
-                                            )
-                                        ),
-                                        Expanded(
-                                            flex: 3,
-                                            child: Container(
-                                                padding: const EdgeInsets.all(10.0),
-                                                decoration: BoxDecoration(
-                                                    border: Border(
-                                                      bottom: BorderSide(
-                                                          color: line,
-                                                          width: CustomStyle.getWidth(1.0)
-                                                      ),
-                                                    )
-                                                ),
-                                                child: Text(
-                                                  "${app.value.bankAccount??"-"} ",
-                                                  textAlign: TextAlign.center,
-                                                  style: CustomStyle.CustomFont(styleFontSize12, text_color_01),
-                                                )
-                                            )
-                                        )
-                                      ]
-                                  ),
-                                  Row(
-                                      children: [
-                                        Expanded(
-                                            flex: 1,
-                                            child: Container(
-                                              padding: const EdgeInsets.all(10.0),
-                                              decoration: BoxDecoration(
-                                                  border: Border(
-                                                      right: BorderSide(
-                                                          color: line,
-                                                          width: CustomStyle.getWidth(1.0)
-                                                      )
-                                                  )
-                                              ),
-                                              child: Text(
-                                                "예금주",
-                                                textAlign: TextAlign.center,
-                                                style: CustomStyle.CustomFont(styleFontSize12, text_color_01),
-                                              ),
-                                            )
-                                        ),
-                                        Expanded(
-                                            flex: 3,
-                                            child: Container(
-                                                padding: const EdgeInsets.all(10.0),
-                                                child: Text(
-                                                  "${app.value.bankCnnm??"-"} ",
-                                                  textAlign: TextAlign.center,
-                                                  style: CustomStyle.CustomFont(styleFontSize12, text_color_01),
-                                                )
-                                            )
-                                        )
-                                      ]
-                                  ),
-                                ],
-                              )
-                          ),
-                          Container(
-                            margin: EdgeInsets.symmetric(horizontal: CustomStyle.getWidth(10.w)),
-                              child: Row(
-                                  mainAxisAlignment: MainAxisAlignment.spaceAround,
-                                  crossAxisAlignment: CrossAxisAlignment.center,
-                                  children :[
-                                    Expanded(
-                                        flex: 7,
-                                        child: Wrap(
-                                            direction: Axis.horizontal,
-                                            alignment: WrapAlignment.start,
-                                            crossAxisAlignment: WrapCrossAlignment.center,
-                                            children: [
-                                              Text(
-                                                "위와 같이 로지스링크에 빠른운임 ",
-                                                textAlign: TextAlign.center,
-                                                style: CustomStyle.CustomFont(styleFontSize12, text_color_01),
-                                              ),
-                                              Text(
-                                                charge,
-                                                textAlign: TextAlign.center,
-                                                style: CustomStyle.CustomFont(styleFontSize12, addr_zip_no),
-                                              ),
-                                              Text(
-                                                "원을 신청합니다.",
-                                                textAlign: TextAlign.center,
-                                                style: CustomStyle.CustomFont(styleFontSize12, text_color_01),
-                                              )
-                                            ]
-                                        )
-                                    ),
-                                    Expanded(
-                                        flex: 2,
-                                        child: Row(
-                                            children:[
-                                              Text(
-                                                "동의",
-                                                style: CustomStyle.CustomFont(styleFontSize10, sub_color),
-                                              ),
-                                              Checkbox(
-                                                  value: _isChecked.value,
-                                                  materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                                                  onChanged: (value) {
-                                                    setState(() {
-                                                      _isChecked.value = value!;
-                                                    });
-                                                  }
-                                              )
-                                            ]
-                                        )
-                                    )
-                                  ]
-                              )
-                          ),
-                          CustomStyle.sizedBoxHeight(10.0),
-                          Row(
-                            children: [
-                              Expanded(
-                                flex: 2,
-                                child: InkWell(
-                                    onTap: (){
-                                      Navigator.of(context).pop();
-                                    },
-                                  child: Container(
-                                     decoration: CustomStyle.customBoxDeco(cancel_btn,radius: 0),
-                                      padding: EdgeInsets.symmetric(vertical: CustomStyle.getHeight(15.0)),
-                                      child:Text(
-                                          "취소",
-                                        textAlign: TextAlign.center,
-                                        style: CustomStyle.CustomFont(styleFontSize16, styleWhiteCol),
-                                      )
-                                  )
-                                )
-                              ),
-                              Expanded(
-                                flex: 4,
-                                child: InkWell(
-                                  onTap: (){
-                                    confirm(_showPayCallback);
-                                  },
-                                  child: Container(
-                                    decoration: CustomStyle.customBoxDeco(main_color,radius: 0),
-                                    padding: EdgeInsets.symmetric(vertical: CustomStyle.getHeight(15.0)),
-                                    child:Text(
-                                        "빠른지급신청",
-                                      textAlign: TextAlign.center,
-                                      style: CustomStyle.CustomFont(styleFontSize16, styleWhiteCol),
-                                    )
-                                  )
-                                )
-                              )
-                            ],
-                          )
-                        ],
-                      )
-                  )
+                          ],
+                        )
+                    )
                 );
               })
-            );
+          );
         }
     );
   }
@@ -1615,7 +1646,7 @@ class _OrderDetailPageState extends State<OrderDetailPage>{
       await pr?.hide();
       switch (obj.runtimeType) {
         case DioError:
-          // Here's the sample to get the failed response error code and message
+        // Here's the sample to get the failed response error code and message
           final res = (obj as DioError).response;
           logger.e("order_detail_page.dart getCheckOrderYn() Error Default: ${res?.statusCode} -> ${res?.statusMessage}");
           break;
@@ -1691,7 +1722,7 @@ class _OrderDetailPageState extends State<OrderDetailPage>{
       app_util.Util.toast("출발 및 도착 진행중에는 입차처리가 불가능합니다.");
     }
   }
-  
+
   void showStartOrder() {
     openCommonConfirmBox(
         context,
@@ -1700,9 +1731,9 @@ class _OrderDetailPageState extends State<OrderDetailPage>{
         Strings.of(context)?.get("confirm")??"Not Found",
             () => Navigator.of(context).pop(false),
             () async {
-              Navigator.of(context).pop(false);
-              await setOrderState("04", "상차지에서 출발했습니다.");
-            });
+          Navigator.of(context).pop(false);
+          await setOrderState("04", "상차지에서 출발했습니다.");
+        });
   }
 
   void showEndOrder() {
@@ -1713,7 +1744,7 @@ class _OrderDetailPageState extends State<OrderDetailPage>{
         Strings.of(context)?.get("confirm")??"Not Found",
             () => Navigator.of(context).pop(false),
             () async {
-              Navigator.of(context).pop(false);
+          Navigator.of(context).pop(false);
           await setOrderState("05", "하차지에 도착했습니다.");
         });
   }
@@ -1760,9 +1791,9 @@ class _OrderDetailPageState extends State<OrderDetailPage>{
       if(_response.status == "200") {
         if(_response.resultMap?["result"] == true) {
 
-            var list = _response.resultMap?["data"] as List;
-            List<OrderModel> itemsList = list.map((i) => OrderModel.fromJSON(i))
-                .toList();
+          var list = _response.resultMap?["data"] as List;
+          List<OrderModel> itemsList = list.map((i) => OrderModel.fromJSON(i))
+              .toList();
           if(itemsList.isNotEmpty) {
             orderItem.value = itemsList[0];
             await initView();
@@ -1838,14 +1869,14 @@ class _OrderDetailPageState extends State<OrderDetailPage>{
           } else {
             openOkBox(context, "삭제된 오더입니다.",
                 Strings.of(context)?.get("confirm") ?? "Not Found", () {
-                    Navigator.of(context).pop(false);
-                    Navigator.of(context).pop(false);
-            });
+                  Navigator.of(context).pop(false);
+                  Navigator.of(context).pop(false);
+                });
           }
-          }else{
+        }else{
           openOkBox(context, _response.resultMap?["msg"], Strings.of(context)?.get("close")??"Not Found", () => Navigator.of(context).pop(false));
         }
-        }else{
+      }else{
         openOkBox(context, _response.resultMap?["error_message"], Strings.of(context)?.get("close")??"Not Found", () => Navigator.of(context).pop(false));
       }
     }).catchError((Object obj) async {
@@ -1865,46 +1896,46 @@ class _OrderDetailPageState extends State<OrderDetailPage>{
   }
 
   Future<void> setOrderState(String code, String msg) async {
-      Logger logger = Logger();
-      await pr?.show();
-      var app = await controller.getUserInfo();
-      await DioService.dioClient(header: true).setOrderState(app.authorization, orderItem.value?.orderId, orderItem.value?.allocId, code).then((it) async {
-        await pr?.hide();
-        ReturnMap _response = DioService.dioResponse(it);
-        logger.d("setOrderState() _response -> ${_response.status} // ${_response.resultMap}");
-        if(_response.status == "200") {
-          if(_response.resultMap?["result"] == true) {
-            if(code == "04") {
-              await addAllocList();
-              await setDriverClick(code,orderItem.value?.sAddr,"N");
-            }else if(code == "05"){
-              orderItem.value?.allocState = code;
-              await removeAllocList();
-              await setDriverClick(code,orderItem.value?.eAddr,"N");
-            }
-            removeGeofence(code);
-            await getOrderDetail(orderItem.value?.allocId);
-            app_util.Util.toast(msg);
-          }else{
-            app_util.Util.toast(_response.resultMap?["msg"]);
+    Logger logger = Logger();
+    await pr?.show();
+    var app = await controller.getUserInfo();
+    await DioService.dioClient(header: true).setOrderState(app.authorization, orderItem.value?.orderId, orderItem.value?.allocId, code).then((it) async {
+      await pr?.hide();
+      ReturnMap _response = DioService.dioResponse(it);
+      logger.d("setOrderState() _response -> ${_response.status} // ${_response.resultMap}");
+      if(_response.status == "200") {
+        if(_response.resultMap?["result"] == true) {
+          if(code == "04") {
+            await addAllocList();
+            await setDriverClick(code,orderItem.value?.sAddr,"N");
+          }else if(code == "05"){
+            orderItem.value?.allocState = code;
+            await removeAllocList();
+            await setDriverClick(code,orderItem.value?.eAddr,"N");
           }
+          removeGeofence(code);
+          await getOrderDetail(orderItem.value?.allocId);
+          app_util.Util.toast(msg);
         }else{
           app_util.Util.toast(_response.resultMap?["msg"]);
         }
-      }).catchError((Object obj) async {
-        await pr?.hide();
-        switch (obj.runtimeType) {
-          case DioError:
-          // Here's the sample to get the failed response error code and message
-            final res = (obj as DioError).response;
-            logger.e("order_detail_page.dart setOrderState() Error Default: ${res?.statusCode} -> ${res?.statusCode} // ${res?.statusMessage} // ${res}");
-            openOkBox(context,"${res?.statusCode} / ${res?.statusMessage}",Strings.of(context)?.get("confirm")??"Error!!",() {Navigator.of(context).pop(false);});
-            break;
-          default:
-            logger.e("order_detail_page.dart setOrderState() Error Default:");
-            break;
-        }
-      });
+      }else{
+        app_util.Util.toast(_response.resultMap?["msg"]);
+      }
+    }).catchError((Object obj) async {
+      await pr?.hide();
+      switch (obj.runtimeType) {
+        case DioError:
+        // Here's the sample to get the failed response error code and message
+          final res = (obj as DioError).response;
+          logger.e("order_detail_page.dart setOrderState() Error Default: ${res?.statusCode} -> ${res?.statusCode} // ${res?.statusMessage} // ${res}");
+          openOkBox(context,"${res?.statusCode} / ${res?.statusMessage}",Strings.of(context)?.get("confirm")??"Error!!",() {Navigator.of(context).pop(false);});
+          break;
+        default:
+          logger.e("order_detail_page.dart setOrderState() Error Default:");
+          break;
+      }
+    });
   }
 
   Future<void> removeGeofence(String code) async {
@@ -1955,7 +1986,7 @@ class _OrderDetailPageState extends State<OrderDetailPage>{
           //print("locationUpdate() Error => ${res?.statusCode} // ${res?.statusMessage}");
           break;
         default:
-          //print("locationUpdate() Error Default => ");
+        //print("locationUpdate() Error Default => ");
           break;
       }
     });
@@ -1966,185 +1997,198 @@ class _OrderDetailPageState extends State<OrderDetailPage>{
     pr = app_util.Util.networkProgress(context);
     //openOkBox(context, msg, Strings.of(context)?.get("confirm")??"Error!!",() {Navigator.of(context).pop(false);});
     return WillPopScope(
-      onWillPop: () async {
-        FBroadcast.instance().broadcast(Const.INTENT_ORDER_REFRESH);
-        Navigator.of(context).pop({'code':200});
-        return false;
-      },
+        onWillPop: () async {
+          FBroadcast.instance().broadcast(Const.INTENT_ORDER_REFRESH);
+          Navigator.of(context).pop({'code':200});
+          return false;
+        },
         child: Scaffold(
-        backgroundColor: Theme.of(context).backgroundColor,
-        appBar: PreferredSize(
-            preferredSize: Size.fromHeight(CustomStyle.getHeight(50.0)),
-          child: AppBar(
-            centerTitle: true,
-            title: Text(
-                Strings.of(context)?.get("order_detail_title")??"Not Found",
-                style: CustomStyle.appBarTitleFont(styleFontSize16,styleWhiteCol)
-            ),
-            leading: IconButton(
-              onPressed: (){
-                FBroadcast.instance().broadcast(Const.INTENT_ORDER_REFRESH);
-                Navigator.of(context).pop({'code':200});
-              },
-              color: styleWhiteCol,
-              icon: const Icon(Icons.arrow_back),
-            ),
-          )
-        ),
-      body: SafeArea(
-        child: CustomScrollView(
-          slivers: [
-            SliverAppBar(
-              pinned: false,
-              snap: false,
-              floating: true,
-              expandedHeight: CustomStyle.getHeight(300.0),
-              flexibleSpace: FlexibleSpaceBar(
-               title: KakaoMap(
-                 onMapCreated: ((controller) async {
-
-                   setState(() {
-
-                     List<LatLng> bounds = List.empty(growable: true);
-                     if(orderItem.value?.sLat.isNull != true && orderItem.value?.sLon.isNull != null) {
-                       bounds.add(LatLng(orderItem.value!.sLat!, orderItem.value!.sLon!));
-                       markers.add(Marker(
-                           markerId: orderItem.value?.sComName ?? "상차지",
-                           markerImageSrc: 'https://t1.daumcdn.net/localimg/localimages/07/2018/pc/flagImg/blue_b.png',
-                           latLng: LatLng(orderItem.value!.sLat!, orderItem.value!.sLon!),
-                           infoWindowContent: '<div style="font: bold italic 0.5em 돋움체;">${orderItem.value?.sComName ?? "상차지"}</div>'
-                       ));
-                     }
-
-                     if(orderItem.value?.eLat.isNull != true && orderItem.value?.eLon.isNull != null) {
-                       bounds.add(LatLng(orderItem.value!.eLat!, orderItem.value!.eLon!));
-                       markers.add(Marker(
-                         markerId: orderItem.value?.eComName??"하차지",
-                         markerImageSrc: 'https://t1.daumcdn.net/localimg/localimages/07/2018/pc/flagImg/red_b.png',
-                         latLng: LatLng(orderItem.value!.eLat!, orderItem.value!.eLon!),
-                         infoWindowContent: '<div style="font: bold italic 0.5em 돋움체;">${orderItem.value?.eComName??"하차지"}</div>',
-                       ));
-                     }
-
-                     mapController = controller;
-                     mapController?.fitBounds(bounds);
-                     mapController?.setBounds();
-                   });
-
-                 }),
-                 currentLevel: 23,
-                 center: LatLng(35.81588719434526, 128.10472746046923),
-                 markers: markers.toList(),
-                 zoomControl: false,
-
-                 onMarkerTap: (markerId, latLng, zoomLevel) {
-                   setState(() {
-                     mapController?.setLevel(3);
-                     mapController?.panTo(latLng);
-                   });
-                 },
-               ),
-                titlePadding: const EdgeInsets.all(0.0),
-              ),
-              leading: const SizedBox(),
-            ),
-            SliverList(
-                delegate: SliverChildBuilderDelegate(
-                    (BuildContext context, int index){
-                      int? stopCnt = orderItem.value?.stopCount;
-                      return Obx((){
-                        return Container(
-                          padding: EdgeInsets.all(CustomStyle.getHeight(10.0)),
-                          child: Column(
-                            children: [
-                              // 길안내 버튼
-                              finished.value == false? getNaviBtn() : const SizedBox(),
-                              // 운송 상태 및 지불 방법
-                              getAllocStateAndPayType(),
-                              // 화물 적재 타입 및 운송 타입
-                              getMixAndReturnYN(),
-                              // 빠른 지급
-                              getPayType(),
-                              // 화물 정보 및 요청사항
-                              getOrderInfo(),
-                              // 상차 상태 및 운송 시간
-                              getCargoesStateAndTime("wayon"),
-                              // 운송 상세 정보
-                              getWayCargoesInfo("wayon"),
-                              CustomStyle.getDivider1(),
-                              //경유지 정보
-                              stopCnt.isNull? const SizedBox() : stopCnt! > 0 ? getStopPointFuture():const SizedBox(),
-                              CustomStyle.sizedBoxHeight(CustomStyle.getHeight(10.0)),
-                              getCargoesStateAndTime("wayoff"),
-                              getWayCargoesInfo("wayoff"),
-                              //하차 정보
-                            ],
-                          )
-                      );
-                      });
+            backgroundColor: Theme.of(context).backgroundColor,
+            appBar: PreferredSize(
+                preferredSize: Size.fromHeight(CustomStyle.getHeight(50.0)),
+                child: AppBar(
+                  centerTitle: true,
+                  title: Text(
+                      Strings.of(context)?.get("order_detail_title")??"Not Found",
+                      style: CustomStyle.appBarTitleFont(styleFontSize16,styleWhiteCol)
+                  ),
+                  leading: IconButton(
+                    onPressed: (){
+                      FBroadcast.instance().broadcast(Const.INTENT_ORDER_REFRESH);
+                      Navigator.of(context).pop({'code':200});
                     },
-                  childCount: 1
+                    color: styleWhiteCol,
+                    icon: const Icon(Icons.arrow_back),
+                  ),
                 )
             ),
-          ],
-        ),
-      ),
-      bottomNavigationBar: SizedBox(
-        height: CustomStyle.getHeight(60.0),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.center,
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            !finished.value == true ? Expanded(
-              flex: 1,
-              child: InkWell(
-                onTap: () async {
-                  await showCancelDialog();
-                },
-                child: Container(
-                  height: CustomStyle.getHeight(60.0),
-                  alignment: Alignment.center,
-                  decoration: BoxDecoration(
-                    color: cancel_btn
+            body: SafeArea(
+              child: CustomScrollView(
+                slivers: [
+                  SliverAppBar(
+                    pinned: false,
+                    snap: false,
+                    floating: true,
+                    expandedHeight: CustomStyle.getHeight(300.0),
+                    flexibleSpace: FlexibleSpaceBar(
+                      title: KakaoMap(
+                        onMapCreated: ((controller) async {
+
+                          setState(() {
+
+                            List<LatLng> bounds = List.empty(growable: true);
+                            if(orderItem.value?.sLat.isNull != true && orderItem.value?.sLon.isNull != null) {
+                              bounds.add(LatLng(orderItem.value!.sLat!, orderItem.value!.sLon!));
+                              markers.add(Marker(
+                                  markerId: orderItem.value?.sComName ?? "상차지",
+                                  markerImageSrc: 'https://t1.daumcdn.net/localimg/localimages/07/2018/pc/flagImg/blue_b.png',
+                                  latLng: LatLng(orderItem.value!.sLat!, orderItem.value!.sLon!),
+                                  infoWindowContent: '<div style="font: bold italic 0.5em 돋움체;">${orderItem.value?.sComName ?? "상차지"}</div>'
+                              ));
+                            }
+
+                            if(orderItem.value?.eLat.isNull != true && orderItem.value?.eLon.isNull != null) {
+                              bounds.add(LatLng(orderItem.value!.eLat!, orderItem.value!.eLon!));
+                              markers.add(Marker(
+                                markerId: orderItem.value?.eComName??"하차지",
+                                markerImageSrc: 'https://t1.daumcdn.net/localimg/localimages/07/2018/pc/flagImg/red_b.png',
+                                latLng: LatLng(orderItem.value!.eLat!, orderItem.value!.eLon!),
+                                infoWindowContent: '<div style="font: bold italic 0.5em 돋움체;">${orderItem.value?.eComName??"하차지"}</div>',
+                              ));
+                            }
+
+                            mapController = controller;
+                            mapController?.fitBounds(bounds);
+                            mapController?.setBounds();
+                          });
+
+                        }),
+                        currentLevel: 23,
+                        center: LatLng(35.81588719434526, 128.10472746046923),
+                        markers: markers.toList(),
+                        zoomControl: false,
+
+                        onMarkerTap: (markerId, latLng, zoomLevel) {
+                          setState(() {
+                            mapController?.setLevel(3);
+                            mapController?.panTo(latLng);
+                          });
+                        },
+                      ),
+                      titlePadding: const EdgeInsets.all(0.0),
+                    ),
+                    leading: const SizedBox(),
                   ),
-                  child: Text(
-                    textAlign: TextAlign.center,
-                      Strings.of(context)?.get("order_detail_cancel_driving")??"Not Found",
-                    style: CustomStyle.CustomFont(styleFontSize16, styleWhiteCol),
+                  SliverList(
+                      delegate: SliverChildBuilderDelegate(
+                              (BuildContext context, int index){
+                            int? stopCnt = orderItem.value?.stopCount;
+                            return Obx((){
+                              return Container(
+                                  padding: EdgeInsets.all(CustomStyle.getHeight(10.0)),
+                                  child: Column(
+                                    children: [
+                                      // 길안내 버튼
+                                      finished.value == false? getNaviBtn() : const SizedBox(),
+                                      // 운송 상태 및 지불 방법
+                                      getAllocStateAndPayType(),
+                                      // 화물 적재 타입 및 운송 타입
+                                      getMixAndReturnYN(),
+                                      // 빠른 지급
+                                      getPayType(),
+                                      // 화물 정보 및 요청사항
+                                      getOrderInfo(),
+                                      // 상차 상태 및 운송 시간
+                                      getCargoesStateAndTime("wayon"),
+                                      // 운송 상세 정보
+                                      getWayCargoesInfo("wayon"),
+                                      CustomStyle.getDivider1(),
+                                      //경유지 정보
+                                      stopCnt.isNull? const SizedBox() : stopCnt! > 0 ? getStopPointFuture():const SizedBox(),
+                                      CustomStyle.sizedBoxHeight(CustomStyle.getHeight(10.0)),
+                                      getCargoesStateAndTime("wayoff"),
+                                      getWayCargoesInfo("wayoff"),
+                                      //하차 정보
+                                    ],
+                                  )
+                              );
+                            });
+                          },
+                          childCount: 1
+                      )
                   ),
+                ],
+              ),
+            ),
+            bottomNavigationBar: SizedBox(
+                height: CustomStyle.getHeight(60.0),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    !finished.value == true ? Expanded(
+                        flex: 1,
+                        child: InkWell(
+                            onTap: () async {
+                              await showCancelDialog();
+                            },
+                            child: Container(
+                              height: CustomStyle.getHeight(60.0),
+                              alignment: Alignment.center,
+                              decoration: BoxDecoration(
+                                  color: cancel_btn
+                              ),
+                              child: Text(
+                                textAlign: TextAlign.center,
+                                Strings.of(context)?.get("order_detail_cancel_driving")??"Not Found",
+                                style: CustomStyle.CustomFont(styleFontSize16, styleWhiteCol),
+                              ),
+                            )
+                        )
+                    ) : SizedBox(),
+                    Expanded(
+                        flex: 1,
+                        child: InkWell(
+                            onTap: ()  async {
+                              var guest = await SP.getBoolean(Const.KEY_GUEST_MODE);
+                              if(guest){
+                                showGuestDialog();
+                                return;
+                              }
+                              if(io.Platform.isAndroid) {
+                                DeviceInfoPlugin deviceInfo = DeviceInfoPlugin();
+                                AndroidDeviceInfo info = await deviceInfo.androidInfo;
+                                if (info.version.sdkInt >= 23) {
+                                  await PhoneCall.calling("${orderItem.value?.sellStaffTel}");
+                                }else{
+                                  await launch("tel://${orderItem.value?.sellStaffTel}");
+                                }
+                              }else{
+                                await launch("tel://${orderItem.value?.sellStaffTel}");
+                              }
+                            },
+                            child: Container(
+                              height: CustomStyle.getHeight(60.0),
+                              alignment: Alignment.center,
+                              decoration: BoxDecoration(
+                                  color: main_color
+                              ),
+                              child: Text(
+                                textAlign: TextAlign.center,
+                                Strings.of(context)?.get("order_detail_call")??"Not Found",
+                                style: CustomStyle.CustomFont(styleFontSize16, styleWhiteCol),
+                              ),
+                            )
+                        )
+                    )
+                  ],
                 )
-              )
-            ) : SizedBox(),
-            Expanded(
-              flex: 1,
-              child: InkWell(
-                onTap: () async {
-                  var guest = await SP.getBoolean(Const.KEY_GUEST_MODE);
-                  if(guest){
-                    showGuestDialog();
-                    return;
-                  }
-                  launch("tel://${orderItem.value?.sellStaffTel}");
-                },
-                child: Container(
-                  height: CustomStyle.getHeight(60.0),
-                  alignment: Alignment.center,
-                  decoration: BoxDecoration(
-                      color: main_color
-                  ),
-                  child: Text(
-                    textAlign: TextAlign.center,
-                    Strings.of(context)?.get("order_detail_call")??"Not Found",
-                    style: CustomStyle.CustomFont(styleFontSize16, styleWhiteCol),
-                  ),
-                )
-              )
             )
-          ],
         )
-      )
-    )
     );
+
+
+
   }
 
 
