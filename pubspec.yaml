@@ -60,6 +60,8 @@ dependencies:
   flutter_native_splash: ^2.3.1
   mobile_number: ^2.1.1
   encrypt: ^5.0.1
+  flutter_localizations:
+    sdk: flutter
   intl: ^0.18.1
   fbroadcast: ^2.0.0
   permission_handler: ^10.3.0
