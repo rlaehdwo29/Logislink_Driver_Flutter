@@ -16,7 +16,7 @@ publish_to: 'none' # Remove this line if you wish to publish to pub.dev
 # https://developer.apple.com/library/archive/documentation/General/Reference/InfoPlistKeyReference/Articles/CoreFoundationKeys.html
 # In Windows, build-name is used as the major, minor, and patch parts
 # of the product and file versions while build-number is used as the build suffix.
-version: 1.1.56+78
+version: 1.1.57+79
 
 environment:
   sdk: '>=3.0.3 <4.0.0'
@@ -77,11 +77,12 @@ dependencies:
   kakao_map_plugin: ^0.1.8
   flutter_dotenv: ^5.0.2
   kakao_flutter_sdk_navi: ^1.4.1
-  firebase_crashlytics: ^3.3.4
-  firebase_core: ^2.15.0
-  firebase_messaging: ^14.6.5
+  firebase_analytics: ^10.8.0
+  firebase_crashlytics: ^3.4.9
+  firebase_core: ^2.24.2
+  firebase_messaging: ^14.7.10
   geofence_service: ^4.0.0
-  firebase_dynamic_links: ^5.3.5
+  firebase_dynamic_links: ^5.4.8
   geolocator: ^8.0.1
   flutter_activity_recognition: ^2.0.0
   app_tracking_transparency: ^2.0.4

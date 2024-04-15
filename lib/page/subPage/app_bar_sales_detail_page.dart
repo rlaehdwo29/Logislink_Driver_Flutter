@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 import 'package:logger/logger.dart';
 import 'package:logislink_driver_flutter/common/app.dart';
@@ -175,6 +176,8 @@ class _AppBarSalesDetailPageState extends State<AppBarSalesDetailPage> {
                           child: Column(
                               children: [
                                 TableCalendar(
+                                  locale: 'ko_KR',
+                                  rowHeight: MediaQuery.of(context).size.width * MediaQuery.of(context).devicePixelRatio > 1500 ? CustomStyle.getHeight(30.h) :CustomStyle.getHeight(45.h) ,
                                   focusedDay: _focusedDay,
                                   firstDay:  DateTime.utc(2010, 1, 1),
                                   lastDay: DateTime.utc(DateTime.now().year, DateTime.now().month, DateTime.now().day),

@@ -1432,6 +1432,8 @@ class _CarBookRegPageState extends State<CarBookRegPage>{
                           child: Column(
                               children: [
                                 TableCalendar(
+                                  locale: 'ko_KR',
+                                  rowHeight: MediaQuery.of(context).size.width * MediaQuery.of(context).devicePixelRatio > 1500 ? CustomStyle.getHeight(30.h) :CustomStyle.getHeight(45.h) ,
                                   focusedDay: _focusedDay,
                                   firstDay:  DateTime.utc(2010, 1, 1),
                                   lastDay: DateTime.utc(DateTime.now().year, DateTime.now().month, DateTime.now().day),

@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'dart:ui';
 
+import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
@@ -10,6 +11,7 @@ import 'package:flutter/scheduler.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_native_splash/flutter_native_splash.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
@@ -47,7 +49,15 @@ bool permission_state = false;
 
 Future<void> main() async {
   final binding = WidgetsFlutterBinding.ensureInitialized();
-  await Firebase.initializeApp();
+  try {
+    await Firebase.initializeApp(
+      options: DefaultFirebaseOptions.currentPlatform,
+    );
+    FirebaseAnalytics.instance.setAnalyticsCollectionEnabled(true);
+  } catch(e) {
+    print("Failed to initialize Firebase: $e");
+  }
+
   if (Platform.isAndroid) {
     await AndroidInAppWebViewController.setWebContentsDebuggingEnabled(true);
 
@@ -224,32 +234,17 @@ class _MyAppState extends State<MyApp> {
           builder: (_,child) => MaterialApp(
             //navigatorKey: navigatorKey,
             localizationsDelegates: const [
+              GlobalMaterialLocalizations.delegate,
+              GlobalCupertinoLocalizations.delegate,
+              GlobalWidgetsLocalizations.delegate,
               StringLocaleDelegate(),
             ],
             supportedLocales: const [
-              Locale('en', 'US'),
-              //Locale('ko', 'KR'),
+              Locale('ko','KR')
             ],
-            localeResolutionCallback:
-                (Locale? locale, Iterable<Locale> supportedLocales) {
-              if (locale == null) {
-                debugPrint("*language locale is null!!!");
-                return supportedLocales.first;
-              }
-
-              for (Locale supportedLocale in supportedLocales) {
-                if (supportedLocale.languageCode == locale.languageCode ||
-                    supportedLocale.countryCode == locale.countryCode) {
-                  debugPrint("*language ok $supportedLocale");
-                  return supportedLocale;
-                }
-              }
-
-              debugPrint("*language to fallback ${supportedLocales.first}");
-              return supportedLocales.first;
-            },
-            title: 'logislink_driver_flutter',
+            locale: const Locale('ko'),
             debugShowCheckedModeBanner: false,
+            title: 'logislink_driver_flutter',
             theme: ThemeData(
               appBarTheme: ThemeData.light()
                   .appBarTheme

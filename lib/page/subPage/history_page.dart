@@ -3,6 +3,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 import 'package:logger/logger.dart';
 import 'package:logislink_driver_flutter/common/app.dart';
@@ -117,18 +118,21 @@ class _HistoryPageState extends State<HistoryPage> {
                   child: Column(
                   children: [
                     TableCalendar(
+                      locale: 'ko_KR',
+                      rowHeight: MediaQuery.of(context).size.width * MediaQuery.of(context).devicePixelRatio > 1500 ? CustomStyle.getHeight(30.h) :CustomStyle.getHeight(45.h) ,
                     firstDay: DateTime.utc(2010, 1, 1),
                     lastDay: DateTime.utc(DateTime.now().year, DateTime.now().month, DateTime.now().day),
-                    headerStyle: const HeaderStyle(
+                    headerStyle: HeaderStyle(
                       // default로 설정 돼 있는 2 weeks 버튼을 없애줌 (아마 2주단위로 보기 버튼인듯?)
                       formatButtonVisible: false,
                       // 달력 타이틀을 센터로
                       titleCentered: true,
                       // 말 그대로 타이틀 텍스트 스타일링
-                      titleTextStyle: TextStyle(
-                        fontWeight: FontWeight.w700,
-                        fontSize: 16.0,
+                      titleTextStyle:CustomStyle.CustomFont(
+                          styleFontSize16, Colors.black,font_weight: FontWeight.w700
                       ),
+                      rightChevronIcon: Icon(Icons.chevron_right,size: 26.h),
+                      leftChevronIcon: Icon(Icons.chevron_left, size: 26.h),
                     ),
                     calendarStyle: CalendarStyle(
                         // 오늘 날짜에 하이라이팅의 유무
@@ -190,7 +194,6 @@ class _HistoryPageState extends State<HistoryPage> {
                       withinRangeDecoration:
                           const BoxDecoration(),
                     ),
-                    //locale: 'ko_KR',
                     focusedDay: _focusedDay,
                     selectedDayPredicate: (day) {
                       return isSameDay(_tempSelectedDay, day);

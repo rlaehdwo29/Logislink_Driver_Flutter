@@ -85,14 +85,14 @@ class _MainPageState extends State<MainPage> with CommonMainWidget,WidgetsBindin
   final _geofenceStreamController = StreamController<Geofence>();
   List<Geofence> geofenceList = List.empty(growable: true);
   final _geofenceService = GeofenceService.instance.setup(
-      interval: 5000,
-      accuracy: 100,
-      loiteringDelayMs: 30000,
-      statusChangeDelayMs: 10000,
-      useActivityRecognition: true,
-      allowMockLocations: true,
-      printDevLog: true,
-      geofenceRadiusSortType: GeofenceRadiusSortType.DESC);
+      interval: 5000, // GeoFence 상태 확인 5초마다
+      accuracy: 100, // GeoFence 지정 범위 100M
+      loiteringDelayMs: 30000, // GeoFence 지연 설정. Enter, DWELL 상태 체크하기 위함
+      statusChangeDelayMs: 10000, // GeoFence 지정 범위 경계 근처에 있을때 상태 변경
+      useActivityRecognition: true, // 활동 인식 API 여부
+      allowMockLocations: true, // 모의 위치 허용 여부
+      printDevLog: true, // 개발자 로그 표시 여부
+      geofenceRadiusSortType: GeofenceRadiusSortType.DESC); // GeoFence 지정 리스트 정렬 유형
 
   Future<void> _onGeofenceStatusChanged(
       Geofence geofence,

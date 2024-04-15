@@ -1,5 +1,6 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 import 'package:logger/logger.dart';
 import 'package:logislink_driver_flutter/common/app.dart';
@@ -270,6 +271,7 @@ class _TaxPageState extends State<TaxPage> {
         app.value.bankCnnm?.isEmpty == true &&
         app.value.bankCode?.isEmpty == true) {
       Util.toast("등록된 계좌가 없습니다.");
+      return false;
     }
     if(app.value.bankchkDate == null) {
       Util.toast("확인되지 않은 계좌입니다.");
@@ -892,6 +894,8 @@ class _TaxPageState extends State<TaxPage> {
                           child: Column(
                               children: [
                                 TableCalendar(
+                                  locale: 'ko_KR',
+                                  rowHeight: MediaQuery.of(context).size.width * MediaQuery.of(context).devicePixelRatio > 1500 ? CustomStyle.getHeight(30.h) :CustomStyle.getHeight(45.h) ,
                                   focusedDay: _focusedDay,
                                   firstDay:  DateTime.utc(2010, 1, 1),
                                   lastDay: DateTime.utc(DateTime.now().year, DateTime.now().month, DateTime.now().day),
@@ -1052,10 +1056,10 @@ class _TaxPageState extends State<TaxPage> {
 
     tax = price ~/ 10;
     totalPrice = price + tax;
-    tvCharge.value =  Util.getInCodeCommaWon(charge.toString());
-    tvPrice.value = Util.getInCodeCommaWon(price.toString());
-    tvTax.value = Util.getInCodeCommaWon(tax.toString());
-    tvTotalPrice.value = Util.getInCodeCommaWon(totalPrice.toString());
+    tvCharge.value =  Util.getInCodeCommaWon(charge.toString()); // 금액
+    tvPrice.value = Util.getInCodeCommaWon(price.toString()); // 공급가액
+    tvTax.value = Util.getInCodeCommaWon(tax.toString()); // 세액
+    tvTotalPrice.value = Util.getInCodeCommaWon(totalPrice.toString()); // 총액
   }
 
   String getBankName(String? code) {

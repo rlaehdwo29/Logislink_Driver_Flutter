@@ -136,6 +136,8 @@ class _ReceiptPageState extends State<ReceiptPage>{
           source: imageSource,
           maxWidth: maxWidth,
           maxHeight: maxHeight,
+          //maxWidth: 750,
+          //maxHeight: 750,
           imageQuality: 50,
         );
           if (pickedFile == null) return null;

@@ -27,10 +27,7 @@ class DefaultFirebaseOptions {
       case TargetPlatform.macOS:
         return macos;
       case TargetPlatform.windows:
-        throw UnsupportedError(
-          'DefaultFirebaseOptions have not been configured for windows - '
-          'you can reconfigure this by running the FlutterFire CLI again.',
-        );
+        return windows;
       case TargetPlatform.linux:
         throw UnsupportedError(
           'DefaultFirebaseOptions have not been configured for linux - '
@@ -44,40 +41,49 @@ class DefaultFirebaseOptions {
   }
 
   static const FirebaseOptions web = FirebaseOptions(
-    apiKey: 'AIzaSyBKO4C62N6VW896fYjK4Nu5Hb3DiiQvqYo',
-    appId: '1:843222466718:web:83f40924f20dfb6ae9bb8f',
-    messagingSenderId: '843222466718',
-    projectId: 'logislinkflutter-9f180',
-    authDomain: 'logislinkflutter-9f180.firebaseapp.com',
-    storageBucket: 'logislinkflutter-9f180.appspot.com',
-    measurementId: 'G-PK1WBPE3XM',
+    apiKey: 'AIzaSyD6b9affz9gcOlCbtNCFMFS4kBKcXPWuCI',
+    appId: '1:443385345478:web:c6315af273c7406b6ceec7',
+    messagingSenderId: '443385345478',
+    projectId: 'logislink-driver',
+    authDomain: 'logislink-driver.firebaseapp.com',
+    storageBucket: 'logislink-driver.appspot.com',
+    measurementId: 'G-PC2B6SX1JB',
   );
 
   static const FirebaseOptions android = FirebaseOptions(
-    apiKey: 'AIzaSyA-LcVr3DycYl4V6Gm1q_FCxgRLKbW_LK0',
-    appId: '1:843222466718:android:ba80ec3e86aa1656e9bb8f',
-    messagingSenderId: '843222466718',
-    projectId: 'logislinkflutter-9f180',
-    storageBucket: 'logislinkflutter-9f180.appspot.com',
+    apiKey: 'AIzaSyDaKwzzlH3iA9y1Tw792TqjJP24J67G1Zg',
+    appId: '1:443385345478:android:631fbcf78abcae9d6ceec7',
+    messagingSenderId: '443385345478',
+    projectId: 'logislink-driver',
+    storageBucket: 'logislink-driver.appspot.com',
   );
 
   static const FirebaseOptions ios = FirebaseOptions(
-    apiKey: 'AIzaSyCJLsG1os71SDt_mWBogWEIoaRN5bDgkew',
-    appId: '1:843222466718:ios:bbc18414c643f41de9bb8f',
-    messagingSenderId: '843222466718',
-    projectId: 'logislinkflutter-9f180',
-    storageBucket: 'logislinkflutter-9f180.appspot.com',
-    iosClientId: '843222466718-dlpr07u3lhflljb7ooktaul11sp2pnnb.apps.googleusercontent.com',
-    iosBundleId: 'com.logislink.driver.logislinkDriverFlutter',
+    apiKey: 'AIzaSyCcYQfFQOplcKTRM86K_nBg4_MFv0o2YqA',
+    appId: '1:443385345478:ios:235bef95aabf8a6e6ceec7',
+    messagingSenderId: '443385345478',
+    projectId: 'logislink-driver',
+    storageBucket: 'logislink-driver.appspot.com',
+    iosBundleId: 'com.logislink.driver',
   );
 
   static const FirebaseOptions macos = FirebaseOptions(
-    apiKey: 'AIzaSyCJLsG1os71SDt_mWBogWEIoaRN5bDgkew',
-    appId: '1:843222466718:ios:9afcfa262430dfd9e9bb8f',
-    messagingSenderId: '843222466718',
-    projectId: 'logislinkflutter-9f180',
-    storageBucket: 'logislinkflutter-9f180.appspot.com',
-    iosClientId: '843222466718-gu5mhjs2dhc84odl0vl4b99dbj1q88on.apps.googleusercontent.com',
-    iosBundleId: 'com.logislink.driver.logislinkDriverFlutter.RunnerTests',
+    apiKey: 'AIzaSyCcYQfFQOplcKTRM86K_nBg4_MFv0o2YqA',
+    appId: '1:443385345478:ios:867fcb938da5e67e6ceec7',
+    messagingSenderId: '443385345478',
+    projectId: 'logislink-driver',
+    storageBucket: 'logislink-driver.appspot.com',
+    iosBundleId: 'com.logislink.driver.logislinkDriverFlutter',
   );
+
+  static const FirebaseOptions windows = FirebaseOptions(
+    apiKey: 'AIzaSyD6b9affz9gcOlCbtNCFMFS4kBKcXPWuCI',
+    appId: '1:443385345478:web:419d090bfed7d81e6ceec7',
+    messagingSenderId: '443385345478',
+    projectId: 'logislink-driver',
+    authDomain: 'logislink-driver.firebaseapp.com',
+    storageBucket: 'logislink-driver.appspot.com',
+    measurementId: 'G-3YW92WC59Z',
+  );
+
 }
