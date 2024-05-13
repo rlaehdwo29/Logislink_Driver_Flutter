@@ -57,7 +57,7 @@
   "popup_permission_body4":"로지스링크는 개인정보 수집 및 서비스 이용\n동의 후 서비스를 제공하고 있습니다.",
 
   "popup_permission_call":"전화",
-  "popup_permission_call_info":"사용자 인증 및 식별을 위해 사용됩니다.",
+  "popup_permission_call_info":" - 로지스링크 차주앱은 로그인 상황에서 로그인을 사용 설정하기 위해\n전화번호을 수집/전송/동기화/저장합니다. \n\n - 담당자에게 전화를 걸기 위해 해당 권한을 사용합니다.",
   "popup_permission_location":"위치",
   "popup_permission_location_info":"로지스링크에서 사용자의 위치를 관제하기 위해 위치정보를 수집합니다.",
   "popup_permission_photo":"저장공간/사진",

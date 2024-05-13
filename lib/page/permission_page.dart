@@ -194,7 +194,7 @@ class _PermissionPageState extends State<PermissionPage>{
                                   ),
                                   RichText(
                                     text: TextSpan(
-                                      text: "사용자 인증 및 식별을 위해 사용됩니다.",
+                                      text: "- 로지스링크 차주앱은 로그인 상황에서 로그인을 사용 설정하기 위해\n전화번호을 수집/전송/동기화/저장합니다.\n\n- 담당자에게 전화를 걸기 위해 해당 권한을 사용합니다.",
                                       style: CustomStyle.CustomFont(
                                           styleFontSize11, text_color_02),
                                     ),
