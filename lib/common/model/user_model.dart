@@ -32,6 +32,7 @@ class UserModel extends ResultModel {
   String? subBizNum;
   String? bizKind;
   String? bizCond;
+  String? socNo;
   String? driverEmail;
   int? vehicCnt;
   String? dangerGoodsYn;
@@ -67,6 +68,7 @@ class UserModel extends ResultModel {
     this.subBizNum,
     this.bizKind,
     this.bizCond,
+    this.socNo,
     this.driverEmail,
     this.vehicCnt,
     this.dangerGoodsYn,
@@ -109,6 +111,7 @@ class UserModel extends ResultModel {
         other.subBizNum == this.subBizNum &&
         other.bizKind == this.bizKind &&
         other.bizCond == this.bizCond &&
+        other.socNo == this.socNo &&
         other.driverEmail == this.driverEmail &&
         other.vehicCnt == this.vehicCnt &&
         other.dangerGoodsYn == this.dangerGoodsYn &&
@@ -146,6 +149,7 @@ class UserModel extends ResultModel {
         this.subBizNum.hashCode +
         this.bizKind.hashCode +
         this.bizCond.hashCode +
+        this.socNo.hashCode +
         this.driverEmail.hashCode +
         this.vehicCnt.hashCode +
         this.dangerGoodsYn.hashCode +

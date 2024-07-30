@@ -47,6 +47,7 @@ class _AppBarMyPageState extends State<AppBarMyPage> {
   TextEditingController subBizNumController = TextEditingController();
   TextEditingController bizNameController = TextEditingController();
   TextEditingController ceoController = TextEditingController();
+  TextEditingController socNoController = TextEditingController();
   TextEditingController bizAddrDetailController = TextEditingController();
   TextEditingController bizCondController = TextEditingController();
   TextEditingController bizKindController = TextEditingController();
@@ -60,6 +61,7 @@ class _AppBarMyPageState extends State<AppBarMyPage> {
     subBizNumController.dispose();
     bizNameController.dispose();
     ceoController.dispose();
+    socNoController.dispose();
     bizAddrDetailController.dispose();
     bizCondController.dispose();
     bizKindController.dispose();
@@ -92,6 +94,7 @@ class _AppBarMyPageState extends State<AppBarMyPage> {
           bizName:mData.value.bizName,
           bizNum:mData.value.bizNum,
           ceo:mData.value.ceo,
+          socNo: mData.value.socNo,
           bizPost:mData.value.bizPost,
           bizAddr:mData.value.bizAddr,
           bizAddrDetail:mData.value.bizAddrDetail,
@@ -112,6 +115,7 @@ class _AppBarMyPageState extends State<AppBarMyPage> {
       subBizNumController.text = tempData.value.subBizNum??"";
       bizNameController.text = tempData.value.bizName??"";
       ceoController.text = tempData.value.ceo??"";
+      socNoController.text = tempData.value.socNo??"";
       bizAddrDetailController.text = tempData.value.bizAddrDetail??"";
       bizCondController.text = tempData.value.bizCond??"";
       bizKindController.text = tempData.value.bizKind??"";
@@ -212,6 +216,7 @@ class _AppBarMyPageState extends State<AppBarMyPage> {
             subBizNumController.text = tempData.value.subBizNum??"";
             bizNameController.text = tempData.value.bizName??"";
             ceoController.text = tempData.value.ceo??"";
+            socNoController.text = Util.getSocNumStrToStr(tempData.value.socNo??"")??"";
             bizAddrDetailController.text = tempData.value.bizAddrDetail??"";
             bizCondController.text = tempData.value.bizCond??"";
             bizKindController.text = tempData.value.bizKind??"";
@@ -233,7 +238,7 @@ class _AppBarMyPageState extends State<AppBarMyPage> {
   Future<void> updateUser() async {
     Logger logger = Logger();
     await pr?.show();
-    await DioService.dioClient(header: true).updateUser(tempData.value?.authorization, tempData.value?.vehicId,tempData.value?.bizName,tempData.value?.bizNum,tempData.value?.subBizNum,tempData.value?.ceo,tempData.value?.bizPost,tempData.value?.bizAddr,tempData.value?.bizAddrDetail,
+    await DioService.dioClient(header: true).updateUser(tempData.value?.authorization, tempData.value?.vehicId,tempData.value?.bizName,tempData.value?.bizNum,tempData.value?.subBizNum,tempData.value?.ceo,tempData.value?.bizPost,tempData.value?.bizAddr,tempData.value?.bizAddrDetail,tempData.value.socNo,
         tempData.value?.bizCond, tempData.value?.bizKind, tempData.value?.driverEmail, tempData.value?.carTypeCode, tempData.value?.carTonCode, tempData.value?.cargoBox,tempData.value?.dangerGoodsYn, tempData.value?.chemicalsYn,tempData.value?.foreignLicenseYn, tempData.value?.forkliftYn).then((it) async {
       await pr?.hide();
       ReturnMap _response = DioService.dioResponse(it);
@@ -737,6 +742,78 @@ class _AppBarMyPageState extends State<AppBarMyPage> {
                                   tempData.value.ceo = "";
                                   setState(() {});
                                   },
+                                icon: const Icon(Icons.clear,size: 12),
+                              ),
+                            ) : const InputDecoration(
+                              border: InputBorder.none,
+                              counterText: '',
+                            ),
+                          )))
+                ],
+              ),
+            ),
+            Container(
+              decoration: BoxDecoration(
+                  border: Border(
+                    bottom:
+                    BorderSide(color: line, width: CustomStyle.getWidth(0.5)),
+                  )),
+              child: Row(
+                children: [
+                  Expanded(
+                      flex: 1,
+                      child: Container(
+                          padding: const EdgeInsets.all(10.0),
+                          child: Text(
+                            Strings.of(context)?.get("socNo") ?? "Not Found",
+                            textAlign: TextAlign.center,
+                            style: CustomStyle.CustomFont(
+                                styleFontSize12, text_color_01),
+                          ))),
+                  Expanded(
+                      flex: 4,
+                      child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 5.0),
+                          decoration: BoxDecoration(
+                              border: Border(
+                                  left: BorderSide(
+                                      color: line,
+                                      width: CustomStyle.getWidth(0.5)))),
+                          child: TextField(
+                            maxLines: 1,
+                            maxLength: 12,
+                            controller: socNoController,
+                            style: CustomStyle.CustomFont(styleFontSize12, text_color_01),
+                            autofocus: false,
+                            enabled: editMode.value,
+                            maxLengthEnforcement: MaxLengthEnforcement.enforced,
+                            keyboardType: TextInputType.text,
+                            onChanged: (socNoText) {
+                              if(socNoText.isNotEmpty) {
+                                String valueTxt = socNoText.replaceAll(".","");
+                                if(valueTxt.length > 6) {
+                                  String subText = socNoText.replaceAll(".", "").substring(0,6);
+                                  socNoController.text = Util.getSocNumStrToStr(subText)!;
+                                  Util.toast("생년월일은 6자리를 넘길 수 없습니다.");
+                                }else {
+                                  socNoController.text = Util.getSocNumStrToStr(socNoText.replaceAll(".", ""))!;
+                                  socNoController.selection = TextSelection.fromPosition(TextPosition(offset: socNoController.text.length));
+                                  tempData.value.socNo = socNoText.replaceAll(".", "");
+                                }
+                              }else{
+                                tempData.value.socNo = "";
+                              }
+                            },
+                            textAlignVertical: TextAlignVertical.center,
+                            decoration: socNoController.text.isNotEmpty && editMode.value ? InputDecoration(
+                              border: InputBorder.none,
+                              counterText: '',
+                              suffixIcon: IconButton(
+                                onPressed: () {
+                                  socNoController.clear();
+                                  tempData.value.socNo = "";
+                                  setState(() {});
+                                },
                                 icon: const Icon(Icons.clear,size: 12),
                               ),
                             ) : const InputDecoration(

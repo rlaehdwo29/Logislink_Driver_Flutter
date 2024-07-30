@@ -65,6 +65,7 @@ abstract class Rest {
       @Field("bizPost") String? bizPost,
       @Field("bizAddr") String? bizAddr,
       @Field("bizAddrDetail") String? bizAddrDetail,
+      @Field('socNo') String? socNo,
       @Field("bizCond") String? bizCond,
       @Field("bizKind") String? bizKind,
       @Field("driverEmail") String? driverEmail,

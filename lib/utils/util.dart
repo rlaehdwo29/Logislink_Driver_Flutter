@@ -356,6 +356,16 @@ class Util {
     }
   }
 
+  static String? getSocNumStrToStr(String? date) {
+    if(date == null || date.isEmpty == true) {
+      return "";
+    }else if(date.length != 6) {
+      return date;
+    }
+
+    return date?.replaceAllMapped(RegExp(r'(\d{2})(\d{1,2})(\d{1,5})'),(Match m) => "${m[1]}.${m[2]}.${m[3]}");
+  }
+
   static String getInCodeCommaWon(String? won) {
     if (won == null || won.isEmpty) return "0";
     double inValues = double.parse(won);
@@ -365,7 +375,7 @@ class Util {
 
   static String getPayFee(String? payCharge, double? per) {
     int charge = int.parse(payCharge!);
-    int fee = (charge * (per! / 100)).ceil();
+    int fee = (charge * (per! / 100)).floor();
     return fee.toString();
   }
 
