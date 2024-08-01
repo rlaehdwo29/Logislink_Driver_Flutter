@@ -115,7 +115,7 @@ class _AppBarMyPageState extends State<AppBarMyPage> {
       subBizNumController.text = tempData.value.subBizNum??"";
       bizNameController.text = tempData.value.bizName??"";
       ceoController.text = tempData.value.ceo??"";
-      socNoController.text = tempData.value.socNo??"";
+      socNoController.text = Util.getSocNumStrToStr(tempData.value.socNo??"")??"";
       bizAddrDetailController.text = tempData.value.bizAddrDetail??"";
       bizCondController.text = tempData.value.bizCond??"";
       bizKindController.text = tempData.value.bizKind??"";
@@ -787,7 +787,7 @@ class _AppBarMyPageState extends State<AppBarMyPage> {
                             autofocus: false,
                             enabled: editMode.value,
                             maxLengthEnforcement: MaxLengthEnforcement.enforced,
-                            keyboardType: TextInputType.text,
+                            keyboardType: TextInputType.number,
                             onChanged: (socNoText) {
                               if(socNoText.isNotEmpty) {
                                 String valueTxt = socNoText.replaceAll(".","");
@@ -1620,6 +1620,9 @@ class _AppBarMyPageState extends State<AppBarMyPage> {
                 if(app != tempData.value) {
                   await showCanceled();
                 }else{
+                  if(widget.onCallback != null) {
+                    widget.onCallback!(true);
+                  }
                   Navigator.of(context).pop();
                 }
 
@@ -1638,6 +1641,7 @@ class _AppBarMyPageState extends State<AppBarMyPage> {
               if(editMode.value == true) {
                 var app = await controller.getUserInfo();
                 if(app != tempData.value) {
+                  if(tempData.value.socNo?.length != 6) return Util.toast("생년월일을 6자리로 설정해주세요.");
                   await edit();
                 }else{
                   editMode.value = !editMode.value;

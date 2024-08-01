@@ -295,10 +295,10 @@ class _LoginPageState extends State<LoginPage> with CommonMainWidget {
         case DioError:
         // Here's the sample to get the failed response error code and message
           final res = (obj as DioError).response;
-          print("에러에러 => ${res?.statusCode} // ${res?.statusMessage}");
+          print("getUserInfo() Error => ${res?.statusCode} // ${res?.statusMessage}");
           break;
         default:
-          print("에러에러222 => ");
+          print("getUserInfo() Error Default => ");
           break;
       }
     });

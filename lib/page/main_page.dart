@@ -944,7 +944,7 @@ class _MainPageState extends State<MainPage> with CommonMainWidget,WidgetsBindin
         case DioError:
         // Here's the sample to get the failed response error code and message
           final res = (obj as DioError).response;
-          print("에러에러 => ${res?.statusCode} // ${res?.statusMessage}");
+          print("getUserInfo() Error => ${res?.statusCode} // ${res?.statusMessage}");
           break;
         default:
           print("getUserInfo() Exepction => ");

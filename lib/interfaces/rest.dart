@@ -24,6 +24,31 @@ abstract class Rest {
   Future<HttpResponse> getVersion(@Field("versionKind") String versionKind);
 
   /**
+   * 스마트로 MID
+   */
+  @FormUrlEncoded()
+  @POST(URL_SMARTRO_MID)
+  Future<HttpResponse> sendSmartroMid(@Header("Authorization") String? Authorization,
+      @Field("custId") String? custId,
+      @Field("deptId") String? deptId,
+      @Field("driverId") String? driverId,
+      @Field("vehicId") String? vehicId,
+
+      @Field("ceo") String? ceo,
+      @Field("mobile") String? mobile,
+      @Field("socNo") String? socNo,
+      @Field("driverEmail") String? driverEmail,
+      @Field("bizNum") String? bizNum,
+      @Field("bizName") String? bizName,
+      @Field("bankCode") String? bankCode,
+      @Field("bankAccount") String? bankAccount,
+      @Field("bankCnnm") String? bankCnnm,
+      @Field("bizAddr") String? bizAddr,
+      @Field("bizAddrDetail") String? bizAddrDetail,
+      @Field("bizPost") String? bizPost,
+      );
+
+  /**
    * 로그인
    */
   @FormUrlEncoded()

@@ -112,14 +112,14 @@ class _OrderDetailPageState extends State<OrderDetailPage> with WidgetsBindingOb
     setState(() {});
   }
 
-  void onCallback(bool? refresh) {
-    setState(() async {
+  void onCallback(bool? refresh) async {
+    //setState(() async {
       if (refresh != null) {
         if (refresh) {
           app.value = await controller.getUserInfo();
         }
       }
-    });
+   // });
   }
 
   void naviCheck(String? type) {
@@ -592,7 +592,7 @@ class _OrderDetailPageState extends State<OrderDetailPage> with WidgetsBindingOb
               style: CustomStyle.CustomFont(styleFontSize14, app_util.Util.getOrderStateColor(orderItem.value?.allocState)),
             ),
             InkWell(
-                onTap: (){
+                onTap: () async {
                   goToPay();
                 },
                 child: orderItem.value?.allocState == "05" && app_util.Util.ynToBoolean(orderItem.value?.payType)?
@@ -1035,7 +1035,7 @@ class _OrderDetailPageState extends State<OrderDetailPage> with WidgetsBindingOb
       var validation_y_check = await validation_finishYn();
       if(validation_y_check == "N"){
         if(result != true) {
-          await sendPay();
+          await sendSmartroMid();
         }else{
           await checkAccNm();
         }
@@ -1085,6 +1085,36 @@ class _OrderDetailPageState extends State<OrderDetailPage> with WidgetsBindingOb
       }
     });
     return result;
+  }
+
+  Future<void> sendSmartroMid() async {
+    Logger logger = Logger();
+    var app = await controller.getUserInfo();
+    await pr?.show();
+    await DioService.dioClient(header: true).sendSmartroMid(app.authorization,widget.item?.sellCustId,widget.item?.sellDeptId,app.driverId,app.vehicId,app.ceo,app.mobile,app.socNo,app.driverEmail,app.bizNum,app.bizName,app.bankCode,app.bankAccount,app.bankCnnm,app.bizAddr,app.bizAddrDetail,app.bizPost).then((it) async {
+      await pr?.hide();
+      ReturnMap _response = DioService.dioResponse(it);
+      if(_response.status == "200") {
+        await sendPay();
+      }else{
+        app_util.Util.toast(_response.message);
+      }
+
+    }).catchError((Object obj) async {
+      await pr?.hide();
+      switch (obj.runtimeType) {
+        case DioError:
+        // Here's the sample to get the failed response error code and message
+          final res = (obj as DioError).response;
+          logger.e("order_detail_page.dart sendSmartroMid() Error Default: ${res?.statusCode} -> ${res?.statusMessage}");
+          openOkBox(context,"${res?.statusCode} / ${res?.statusMessage}",Strings.of(context)?.get("confirm")??"Error!!",() {Navigator.of(context).pop(false);});
+          break;
+        default:
+          logger.e("order_detail_page.dart sendSmartroMid() Error Default:");
+          break;
+      }
+    });
+
   }
 
   Future<void> sendPay() async {
@@ -1177,7 +1207,8 @@ class _OrderDetailPageState extends State<OrderDetailPage> with WidgetsBindingOb
         //user.bankchkDate = app_util.Util.getDateCalToStr(DateTime.now(), "yyyy-MM-dd HH:mm:ss");
         user.bankchkDate = app_util.Util.getCurrentDate("yyyy-MM-dd HH:mm:ss");
         App().setUserInfo(user);
-        await sendPay();
+        await sendSmartroMid();
+        //await sendPay();
         setState(() {});
       }else{
         app_util.Util.toast(_response.message);
@@ -1262,7 +1293,9 @@ class _OrderDetailPageState extends State<OrderDetailPage> with WidgetsBindingOb
                                                 value: _isChecked.value,
                                                 materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
                                                 onChanged: (value) {
-                                                  setState(() {});
+                                                  setState(() {
+                                                    _isChecked.value = !_isChecked.value;
+                                                  });
                                                 }
                                             )
                                         ),
