@@ -4,8 +4,8 @@
 
   const String m_ServerRelease = "https://app.logis-link.co.kr";    // 실 서버
 
-  const String m_ServerDebug = "http://192.168.53.51:8080";         // localhost
-  //const String m_ServerDebug = "http://172.30.1.89:8080";
+  const String m_ServerDebug = "http://192.168.53.51:9080";         // localhost
+  //const String m_ServerDebug2 = "http://192.168.53.62:8070";    //손팀장님 IP
   //const String m_ServerDebug = "http://59.15.228.197:8080";
 
   const String m_ServerTest = "http://211.252.86.30:806";           // Test 서버
@@ -34,8 +34,11 @@
   // 버전코드
   const String URL_VERSION_CODE = "/cmm/version/list";
 
-  // 로그인
-  const String URL_USER_LOGIN = "/drv/login";
+
+  // 스마트로 MID
+  const String URL_SMARTRO_MID = "/api/card/getMidMB";
+ // 로그인
+ const String URL_USER_LOGIN = "/drv/login";
  // IOS 로그인
  const String URL_USER_IOS_LOGIN = "/drv/ioslogin";
   // 차주 정보

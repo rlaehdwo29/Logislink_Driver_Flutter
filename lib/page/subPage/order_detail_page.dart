@@ -1238,13 +1238,15 @@ class _OrderDetailPageState extends State<OrderDetailPage> with WidgetsBindingOb
 
   Future<void> showPay(Function(String?) _showPayCallback) async {
     _isChecked.value = false;
+    final sellChargeFix = (int.parse(orderItem.value.sellCharge??"0") * 1.1).toInt().toString().obs;
+
     return showDialog(
         context: context,
         barrierDismissible: false,
         builder: (BuildContext context) {
 
-          String fee = app_util.Util.getPayFee(orderItem.value?.sellCharge, 1.298);
-          String charge = app_util.Util.getInCodeCommaWon(app_util.Util.getPayCharge(orderItem.value?.sellCharge, fee));
+          String fee = app_util.Util.getPayFee(sellChargeFix.value, 1.298);
+          String charge = app_util.Util.getInCodeCommaWon(app_util.Util.getPayCharge(sellChargeFix.value, fee));
 
           return AlertDialog(
               contentPadding: EdgeInsets.all(CustomStyle.getWidth(0.0)),
@@ -1287,18 +1289,6 @@ class _OrderDetailPageState extends State<OrderDetailPage> with WidgetsBindingOb
                                     child: Stack(
                                       clipBehavior: Clip.none,
                                       children: [
-                                        Positioned(
-                                            left: CustomStyle.getWidth(5),
-                                            child: Checkbox(
-                                                value: _isChecked.value,
-                                                materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                                                onChanged: (value) {
-                                                  setState(() {
-                                                    _isChecked.value = !_isChecked.value;
-                                                  });
-                                                }
-                                            )
-                                        ),
                                         Column(
                                       crossAxisAlignment: CrossAxisAlignment.center,
                                       mainAxisAlignment: MainAxisAlignment.center,
@@ -1317,12 +1307,14 @@ class _OrderDetailPageState extends State<OrderDetailPage> with WidgetsBindingOb
                                                   ),
                                                 ],
                                               ),
+                                              Obx(() =>
                                               Container(
                                                 margin: EdgeInsets.only(left: CustomStyle.getWidth(5)),
                                                 child: Text(
-                                                  "${app_util.Util.getInCodeCommaWon(orderItem.value?.sellCharge)}원",
+                                                  "${app_util.Util.getInCodeCommaWon(sellChargeFix.value)}원",
                                                   style: CustomStyle.CustomFont(styleFontSize16, text_color_01,font_weight: FontWeight.w700),
                                                 )
+                                              )
                                               ),
                                             ],
                                           ),
@@ -1340,7 +1332,7 @@ class _OrderDetailPageState extends State<OrderDetailPage> with WidgetsBindingOb
                                                   style: CustomStyle.CustomFont(styleFontSize14, addr_zip_no,font_weight: FontWeight.w700),
                                                 ),
                                                 Text(
-                                                  " (수수료 ${app_util.Util.getInCodeCommaWon(app_util.Util.getPayFee(orderItem.value?.sellCharge, 1.298))}원 제외)",
+                                                  " (수수료 ${app_util.Util.getInCodeCommaWon(app_util.Util.getPayFee(sellChargeFix.value, 1.298))}원 제외)",
                                                   style: CustomStyle.CustomFont(styleFontSize10, addr_zip_no),
                                                 ),
                                               ],
@@ -1361,20 +1353,39 @@ class _OrderDetailPageState extends State<OrderDetailPage> with WidgetsBindingOb
                               ),
                               Container(
                                 margin: EdgeInsets.symmetric(horizontal: CustomStyle.getWidth(10)),
-                                child: Column(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                child: Row(
                                   children: [
-                                    Text(
-                                      "* 위 금액은 부가세가 포함된 가격임을 알려드립니다.",
-                                      style: CustomStyle.CustomFont(styleFontSize10, addr_zip_no,font_weight: FontWeight.w600),
-                                    ),
-                                    Text(
-                                      "* 위의 체크박스를 클릭하여 빠른지급신청에 동의해주세요.",
-                                      textAlign: TextAlign.start,
-                                      style: CustomStyle.CustomFont(styleFontSize10, addr_zip_no,font_weight: FontWeight.w600),
+                                    Row(children :[
+                                      Text(
+                                        "동의",
+                                        style: CustomStyle.CustomFont(styleFontSize12, text_color_01,font_weight: FontWeight.w700),
+                                      ),
+                                      Checkbox(
+                                          value: _isChecked.value,
+                                          materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                                          onChanged: (value) {
+                                            setState(() {
+                                              _isChecked.value = !_isChecked.value;
+                                            });
+                                          }
+                                      )
+                                    ]),
+                                    Column(
+                                      mainAxisAlignment: MainAxisAlignment.center,
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          "* 위 금액은 부가세가 포함된 가격입니다.",
+                                          style: CustomStyle.CustomFont(styleFontSize11, addr_zip_no,font_weight: FontWeight.w600),
+                                        ),
+                                        Text(
+                                          "* 왼쪽의 빠른지급신청에 동의해주세요.",
+                                          textAlign: TextAlign.start,
+                                          style: CustomStyle.CustomFont(styleFontSize11, addr_zip_no,font_weight: FontWeight.w600),
+                                        )
+                                      ],
                                     )
-                                  ],
+                                  ]
                                 )
                               ),
                               CustomStyle.sizedBoxHeight(CustomStyle.getHeight(10.0)),
