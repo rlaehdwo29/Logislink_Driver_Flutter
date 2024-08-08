@@ -1029,15 +1029,17 @@ class _OrderDetailPageState extends State<OrderDetailPage> with WidgetsBindingOb
     openOkBox(context,"삭제된 오더입니다.", Strings.of(context)?.get("confirm")??"Not Found", () { Navigator.of(context).pop(false);});
   }
 
-  Future<void> showPayConfirm(String? _result) async {
-    if(_result == "200") {
+  Future<void> showPayConfirm(Map<String,String>? _result) async {
+    if(_result?["result"] == "200") {
       var result = await checkBankDate();
       var validation_y_check = await validation_finishYn();
       if(validation_y_check == "N"){
+        // 계좌정보가 30일 이내로 업데이트 되었다면 계좌 정보를 체크하지 않음
         if(result != true) {
-          await sendSmartroMid();
+          //await sendSmartroMid(); // MID 가져오기 API 대기 2024.08.07
+          await sendPay(_result);
         }else{
-          await checkAccNm();
+          await checkAccNm(_result);
         }
       }else if(validation_y_check == "Y") {
         openOkBox(context, "해당 오더는 마감처리 또는 빠른지급 신청이 완료된 건으로 \n 빠른지급 신청이 불가합니다.", Strings.of(context)?.get("confirm")??"Error!!", () { Navigator.of(context).pop(false);});
@@ -1087,7 +1089,7 @@ class _OrderDetailPageState extends State<OrderDetailPage> with WidgetsBindingOb
     return result;
   }
 
-  Future<void> sendSmartroMid() async {
+  Future<void> sendSmartroMid(Map<String,String>? _result) async {
     Logger logger = Logger();
     var app = await controller.getUserInfo();
     await pr?.show();
@@ -1095,7 +1097,7 @@ class _OrderDetailPageState extends State<OrderDetailPage> with WidgetsBindingOb
       await pr?.hide();
       ReturnMap _response = DioService.dioResponse(it);
       if(_response.status == "200") {
-        await sendPay();
+        await sendPay(_result);
       }else{
         app_util.Util.toast(_response.message);
       }
@@ -1117,7 +1119,7 @@ class _OrderDetailPageState extends State<OrderDetailPage> with WidgetsBindingOb
 
   }
 
-  Future<void> sendPay() async {
+  Future<void> sendPay(Map<String,String>? _result) async {
     Logger logger = Logger();
     var app = await controller.getUserInfo();
     await pr?.show();
@@ -1127,6 +1129,7 @@ class _OrderDetailPageState extends State<OrderDetailPage> with WidgetsBindingOb
       if(_response.status == "200") {
         orderItem.value?.reqPayYN = "Y";
         setCalcView();
+        await updateUser(_result);
         app_util.Util.toast("빠른지급 신청이 완료되었습니다.");
         if(orderItem.value?.receiptYn == "N") {
           await showNextReceiptDialog();
@@ -1152,6 +1155,43 @@ class _OrderDetailPageState extends State<OrderDetailPage> with WidgetsBindingOb
 
   }
 
+  Future<void> updateUser(Map<String,String>? _result) async {
+    Logger logger = Logger();
+    var app = await App().getUserInfo();
+    await pr?.show();
+    await DioService.dioClient(header: true).updateUser(app.authorization, app.vehicId, app.bizName, app.bizNum,app.subBizNum, app.ceo, app.bizPost,app.bizAddr,app.bizAddrDetail,_result?['socNo']?.replaceAll('.', ''),
+        app.bizCond, app.bizKind, _result?["email"], app.carTypeCode, app.carTonCode, app.cargoBox, app.dangerGoodsYn, app.chemicalsYn, app.foreignLicenseYn, app.forkliftYn).then((it) async {
+      await pr?.hide();
+      ReturnMap _response = DioService.dioResponse(it);
+      logger.d("updateUser() _response -> ${_response.status} // ${_response.resultMap}");
+      if(_response.status == "200") {
+        if(_response.resultMap?["result"] == true) {
+          app.socNo = _result?["socNo"]?.replaceAll('.', '');
+          app.driverEmail = _result?["email"];
+          await controller.setUserInfo(app);
+        }else{
+          app_util.Util.toast(_response.resultMap?["msg"]);
+        }
+      }else{
+        app_util.Util.toast(_response.message);
+      }
+      setState(() {});
+    }).catchError((Object obj) async {
+      await pr?.hide();
+      switch (obj.runtimeType) {
+        case DioError:
+        // Here's the sample to get the failed response error code and message
+          final res = (obj as DioError).response;
+          logger.e("order_detail_page.dart updateUser() Error Default: ${res?.statusCode} -> ${res?.statusMessage}");
+          openOkBox(context,"${res?.statusCode} / ${res?.statusMessage}",Strings.of(context)?.get("confirm")??"Error!!",() {Navigator.of(context).pop(false);});
+          break;
+        default:
+          logger.e("order_detail_page.dart updateUser() Error Default:");
+          break;
+      }
+    });
+  }
+
   Future<void> showNextReceiptDialog() async {
     openCommonConfirmBox(
         context,
@@ -1166,7 +1206,7 @@ class _OrderDetailPageState extends State<OrderDetailPage> with WidgetsBindingOb
     );
   }
 
-  Future<void> checkAccNm() async {
+  Future<void> checkAccNm(Map<String,String>? _result) async {
     Logger logger = Logger();
     var app = await App().getUserInfo();
     await pr?.show();
@@ -1174,7 +1214,7 @@ class _OrderDetailPageState extends State<OrderDetailPage> with WidgetsBindingOb
       await pr?.hide();
       ReturnMap _response = DioService.dioResponse(it);
       if(_response.status == "200") {
-        updateBank();
+        updateBank(_result);
       }else{
         app_util.Util.toast(_response.message);
       }
@@ -1194,7 +1234,7 @@ class _OrderDetailPageState extends State<OrderDetailPage> with WidgetsBindingOb
     });
   }
 
-  Future<void> updateBank() async {
+  Future<void> updateBank(Map<String,String>? _result) async {
     Logger logger = Logger();
     var app = await App().getUserInfo();
     await pr?.show();
@@ -1207,8 +1247,8 @@ class _OrderDetailPageState extends State<OrderDetailPage> with WidgetsBindingOb
         //user.bankchkDate = app_util.Util.getDateCalToStr(DateTime.now(), "yyyy-MM-dd HH:mm:ss");
         user.bankchkDate = app_util.Util.getCurrentDate("yyyy-MM-dd HH:mm:ss");
         App().setUserInfo(user);
-        await sendSmartroMid();
-        //await sendPay();
+        //await sendSmartroMid(); // MID 가져오기 API 대기 2024.08.07
+        await sendPay(_result);
         setState(() {});
       }else{
         app_util.Util.toast(_response.message);
@@ -1236,9 +1276,13 @@ class _OrderDetailPageState extends State<OrderDetailPage> with WidgetsBindingOb
     return app_util.Util.betweenDate(nowDate, saveDate)! > 30;
   }
 
-  Future<void> showPay(Function(String?) _showPayCallback) async {
+  Future<void> showPay(Function(Map<String,String>?) _showPayCallback) async {
     _isChecked.value = false;
     final sellChargeFix = (int.parse(orderItem.value.sellCharge??"0") * 1.1).toInt().toString().obs;
+    TextEditingController socNoController = TextEditingController();
+    socNoController.text =  app_util.Util.getSocNumStrToStr(app.value.socNo)??"";
+    TextEditingController emailController = TextEditingController();
+    emailController.text = app.value.driverEmail??"";
 
     return showDialog(
         context: context,
@@ -1482,6 +1526,7 @@ class _OrderDetailPageState extends State<OrderDetailPage> with WidgetsBindingOb
                                           Expanded(
                                               flex: 1,
                                               child: Container(
+                                                height: CustomStyle.getHeight(35),
                                                 padding: const EdgeInsets.all(5.0),
                                                 decoration: BoxDecoration(
                                                     border: Border(
@@ -1505,7 +1550,8 @@ class _OrderDetailPageState extends State<OrderDetailPage> with WidgetsBindingOb
                                           Expanded(
                                               flex: 3,
                                               child: Container(
-                                                  padding: const EdgeInsets.all(7.0),
+                                                  height: CustomStyle.getHeight(35),
+                                                  //padding: const EdgeInsets.all(7.0),
                                                   decoration: BoxDecoration(
                                                       border: Border(
                                                         bottom: BorderSide(
@@ -1514,11 +1560,51 @@ class _OrderDetailPageState extends State<OrderDetailPage> with WidgetsBindingOb
                                                         ),
                                                       )
                                                   ),
-                                                  child: Text(
+                                                  child: TextField(
+                                                    maxLines: 1,
+                                                    keyboardType: TextInputType.datetime,
+                                                    style: CustomStyle.CustomFont(styleFontSize12, Colors.black),
+                                                    maxLengthEnforcement: MaxLengthEnforcement.enforced,
+                                                    textAlignVertical: TextAlignVertical.center,
+                                                    textAlign: TextAlign.center,
+                                                    controller: socNoController,
+                                                    decoration: socNoController.text.isNotEmpty ? InputDecoration(
+                                                      border: InputBorder.none,
+                                                      hintText: "생년월일을 입력해주세요.",
+                                                      hintStyle: CustomStyle.CustomFont(styleFontSize12, light_gray23),
+                                                      suffixIcon: IconButton(
+                                                        onPressed: () {
+                                                          socNoController.clear();
+                                                        },
+                                                        icon: const Icon(Icons.clear, size: 18,color: Colors.black,),
+                                                      ),
+                                                    ) : InputDecoration(
+                                                      border: InputBorder.none,
+                                                      hintText: "생년월일을 입력해주세요.",
+                                                      hintStyle: CustomStyle.CustomFont(styleFontSize12, light_gray23),
+                                                    ),
+                                                    onChanged: (socNoText) {
+                                                      if (socNoText.isNotEmpty) {
+                                                        if(socNoController.text.replaceAll(".","").length > 6) {
+                                                           String subText = socNoText.replaceAll(".", "").substring(0,6);
+                                                           socNoController.text = app_util.Util.getSocNumStrToStr(subText)!;
+                                                           app_util.Util.toast("생년월일은 6자리를 넘길 수 없습니다.");
+                                                        }else{
+                                                          socNoController.text = app_util.Util.getSocNumStrToStr(socNoText.replaceAll(".", ""))!;
+                                                          socNoController.selection = TextSelection.fromPosition(TextPosition(offset: socNoController.text.length));
+                                                        }
+                                                      } else {
+                                                        socNoController.text = "";
+                                                      }
+                                                      setState(() {});
+                                                    },
+                                                  )
+
+                                                  /*Text(
                                                     "${app_util.Util.getSocNumStrToStr(app.value.socNo)}",
                                                     textAlign: TextAlign.center,
                                                     style: CustomStyle.CustomFont(styleFontSize12, text_color_01),
-                                                  )
+                                                  )*/
                                               )
                                           )
                                         ]
@@ -1561,7 +1647,7 @@ class _OrderDetailPageState extends State<OrderDetailPage> with WidgetsBindingOb
                                                       )
                                                   ),
                                                   child: Text(
-                                                    "${app_util.Util.makePhoneNumber(app.value.telnum)}",
+                                                    "${app_util.Util.makePhoneNumber(app.value.mobile)}",
                                                     textAlign: TextAlign.center,
                                                     style: CustomStyle.CustomFont(styleFontSize12, text_color_01),
                                                   )
@@ -1574,6 +1660,7 @@ class _OrderDetailPageState extends State<OrderDetailPage> with WidgetsBindingOb
                                           Expanded(
                                               flex: 1,
                                               child: Container(
+                                                height: CustomStyle.getHeight(35),
                                                 padding: const EdgeInsets.all(5.0),
                                                 decoration: BoxDecoration(
                                                     border: Border(
@@ -1597,7 +1684,8 @@ class _OrderDetailPageState extends State<OrderDetailPage> with WidgetsBindingOb
                                           Expanded(
                                               flex: 3,
                                               child: Container(
-                                                  padding: const EdgeInsets.all(7.0),
+                                                  height: CustomStyle.getHeight(35),
+                                                  //padding: const EdgeInsets.all(7.0),
                                                   decoration: BoxDecoration(
                                                       border: Border(
                                                         bottom: BorderSide(
@@ -1606,11 +1694,45 @@ class _OrderDetailPageState extends State<OrderDetailPage> with WidgetsBindingOb
                                                         ),
                                                       )
                                                   ),
-                                                  child: Text(
+                                                  child:
+                                                  TextField(
+                                                    maxLines: 1,
+                                                    keyboardType: TextInputType.emailAddress,
+                                                    style: CustomStyle.CustomFont(styleFontSize12, Colors.black),
+                                                    maxLengthEnforcement: MaxLengthEnforcement.enforced,
+                                                    textAlignVertical: TextAlignVertical.center,
+                                                    textAlign: TextAlign.center,
+                                                    controller: emailController,
+                                                    decoration: emailController.text.isNotEmpty ? InputDecoration(
+                                                      border: InputBorder.none,
+                                                      hintText: "이메일을 입력해주세요.",
+                                                      hintStyle: CustomStyle.CustomFont(styleFontSize12, light_gray23),
+                                                      suffixIcon: IconButton(
+                                                        onPressed: () {
+                                                          emailController.clear();
+                                                        },
+                                                        icon: const Icon(Icons.clear, size: 18,color: Colors.black,),
+                                                      ),
+                                                    ) : InputDecoration(
+                                                      border: InputBorder.none,
+                                                      hintText: "이메일을 입력해주세요.",
+                                                      hintStyle: CustomStyle.CustomFont(styleFontSize12, light_gray23),
+                                                    ),
+                                                    onChanged: (emailText) {
+                                                      if (emailText.isNotEmpty) {
+                                                        emailController.selection = TextSelection.fromPosition(TextPosition(offset: emailController.text.length));
+                                                        emailController.text = emailText;
+                                                      } else {
+                                                        emailController.text = "";
+                                                      }
+                                                      setState(() {});
+                                                    },
+                                                  )
+                                                  /*Text(
                                                     "${app.value.driverEmail}",
                                                     textAlign: TextAlign.center,
                                                     style: CustomStyle.CustomFont(styleFontSize12, text_color_01),
-                                                  )
+                                                  )*/
                                               )
                                           )
                                         ]
@@ -2030,7 +2152,7 @@ class _OrderDetailPageState extends State<OrderDetailPage> with WidgetsBindingOb
                             flex: 4,
                             child: InkWell(
                                 onTap: (){
-                                  confirm(_showPayCallback);
+                                  confirm(socNoController.text, emailController.text, _showPayCallback);
                                 },
                                 child: Container(
                                     decoration: CustomStyle.customBoxDeco(main_color,radius: 0),
@@ -2051,12 +2173,12 @@ class _OrderDetailPageState extends State<OrderDetailPage> with WidgetsBindingOb
     );
   }
 
-  void confirm(Function(String?) _showPayCallback) {
-    if(app.value.ceo == null || app.value.ceo?.isEmpty == true) {
+  void confirm(String? socNoControllerText,String? emailControllerText, Function(Map<String,String>?) _showPayCallback) {
+    /*if(app.value.ceo == null || app.value.ceo?.isEmpty == true) {
       app_util.Util.toast("신청정보에 \'대표자\'를 입력해주세요.");
     }else if(app.value.socNo == null || app.value.socNo?.isEmpty == true) {
       app_util.Util.toast("신청정보에 \'생년월일\'를 입력해주세요.");
-    }else if(app.value.telnum == null || app.value.telnum?.isEmpty == true) {
+    }else if(app.value.mobile == null || app.value.mobile?.isEmpty == true) {
       app_util.Util.toast("신청정보에 \'전화번호\'를 입력해주세요.");
     }else if(app.value.driverEmail == null || app.value.driverEmail?.isEmpty == true){
       app_util.Util.toast("신청정보에 \'이메일\'를 입력해주세요.");
@@ -2068,10 +2190,20 @@ class _OrderDetailPageState extends State<OrderDetailPage> with WidgetsBindingOb
       app_util.Util.toast("신청정보에 \'우편번호\'를 입력해주세요.");
     }else if(app.value.bizAddr == null || app.value.bizAddr?.isEmpty == true) {
       app_util.Util.toast("신청정보에 \'사업자등록주소\'를 입력해주세요.");
-    }else if(!_isChecked.value){
+    }*/
+    if(socNoControllerText == null || socNoControllerText?.isEmpty == true) {
+      app_util.Util.toast("신청정보에 \'생년월일\'를 입력해주세요.");
+    } else if(emailControllerText == null || emailControllerText?.isEmpty == true){
+      app_util.Util.toast("신청정보에 \'이메일\'를 입력해주세요.");
+    } else if(!_isChecked.value){
       app_util.Util.toast("빠른지급신청에 동의해주세요.");
     }else {
-      _showPayCallback("200");
+      Map<String,String> _result = {
+        'result' : "200",
+        'socNo' : socNoControllerText,
+        'email' : emailControllerText
+      };
+      _showPayCallback(_result);
       Navigator.of(context).pop();
     }
   }

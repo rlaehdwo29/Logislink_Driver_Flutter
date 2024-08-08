@@ -136,9 +136,11 @@ class _AppBarMyPageState extends State<AppBarMyPage> {
       switch(codeType) {
         case 'CAR_TYPE_CD':
           tempData.value.carTypeName = codeModel?.codeName??"";
+          tempData.value.carTypeCode = codeModel?.code;
           break;
         case 'CAR_TON_CD':
           tempData.value?.carTonName = codeModel?.codeName??"";
+          tempData.value.carTonCode = codeModel?.code;
           break;
         case 'YN_SEL' :
           if(value != 0){
