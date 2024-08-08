@@ -591,20 +591,22 @@ class _OrderDetailPageState extends State<OrderDetailPage> with WidgetsBindingOb
               orderItem.value?.allocStateName??"-",
               style: CustomStyle.CustomFont(styleFontSize14, app_util.Util.getOrderStateColor(orderItem.value?.allocState)),
             ),
-            InkWell(
-                onTap: () async {
-                  goToPay();
-                },
-                child: orderItem.value?.allocState == "05" && app_util.Util.ynToBoolean(orderItem.value?.payType)?
-                Container(
-                  padding: EdgeInsets.symmetric(vertical: CustomStyle.getHeight(5.0),horizontal: CustomStyle.getWidth(10.0)),
-                  decoration: tvPay.value ? CustomStyle.customBoxDeco(styleWhiteCol,border_color: text_color_02) : CustomStyle.customBoxDeco(sub_color),
-                  child: Text(
-                    Strings.of(context)?.get("pay_title")??"Not Found",
-                    style: CustomStyle.CustomFont(styleFontSize10, tvPay.value ? text_color_02 : styleWhiteCol),
-                  ),
-                ) : const SizedBox()
-            )
+            orderItem.value?.sellCustId == "C20210802130835001" ?
+            orderItem.value?.allocState == "05" && app_util.Util.ynToBoolean(orderItem.value?.payType)?
+              InkWell(
+                  onTap: () async {
+                    goToPay();
+                  },
+                  child: Container(
+                    padding: EdgeInsets.symmetric(vertical: CustomStyle.getHeight(5.0),horizontal: CustomStyle.getWidth(10.0)),
+                    decoration: tvPay.value ? CustomStyle.customBoxDeco(styleWhiteCol,border_color: text_color_02) : CustomStyle.customBoxDeco(sub_color),
+                    child: Text(
+                      Strings.of(context)?.get("pay_title")??"Not Found",
+                      style: CustomStyle.CustomFont(styleFontSize10, tvPay.value ? text_color_02 : styleWhiteCol),
+                    ),
+                  )
+              ): const SizedBox()
+                :const SizedBox()
           ],
         )
     );
