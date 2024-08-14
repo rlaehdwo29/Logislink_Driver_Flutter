@@ -101,6 +101,8 @@ class OrderModel extends ResultModel {
 
   String? autoCarTimeYn;       //Geo 값 On/Off 업체 설정 (Y: 출입차 자동 처리, N: 업체 미 적용)
 
+  String? insureAmt;  //산재금액
+
   OrderModel({
     this.orderId,
     this.allocId,
@@ -187,6 +189,7 @@ class OrderModel extends ResultModel {
     this.reqPayFee,
     this.finishYn,
     this.autoCarTimeYn,
+    this.insureAmt
   });
 
   factory OrderModel.fromJSON(Map<String,dynamic> json) {
@@ -275,7 +278,8 @@ class OrderModel extends ResultModel {
       payAmt:json['payAmt'],
       reqPayFee:double.parse((json['reqPayFee'] ?? 0.0).toString()),
       finishYn:json['finishYn'],
-      autoCarTimeYn:json['autoCarTimeYn']
+      autoCarTimeYn:json['autoCarTimeYn'],
+      insureAmt:json['insureAmt']
     );
     return order;
   }

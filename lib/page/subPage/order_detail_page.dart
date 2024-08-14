@@ -71,12 +71,15 @@ class _OrderDetailPageState extends State<OrderDetailPage> with WidgetsBindingOb
   final orderItem = OrderModel().obs;
   final stopPointList = List.empty(growable: true).obs;
 
+  final mAllocId = "".obs;
+  final mOrderId = "".obs;
+
   late AppLifecycleState _notification;
 
   @override
   void initState() {
     FBroadcast.instance().register(Const.INTENT_DETAIL_REFRESH, (value, callback) async {
-      await getOrderDetail(widget.allocId);
+      await getOrderDetail(orderItem.value?.allocId);
     });
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       app.value = await controller.getUserInfo();
@@ -86,8 +89,10 @@ class _OrderDetailPageState extends State<OrderDetailPage> with WidgetsBindingOb
         await initView();
       }else{
         if(widget.allocId != null) {
+          mAllocId.value = widget.allocId!;
+          mOrderId.value = widget.orderId!;
           code = widget.code;
-          await getOrderList2();
+          await getOrderList2(mAllocId.value,mOrderId.value);
         }else{
           Navigator.of(context).pop(false);
         }
@@ -1428,6 +1433,11 @@ class _OrderDetailPageState extends State<OrderDetailPage> with WidgetsBindingOb
                                           "* 왼쪽의 빠른지급신청에 동의해주세요.",
                                           textAlign: TextAlign.start,
                                           style: CustomStyle.CustomFont(styleFontSize11, addr_zip_no,font_weight: FontWeight.w600),
+                                        ),
+                                        Text(
+                                          "* 산재금액(${app_util.Util.getInCodeCommaWon(orderItem.value.insureAmt)} 원) 예치금에서 공제됩니다.",
+                                          textAlign: TextAlign.start,
+                                          style: CustomStyle.CustomFont(styleFontSize11, addr_zip_no,font_weight: FontWeight.w600),
                                         )
                                       ],
                                     )
@@ -2444,14 +2454,14 @@ class _OrderDetailPageState extends State<OrderDetailPage> with WidgetsBindingOb
     List<String>? allocList = await SP.getStringList(Const.KEY_ALLOC_ID);
     allocList?.add(orderItem.value?.allocId??"");
     await SP.putStringList(Const.KEY_ALLOC_ID, allocList);
-    locationUpdate(widget.allocId);
+    locationUpdate(orderItem.value?.allocId);
   }
 
-  Future<void> getOrderList2() async {
+  Future<void> getOrderList2(String allocId, String orderId) async {
     Logger logger = Logger();
     await pr?.show();
     var app = await controller.getUserInfo();
-    await DioService.dioClient(header: true).getOrderList2(app.authorization, widget.allocId, widget.orderId).then((it) async {
+    await DioService.dioClient(header: true).getOrderList2(app.authorization, allocId, orderId).then((it) async {
       await pr?.hide();
       ReturnMap _response = DioService.dioResponse(it);
       logger.d("getOrderList2() _response -> ${_response.status} // ${_response.resultMap}");
@@ -2626,7 +2636,7 @@ class _OrderDetailPageState extends State<OrderDetailPage> with WidgetsBindingOb
   }
 
   Future<void> removeAllocList() async {
-    locationUpdate(widget.allocId);
+    locationUpdate(orderItem.value?.allocId);
 
     List<String>? allocList = await SP.getStringList(Const.KEY_ALLOC_ID);
     allocList?.remove(orderItem.value?.allocId);

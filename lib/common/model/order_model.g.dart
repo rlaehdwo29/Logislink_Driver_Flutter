@@ -92,6 +92,7 @@ OrderModel _$OrderModelFromJson(Map<String, dynamic> json) => OrderModel(
       reqPayFee: (json['reqPayFee'] as num?)?.toDouble(),
       finishYn: json['finishYn'] as String?,
       autoCarTimeYn: json['autoCarTimeYn'] as String?,
+      insureAmt: json['insureAmt'] as String?,
     );
 
 Map<String, dynamic> _$OrderModelToJson(OrderModel instance) =>
@@ -181,4 +182,5 @@ Map<String, dynamic> _$OrderModelToJson(OrderModel instance) =>
       'reqPayFee': instance.reqPayFee,
       'finishYn': instance.finishYn,
       'autoCarTimeYn': instance.autoCarTimeYn,
+      'insureAmt': instance.insureAmt,
     };
