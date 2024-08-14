@@ -591,22 +591,6 @@ class _OrderDetailPageState extends State<OrderDetailPage> with WidgetsBindingOb
               orderItem.value?.allocStateName??"-",
               style: CustomStyle.CustomFont(styleFontSize14, app_util.Util.getOrderStateColor(orderItem.value?.allocState)),
             ),
-            orderItem.value?.sellCustId == "C20210802130835001" ?
-            orderItem.value?.allocState == "05" && app_util.Util.ynToBoolean(orderItem.value?.payType)?
-              InkWell(
-                  onTap: () async {
-                    goToPay();
-                  },
-                  child: Container(
-                    padding: EdgeInsets.symmetric(vertical: CustomStyle.getHeight(5.0),horizontal: CustomStyle.getWidth(10.0)),
-                    decoration: tvPay.value ? CustomStyle.customBoxDeco(styleWhiteCol,border_color: text_color_02) : CustomStyle.customBoxDeco(sub_color),
-                    child: Text(
-                      Strings.of(context)?.get("pay_title")??"Not Found",
-                      style: CustomStyle.CustomFont(styleFontSize10, tvPay.value ? text_color_02 : styleWhiteCol),
-                    ),
-                  )
-              ): const SizedBox()
-                :const SizedBox()
           ],
         )
     );
@@ -643,7 +627,22 @@ class _OrderDetailPageState extends State<OrderDetailPage> with WidgetsBindingOb
                           )
                       ),
                     ),
-                    orderItem.value?.chargeType == "01" ?
+                    orderItem.value?.sellCustId == "C20210802130835001" ?
+                      orderItem.value?.allocState == "05" && app_util.Util.ynToBoolean(orderItem.value?.payType)?
+                      InkWell(
+                          onTap: () async {
+                            goToPay();
+                          },
+                          child: Container(
+                            padding: EdgeInsets.symmetric(vertical: CustomStyle.getHeight(5.0),horizontal: CustomStyle.getWidth(10.0)),
+                            decoration: tvPay.value ? CustomStyle.customBoxDeco(styleWhiteCol,border_color: text_color_02) : CustomStyle.customBoxDeco(sub_color),
+                            child: Text(
+                              Strings.of(context)?.get("pay_title")??"Not Found",
+                              style: CustomStyle.CustomFont(styleFontSize10, tvPay.value ? text_color_02 : styleWhiteCol),
+                            ),
+                          )
+                      ): const SizedBox()
+                    : orderItem.value?.chargeType == "01" ?
                     InkWell(
                       onTap: () async {
                         await goToTax();
@@ -665,7 +664,8 @@ class _OrderDetailPageState extends State<OrderDetailPage> with WidgetsBindingOb
   }
 
   Widget getPayType(){
-    return app_util.Util.ynToBoolean(orderItem.value?.payType)? Container(
+    return app_util.Util.ynToBoolean(orderItem.value?.payType)?
+    Container(
       margin: EdgeInsets.only(bottom: CustomStyle.getHeight(10.0)),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.center,
@@ -2762,7 +2762,7 @@ class _OrderDetailPageState extends State<OrderDetailPage> with WidgetsBindingOb
                                       // 화물 적재 타입 및 운송 타입
                                       getMixAndReturnYN(),
                                       // 빠른 지급
-                                      getPayType(),
+                                      orderItem.value?.sellCustId == "C20210802130835001" ? getPayType() : const SizedBox(),
                                       // 화물 정보 및 요청사항
                                       getOrderInfo(),
                                       // 상차 상태 및 운송 시간
