@@ -2235,7 +2235,11 @@ class _OrderDetailPageState extends State<OrderDetailPage> with WidgetsBindingOb
       if(results["code"] == 200) {
         await getOrderDetail(orderItem.value?.allocId);
         if (orderItem.value?.taxinvYn == "N" && orderItem.value?.loadStatus == "0") {
-          showNextTaxDialog();
+          if(orderItem.value?.sellCustId == "C20210802130835001") {
+            Navigator.of(context).pop(false);
+          }else{
+            showNextTaxDialog();
+          }
         }
         setState(() {});
       }
