@@ -283,12 +283,12 @@ class _TaxPageState extends State<TaxPage> {
   Future<void> sendTax() async {
     var _validation = await validation();
     if(_validation) {
-      if(widget.item?.payType == "Y") {
+      /*if(widget.item?.payType == "Y") {
         if(widget.item?.reqPayYN == "N") {
           showIsPayDialog();
           return;
         }
-      }
+      }*/
       showTax();
     }
   }

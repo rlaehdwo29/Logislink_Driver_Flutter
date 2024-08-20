@@ -8,9 +8,11 @@ class CodeModel extends ResultModel {
 
   String? code;
   String? codeName;
+  String? useYn;
+  String? memo;
   bool? isCheck;
 
-  CodeModel({this.code, this.codeName});
+  CodeModel({this.code, this.codeName, this.useYn, this.memo});
 
   factory CodeModel.fromJSON(Map<String,dynamic> json) => _$CodeModelFromJson(json);
 

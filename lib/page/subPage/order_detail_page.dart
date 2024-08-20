@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:developer';
 import 'dart:io' as io;
 
@@ -36,6 +37,8 @@ import 'package:progress_dialog_null_safe/progress_dialog_null_safe.dart';
 import 'package:provider/provider.dart';
 import 'package:dio/dio.dart';
 import 'package:url_launcher/url_launcher.dart';
+
+import '../../common/model/code_model.dart';
 
 class OrderDetailPage extends StatefulWidget {
   OrderModel? item;
@@ -984,6 +987,7 @@ class _OrderDetailPageState extends State<OrderDetailPage> with WidgetsBindingOb
                 app_util.Util.snackbar(context, "계좌정보를 확인해 주세요. 등록된 계좌정보가 없거나 확인되지 않은 계좌입니다.");
               } else {
                 showPay(showPayConfirm);
+                await getPopUpTask();
               }
             }else{
               if(!(gData.loadStatus == "0")) {
@@ -2336,6 +2340,38 @@ class _OrderDetailPageState extends State<OrderDetailPage> with WidgetsBindingOb
           break;
       }
     });
+  }
+
+  Future<void> getPopUpTask() async {
+    Logger logger = Logger();
+      await DioService.dioClient(header: true).getCodeList(Const.DRIVER_POPUP_CHECK).then((it) async {
+        ReturnMap _response = DioService.dioResponse(it);
+        logger.d("GetPopUpTask() _response -> ${_response.status} // ${_response.resultMap}");
+        if(_response.status == "200") {
+          if(_response.resultMap?["data"] != null) {
+            var jsonString = jsonEncode(it.response.data);
+            Map<String, dynamic> jsonData = jsonDecode(jsonString);
+            var list = jsonData?["data"] as List;
+            List<CodeModel>? itemsList = list.map((i) => CodeModel.fromJSON(i)).toList();
+            if(itemsList[0].useYn == "Y") {
+              openOkBox(context, "${itemsList[0].codeName} \n\n ${itemsList[0].memo}", Strings.of(context)?.get("confirm") ?? "Error!!", () async {
+                Navigator.of(context).pop(false);
+              },align: TextAlign.left);
+            }
+          }
+        }
+      }).catchError((Object obj) async {
+        switch (obj.runtimeType) {
+          case DioError:
+          // Here's the sample to get the failed response error code and message
+            final res = (obj as DioError).response;
+            logger.e("brige_page.dart GetPopUpTask() Error Default: ${res?.statusCode} -> ${res?.statusMessage}");
+            break;
+          default:
+            logger.e("brige_page.dart GetPopUpTask() Error Default:");
+            break;
+        }
+      });
   }
 
   Future<void> _setState() async {

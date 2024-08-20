@@ -30,7 +30,7 @@ class ReturnMap {
   }
 }
 
-openOkBox(BuildContext context, String msg,String okTxt, Function() okEvent) {
+openOkBox(BuildContext context, String msg,String okTxt, Function() okEvent,{TextAlign? align}) {
   return openDialogBox(context,
       msg,
       InkWell(
@@ -49,6 +49,7 @@ openOkBox(BuildContext context, String msg,String okTxt, Function() okEvent) {
             ),
           ),
         ),
+    align: align
   );
 }
 
@@ -99,7 +100,7 @@ openCommonConfirmBox(BuildContext context, String msg, String cancelTxt,
 }
 
 
-openDialogBox(BuildContext context, String msg, Widget button) {
+openDialogBox(BuildContext context, String msg, Widget button,{TextAlign? align}) {
   return showDialog(
       barrierDismissible: false,
       context: context,
@@ -119,7 +120,7 @@ openDialogBox(BuildContext context, String msg, Widget button) {
                   Padding(
                     padding: EdgeInsets.all(CustomStyle.getWidth(30.0)),
                     child: RichText(
-                      textAlign: TextAlign.center,
+                      textAlign: align ?? TextAlign.center,
                       text: TextSpan(
                         text: msg,
                         style: CustomStyle.alertMsgFont(),
