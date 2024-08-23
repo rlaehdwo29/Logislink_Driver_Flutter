@@ -34,7 +34,7 @@ UserModel _$UserModelFromJson(Map<String, dynamic> json) => UserModel(
       bizCond: json['bizCond'] as String?,
       socNo: json['socNo'] as String?,
       driverEmail: json['driverEmail'] as String?,
-      vehicCnt: json['vehicCnt'] as int?,
+      vehicCnt: (json['vehicCnt'] as num?)?.toInt(),
       dangerGoodsYn: json['dangerGoodsYn'] as String?,
       chemicalsYn: json['chemicalsYn'] as String?,
       foreignLicenseYn: json['foreignLicenseYn'] as String?,

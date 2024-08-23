@@ -7,18 +7,18 @@ part of 'car_book_model.dart';
 // **************************************************************************
 
 CarBookModel _$CarBookModelFromJson(Map<String, dynamic> json) => CarBookModel(
-      carSeq: json['carSeq'] as int?,
+      carSeq: (json['carSeq'] as num?)?.toInt(),
       driverId: json['driverId'] as String?,
       bookSeq: json['bookSeq'] as String?,
       itemCode: json['itemCode'] as String?,
       bookDate: json['bookDate'] as String?,
-      price: json['price'] as int?,
-      unit: json['unit'] as int?,
-      total: json['total'] as int?,
-      mileage: json['mileage'] as int?,
-      fuel: json['fuel'] as int?,
-      refuelAmt: json['refuelAmt'] as int?,
-      unitPrice: json['unitPrice'] as int?,
+      price: (json['price'] as num?)?.toInt(),
+      unit: (json['unit'] as num?)?.toInt(),
+      total: (json['total'] as num?)?.toInt(),
+      mileage: (json['mileage'] as num?)?.toInt(),
+      fuel: (json['fuel'] as num?)?.toInt(),
+      refuelAmt: (json['refuelAmt'] as num?)?.toInt(),
+      unitPrice: (json['unitPrice'] as num?)?.toInt(),
       regDate: json['regDate'] as String?,
       memo: json['memo'] as String?,
     );

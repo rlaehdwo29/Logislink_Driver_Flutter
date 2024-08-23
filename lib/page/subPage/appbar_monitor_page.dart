@@ -472,7 +472,7 @@ class _AppBarMonitorPageState extends State<AppBarMonitorPage> {
   Widget build(BuildContext context) {
     Util.notificationDialog(context,"실적현황",webViewKey);
     return Scaffold(
-        backgroundColor: Theme.of(context).backgroundColor,
+        backgroundColor: Colors.white,
       appBar: PreferredSize(
           preferredSize: Size.fromHeight(CustomStyle.getHeight(60.0)),
           child: AppBar(

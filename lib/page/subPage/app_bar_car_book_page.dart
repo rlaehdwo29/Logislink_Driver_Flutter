@@ -1021,7 +1021,7 @@ class _AppBarCarBookPageState extends State<AppBarCarBookPage> with TickerProvid
     pr = Util.networkProgress(context);
     Util.notificationDialog(context,"차계부",webViewKey);
     return Scaffold(
-      backgroundColor: Theme.of(context).backgroundColor,
+      backgroundColor: Colors.white,
       appBar: PreferredSize(
           preferredSize: Size.fromHeight(CustomStyle.getHeight(60.0)),
           child: AppBar(

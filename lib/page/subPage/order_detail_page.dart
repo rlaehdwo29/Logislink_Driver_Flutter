@@ -599,6 +599,24 @@ class _OrderDetailPageState extends State<OrderDetailPage> with WidgetsBindingOb
               orderItem.value?.allocStateName??"-",
               style: CustomStyle.CustomFont(styleFontSize14, app_util.Util.getOrderStateColor(orderItem.value?.allocState)),
             ),
+            orderItem.value?.sellCustId == "C20210802130835001" ?
+              orderItem.value?.taxinvYn == "N" ?
+                orderItem.value?.allocState == "05" && app_util.Util.ynToBoolean(orderItem.value?.payType)?
+                InkWell(
+                    onTap: () async {
+                      goToPay();
+                    },
+                    child: Container(
+                      padding: EdgeInsets.symmetric(vertical: CustomStyle.getHeight(5.0),horizontal: CustomStyle.getWidth(10.0)),
+                      decoration: tvPay.value ? CustomStyle.customBoxDeco(styleWhiteCol,border_color: text_color_02) : CustomStyle.customBoxDeco(sub_color),
+                      child: Text(
+                        Strings.of(context)?.get("pay_title")??"Not Found",
+                        style: CustomStyle.CustomFont(styleFontSize10, tvPay.value ? text_color_02 : styleWhiteCol),
+                      ),
+                    )
+                ): const SizedBox()
+              :const SizedBox()
+            : const SizedBox()
           ],
         )
     );
@@ -628,42 +646,31 @@ class _OrderDetailPageState extends State<OrderDetailPage> with WidgetsBindingOb
                       child: Container(
                           decoration: tvReceipt.value ? CustomStyle.customBoxDeco(styleWhiteCol,border_color: text_color_02) : CustomStyle.customBoxDeco(sub_color),
                           padding: EdgeInsets.symmetric(vertical: CustomStyle.getHeight(5.0),horizontal: CustomStyle.getWidth(10.0)),
-                          margin: EdgeInsets.only(right: CustomStyle.getWidth(10.0)),
                           child:Text(
                             Strings.of(context)?.get("receipt_reg_title")??"Not Found",
                             style: CustomStyle.CustomFont(styleFontSize10, tvReceipt.value ? text_color_02 : styleWhiteCol),
                           )
                       ),
                     ),
-                    orderItem.value?.sellCustId == "C20210802130835001" ?
-                      orderItem.value?.allocState == "05" && app_util.Util.ynToBoolean(orderItem.value?.payType)?
-                      InkWell(
-                          onTap: () async {
-                            goToPay();
-                          },
-                          child: Container(
-                            padding: EdgeInsets.symmetric(vertical: CustomStyle.getHeight(5.0),horizontal: CustomStyle.getWidth(10.0)),
-                            decoration: tvPay.value ? CustomStyle.customBoxDeco(styleWhiteCol,border_color: text_color_02) : CustomStyle.customBoxDeco(sub_color),
-                            child: Text(
-                              Strings.of(context)?.get("pay_title")??"Not Found",
-                              style: CustomStyle.CustomFont(styleFontSize10, tvPay.value ? text_color_02 : styleWhiteCol),
-                            ),
-                          )
-                      ): const SizedBox()
-                    : orderItem.value?.chargeType == "01" ?
-                    InkWell(
-                      onTap: () async {
-                        await goToTax();
-                      },
-                      child: Container(
-                          decoration: tvTax.value ? CustomStyle.customBoxDeco(styleWhiteCol,border_color: text_color_02) : CustomStyle.customBoxDeco(sub_color),
-                          padding: EdgeInsets.symmetric(vertical: CustomStyle.getHeight(5.0),horizontal: CustomStyle.getWidth(10.0)),
-                          child:Text(
-                            Strings.of(context)?.get("tax_title")??"Not Found",
-                            style: CustomStyle.CustomFont(styleFontSize10, tvTax.value ? text_color_02 : styleWhiteCol),
-                          )
-                      ),
-                    ):const SizedBox(),
+                    orderItem.value?.reqPayYN == "N" ?
+                      orderItem.value?.chargeType == "01" ?
+                        Container(
+                           margin: EdgeInsets.only(left: CustomStyle.getWidth(10.0)),
+                           child: InkWell(
+                           onTap: () async {
+                             await goToTax();
+                           },
+                           child: Container(
+                               decoration: tvTax.value ? CustomStyle.customBoxDeco(styleWhiteCol,border_color: text_color_02) : CustomStyle.customBoxDeco(sub_color),
+                               padding: EdgeInsets.symmetric(vertical: CustomStyle.getHeight(5.0),horizontal: CustomStyle.getWidth(10.0)),
+                               child:Text(
+                                 Strings.of(context)?.get("tax_title")??"Not Found",
+                                 style: CustomStyle.CustomFont(styleFontSize10, tvTax.value ? text_color_02 : styleWhiteCol),
+                               )
+                           ),
+                         )
+                       ) : const SizedBox()
+                     : const SizedBox()
                   ]
               ) : const SizedBox()
             ]
@@ -855,8 +862,8 @@ class _OrderDetailPageState extends State<OrderDetailPage> with WidgetsBindingOb
                     flex: 1,
                     child:ElevatedButton(
                         style: ElevatedButton.styleFrom(
-                          primary: orderItem.value?.allocState != "04" && orderItem.value?.allocState != "05" && orderItem.value?.allocState != "20" && orderItem.value?.allocState != "12"? sub_color : text_color_02,
-                          onPrimary: orderItem.value?.allocState != "04" && orderItem.value?.allocState != "05" && orderItem.value?.allocState != "20" && orderItem.value?.allocState != "12"? sub_color : text_color_02,
+                          foregroundColor: orderItem.value?.allocState != "04" && orderItem.value?.allocState != "05" && orderItem.value?.allocState != "20" && orderItem.value?.allocState != "12"? sub_color : text_color_02,
+                          backgroundColor: orderItem.value?.allocState != "04" && orderItem.value?.allocState != "05" && orderItem.value?.allocState != "20" && orderItem.value?.allocState != "12"? sub_color : text_color_02,
                           padding: EdgeInsets.symmetric(vertical: CustomStyle.getHeight(5.0)),
                           shape: const RoundedRectangleBorder(
                               borderRadius: BorderRadius.all(Radius.circular(5.0))
@@ -879,8 +886,8 @@ class _OrderDetailPageState extends State<OrderDetailPage> with WidgetsBindingOb
                     flex: 1,
                     child:ElevatedButton(
                         style: ElevatedButton.styleFrom(
-                          primary: orderItem.value?.allocState != "04" && orderItem.value?.allocState != "05" && orderItem.value?.allocState != "20"? sub_color : text_color_02,
-                          onPrimary: orderItem.value?.allocState != "04" && orderItem.value?.allocState != "05" && orderItem.value?.allocState != "20"? sub_color : text_color_02,
+                          foregroundColor: orderItem.value?.allocState != "04" && orderItem.value?.allocState != "05" && orderItem.value?.allocState != "20"? sub_color : text_color_02,
+                          backgroundColor: orderItem.value?.allocState != "04" && orderItem.value?.allocState != "05" && orderItem.value?.allocState != "20"? sub_color : text_color_02,
                           padding: EdgeInsets.symmetric(vertical: CustomStyle.getHeight(5.0)),
                           shape: const RoundedRectangleBorder(
                               borderRadius: BorderRadius.all(Radius.circular(5.0))
@@ -899,8 +906,8 @@ class _OrderDetailPageState extends State<OrderDetailPage> with WidgetsBindingOb
                 )
               ]) : ElevatedButton(
               style: ElevatedButton.styleFrom(
-                primary: orderItem.value?.allocState != "05" ? sub_color : text_color_02,
-                onPrimary: orderItem.value?.allocState != "05" ? sub_color : text_color_02,
+                foregroundColor: orderItem.value?.allocState != "05" ? sub_color : text_color_02,
+                backgroundColor: orderItem.value?.allocState != "05" ? sub_color : text_color_02,
                 padding: EdgeInsets.symmetric(vertical: CustomStyle.getHeight(5.0)),
                 shape: const RoundedRectangleBorder(
                     borderRadius: BorderRadius.all(Radius.circular(5.0))
@@ -2240,7 +2247,9 @@ class _OrderDetailPageState extends State<OrderDetailPage> with WidgetsBindingOb
         await getOrderDetail(orderItem.value?.allocId);
         if (orderItem.value?.taxinvYn == "N" && orderItem.value?.loadStatus == "0") {
           if(orderItem.value?.sellCustId == "C20210802130835001") {
-            Navigator.of(context).pop(false);
+            if(tvTax.value) {
+              showNextTaxDialog();
+            }
           }else{
             showNextTaxDialog();
           }
@@ -2720,7 +2729,7 @@ class _OrderDetailPageState extends State<OrderDetailPage> with WidgetsBindingOb
           return false;
         },
         child: Scaffold(
-            backgroundColor: Theme.of(context).backgroundColor,
+            backgroundColor: Colors.white,
             appBar: PreferredSize(
                 preferredSize: Size.fromHeight(CustomStyle.getHeight(50.0)),
                 child: AppBar(

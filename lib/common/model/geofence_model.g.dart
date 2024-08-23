@@ -16,8 +16,8 @@ GeofenceModel _$GeofenceModelFromJson(Map<String, dynamic> json) =>
       lon: json['lon'] as String,
       endDate: json['endDate'] as String?,
       flag: json['flag'] as String?,
-      stopNum: json['stopNum'] as int?,
-    )..id = json['id'] as int?;
+      stopNum: (json['stopNum'] as num?)?.toInt(),
+    )..id = (json['id'] as num?)?.toInt();
 
 Map<String, dynamic> _$GeofenceModelToJson(GeofenceModel instance) =>
     <String, dynamic>{

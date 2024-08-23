@@ -8,7 +8,7 @@ part of 'notification_model.dart';
 
 NotificationModel _$NotificationModelFromJson(Map<String, dynamic> json) =>
     NotificationModel(
-      msgSeq: json['msgSeq'] as int?,
+      msgSeq: (json['msgSeq'] as num?)?.toInt(),
       orderId: json['orderId'] as String?,
       allocId: json['allocId'] as String?,
       title: json['title'] as String?,

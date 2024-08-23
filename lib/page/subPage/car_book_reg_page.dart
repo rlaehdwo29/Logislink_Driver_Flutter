@@ -1879,7 +1879,7 @@ class _CarBookRegPageState extends State<CarBookRegPage>{
     pr = Util.networkProgress(context);
 
     return Scaffold(
-        backgroundColor: Theme.of(context).backgroundColor,
+        backgroundColor: Colors.white,
       appBar: PreferredSize(
           preferredSize: Size.fromHeight(CustomStyle.getHeight(60.0)),
           child: AppBar(

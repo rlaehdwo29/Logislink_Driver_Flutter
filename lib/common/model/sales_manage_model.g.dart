@@ -20,7 +20,7 @@ SalesManageModel _$SalesManageModelFromJson(Map<String, dynamic> json) =>
       endDate: json['endDate'] as String?,
       orderComp: json['orderComp'] as String?,
       truckNetwork: json['truckNetwork'] as String?,
-      money: json['money'] as int?,
+      money: (json['money'] as num?)?.toInt(),
       startLoc: json['startLoc'] as String?,
       endLoc: json['endLoc'] as String?,
       goodsName: json['goodsName'] as String?,

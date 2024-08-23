@@ -9,7 +9,7 @@ part of 'result_model.dart';
 ResultModel _$ResultModelFromJson(Map<String, dynamic> json) => ResultModel(
       result: json['result'] as bool?,
       msg: json['msg'] as String?,
-      total: json['total'] as int?,
+      total: (json['total'] as num?)?.toInt(),
     );
 
 Map<String, dynamic> _$ResultModelToJson(ResultModel instance) =>

@@ -9,6 +9,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_foreground_task/flutter_foreground_task.dart';
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
@@ -48,6 +49,7 @@ late AppDataBase database;
 bool permission_state = false;
 
 Future<void> main() async {
+  FlutterForegroundTask.initCommunicationPort();
   final binding = WidgetsFlutterBinding.ensureInitialized();
   try {
     await Firebase.initializeApp(
@@ -250,8 +252,7 @@ class _MyAppState extends State<MyApp> {
                   .appBarTheme
                   .copyWith(backgroundColor: main_color),
               primaryColor: main_color,
-              backgroundColor: styleWhiteCol,
-              textTheme: TextTheme(bodyText1: CustomStyle.baseFont()),
+              textTheme: TextTheme(bodyLarge: CustomStyle.baseFont()),
               visualDensity: VisualDensity.adaptivePlatformDensity,
               fontFamily: 'NanumSquare',
             ),

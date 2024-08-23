@@ -121,9 +121,7 @@ class _TaxPageState extends State<TaxPage> {
           return false;
         } ,
         child: Scaffold(
-            backgroundColor: Theme
-                .of(context)
-                .backgroundColor,
+            backgroundColor: Colors.white,
             appBar: PreferredSize(
                 preferredSize: Size.fromHeight(CustomStyle.getHeight(50.0)),
                 child: AppBar(
@@ -311,27 +309,48 @@ class _TaxPageState extends State<TaxPage> {
   }
 
   void showTax() {
-    openCommonConfirmBox(
-        context,
-        "[${widget.item?.sellCustName}] \n\n 전자세금계산서를 발행 하시겠습니까?",
-        Strings.of(context)?.get("cancel")??"Not Found",
-        Strings.of(context)?.get("confirm")??"Not Found",
-            () {
-          Navigator.of(context).pop(false);
-        },
-            () async {
-          Navigator.of(context).pop(false);
-          if(widget.item?.invId?.isNotEmpty == true) {
-            if(widget.item?.loadStatus == "0") {
-              await issueTax();
-            }else if(widget.item?.loadStatus == "1") {
-              Util.toast("전자세금계산서 발행 요청중입니다.");
+    if(widget.item?.sellCustId == "C20210802130835001") {
+      openCommonConfirmBox(
+          context,
+          "※ \'전자세금계산서\' 발행 시\n\'빠른지급신청\'을 할 수 없습니다.\n\n [${widget.item?.sellCustName}] \'전자세금계산서\'를\n발행 하시겠습니까?",
+          Strings.of(context)?.get("cancel")??"Not Found",
+          Strings.of(context)?.get("confirm")??"Not Found",
+              () => Navigator.of(context).pop(false),
+              () async {
+                Navigator.of(context).pop(false);
+                if(widget.item?.invId?.isNotEmpty == true) {
+                  if(widget.item?.loadStatus == "0") {
+                    await issueTax();
+                  }else if(widget.item?.loadStatus == "1") {
+                    Util.toast("전자세금계산서 발행 요청중입니다.");
+                  }
+                }else{
+                  await writeTax();
+                }
+          });
+    }else{
+      openCommonConfirmBox(
+          context,
+          "[${widget.item?.sellCustName}] \n\n 전자세금계산서를 발행 하시겠습니까?",
+          Strings.of(context)?.get("cancel")??"Not Found",
+          Strings.of(context)?.get("confirm")??"Not Found",
+              () {
+            Navigator.of(context).pop(false);
+          },
+              () async {
+            Navigator.of(context).pop(false);
+            if(widget.item?.invId?.isNotEmpty == true) {
+              if(widget.item?.loadStatus == "0") {
+                await issueTax();
+              }else if(widget.item?.loadStatus == "1") {
+                Util.toast("전자세금계산서 발행 요청중입니다.");
+              }
+            }else{
+              await writeTax();
             }
-          }else{
-            await writeTax();
           }
-        }
-    );
+      );
+    }
   }
 
   Future<void> writeTax() async {
@@ -1559,8 +1578,8 @@ class _TaxPageState extends State<TaxPage> {
                       ),
                       ElevatedButton(
                           style: ElevatedButton.styleFrom(
-                            primary: sub_color,
-                            onPrimary: main_color,
+                            foregroundColor: sub_color,
+                            backgroundColor: main_color,
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(15.0),
                             ),
@@ -2222,8 +2241,8 @@ class _TaxPageState extends State<TaxPage> {
             ),
             ElevatedButton(
                 style: ElevatedButton.styleFrom(
-                  primary: sub_color,
-                  onPrimary: main_color,
+                  foregroundColor: sub_color,
+                  backgroundColor: main_color,
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(15.0),
                   ),

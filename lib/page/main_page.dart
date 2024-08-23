@@ -10,6 +10,8 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_foreground_task/flutter_foreground_task.dart';
+import 'package:flutter_foreground_task/ui/with_foreground_task.dart';
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:geofence_service/geofence_service.dart';
@@ -84,6 +86,7 @@ class _MainPageState extends State<MainPage> with CommonMainWidget,WidgetsBindin
   final _activityStreamController = StreamController<Activity>();
   final _geofenceStreamController = StreamController<Geofence>();
   List<Geofence> geofenceList = List.empty(growable: true);
+
   final _geofenceService = GeofenceService.instance.setup(
       interval: 5000, // GeoFence 상태 확인 5초마다
       accuracy: 100, // GeoFence 지정 범위 100M
@@ -318,6 +321,8 @@ class _MainPageState extends State<MainPage> with CommonMainWidget,WidgetsBindin
   void initState() {
     super.initState();
     isRunning = true;
+    FlutterForegroundTask.addTaskDataCallback(_onReceiveTaskData);
+
     FBroadcast.instance().register(Const.INTENT_ORDER_REFRESH, (value, callback) async {
       await getOrderMethod(true);
     },context: this);
@@ -391,8 +396,32 @@ class _MainPageState extends State<MainPage> with CommonMainWidget,WidgetsBindin
         var guest = await SP.getBoolean(Const.KEY_GUEST_MODE);
       if (guest) showGuestDialog();
     });
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      // Request permissions and initialize the service.
+      _requestPermissions();
+      _initService();
+    });
+
   }
 
+  void _onReceiveTaskData(Object data) {
+    if (data is int) {
+      if(!_geofenceService.isRunningService) {
+        _geofenceService.addGeofenceStatusChangeListener(_onGeofenceStatusChanged);
+        _geofenceService.addLocationChangeListener(_onLocationChanged);
+        _geofenceService.addLocationServicesStatusChangeListener(_onLocationServicesStatusChanged);
+        _geofenceService.addActivityChangeListener(_onActivityChanged);
+        _geofenceService.addStreamErrorListener(_onError);
+        _geofenceService.start(geofenceList).catchError(_onError);
+
+        if (widget.allocId != null) {
+          Navigator.push(context, MaterialPageRoute(
+              builder: (context) => OrderDetailPage(allocId: widget.allocId)));
+        }
+      }
+    }
+  }
 
   void handleDeepLink() async {
     
@@ -423,6 +452,7 @@ class _MainPageState extends State<MainPage> with CommonMainWidget,WidgetsBindin
 
   @override
   void dispose() {
+    //FlutterForegroundTask.removeTaskDataCallback(_onReceiveTaskData);
     super.dispose();
   }
 
@@ -455,7 +485,7 @@ class _MainPageState extends State<MainPage> with CommonMainWidget,WidgetsBindin
     String? carType = app.carTypeCode;
     String? carTon = app.carTonCode;
     if((carType != null && carType.isNotEmpty) && (carTon != null && carTon.isNotEmpty)) {
-      await startService();
+        await startGeoService();
     }else{
       showCarSetting();
     }
@@ -551,20 +581,21 @@ class _MainPageState extends State<MainPage> with CommonMainWidget,WidgetsBindin
     await finishService();
   }
 
-  Future<void> startService() async {
+  Future<ServiceRequestResult> startGeoService() async {
     await SP.putBool(Const.KEY_SETTING_WORK, true);
-    if(!_geofenceService.isRunningService) {
+    if(await FlutterForegroundTask.isRunningService) {
+      return FlutterForegroundTask.restartService();
+    }else{
+      print("startGeoService");
       await setGeofencingClient();
-      _geofenceService.addGeofenceStatusChangeListener(_onGeofenceStatusChanged);
-      _geofenceService.addLocationChangeListener(_onLocationChanged);
-      _geofenceService.addLocationServicesStatusChangeListener(_onLocationServicesStatusChanged);
-      _geofenceService.addActivityChangeListener(_onActivityChanged);
-      _geofenceService.addStreamErrorListener(_onError);
-      _geofenceService.start(geofenceList).catchError(_onError);
-    }
-
-    if(widget.allocId != null) {
-      Navigator.push(context, MaterialPageRoute(builder: (context) => OrderDetailPage(allocId: widget.allocId)));
+      return FlutterForegroundTask.startService(
+        serviceId: 1100,
+        notificationTitle: '로지스링크에서 현재 위치를 전송중입니다.',
+        notificationText: '',
+        notificationIcon: null,
+        notificationButtons: [],
+        callback: startCallback,
+      );
     }
 
   }
@@ -1201,31 +1232,61 @@ class _MainPageState extends State<MainPage> with CommonMainWidget,WidgetsBindin
     );
   }
 
+  Future<void> _requestPermissions() async {
+    // Android 13+, you need to allow notification permission to display foreground service notification.
+    //
+    // iOS: If you need notification, ask for permission.
+    final NotificationPermission notificationPermissionStatus = await FlutterForegroundTask.checkNotificationPermission();
+    if (notificationPermissionStatus != NotificationPermission.granted) {
+      //await FlutterForegroundTask.requestNotificationPermission();
+    }
+
+    if (Platform.isAndroid) {
+      // "android.permission.SYSTEM_ALERT_WINDOW" permission must be granted for
+      // onNotificationPressed function to be called.
+      //
+      // When the notification is pressed while permission is denied,
+      // the onNotificationPressed function is not called and the app opens.
+      //
+      // If you do not use the onNotificationPressed or launchApp function,
+      // you do not need to write this code.
+      if (!await FlutterForegroundTask.canDrawOverlays) {
+        // This function requires `android.permission.SYSTEM_ALERT_WINDOW` permission.
+        await FlutterForegroundTask.openSystemAlertWindowSettings();
+      }
+
+      // Android 12+, there are restrictions on starting a foreground service.
+      //
+      // To restart the service on device reboot or unexpected problem, you need to allow below permission.
+      /*if (!await FlutterForegroundTask.isIgnoringBatteryOptimizations) {
+        // This function requires `android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS` permission.
+        await FlutterForegroundTask.requestIgnoreBatteryOptimization();
+      }*/
+    }
+  }
+
+  Future<void> _initService() async {
+    FlutterForegroundTask.init(
+      androidNotificationOptions: AndroidNotificationOptions(
+        channelId: Const.LOCATION_SERVICE_CHANNEL_ID,
+        channelName: '로지스링크 차주용',
+        channelDescription: 'This notification appears when the geofence service is running in the background.',
+        channelImportance: NotificationChannelImportance.LOW,
+        priority: NotificationPriority.LOW,
+      ),
+      iosNotificationOptions: const IOSNotificationOptions(
+        showNotification: true,
+        playSound: false,
+      ),
+      foregroundTaskOptions: const ForegroundTaskOptions(),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     Util.notificationDialog(context,"기본",webViewKey);
-    return MaterialApp(
-      debugShowCheckedModeBanner:false,
-        // A widget used when you want to start a foreground task when trying to minimize or close the app.
-        // Declare on top of the [Scaffold] widget.
-        home: WillStartForegroundTask(
-        onWillStart: () async {
-      // You can add a foreground task start condition.
-      return _geofenceService.isRunningService;
-    },
-    androidNotificationOptions: AndroidNotificationOptions(
-    channelId: Const.LOCATION_SERVICE_CHANNEL_ID,
-    channelName: '로지스링크 차주용',
-    channelDescription: 'This notification appears when the geofence service is running in the background.',
-    channelImportance: NotificationChannelImportance.LOW,
-    priority: NotificationPriority.LOW,
-    isSticky: false,
-    ),
-    iosNotificationOptions: const IOSNotificationOptions(),
-    foregroundTaskOptions: const ForegroundTaskOptions(),
-    notificationTitle: '로지스링크에서 현재 위치를 전송중입니다.',
-    notificationText: '',
-    child: Scaffold(
+    return WithForegroundTask(
+            child: Scaffold(
                   key: _scaffoldKey,
                   backgroundColor: order_item_background,
                   appBar: AppBar(
@@ -1274,7 +1335,7 @@ class _MainPageState extends State<MainPage> with CommonMainWidget,WidgetsBindin
                             var item = orderList[index];
                             return getListCardView(item);
                           },
-                        ): Container(
+                        ) : Container(
                             alignment: Alignment.center,
                             child:Center(
                                 child:Text(
@@ -1322,7 +1383,71 @@ class _MainPageState extends State<MainPage> with CommonMainWidget,WidgetsBindin
                       )
                   ),
                 )
-          )
-    );
+          );
+  }
+}
+
+@pragma('vm:entry-point')
+void startCallback() {
+  // The setTaskHandler function must be called to handle the task in the background.
+  FlutterForegroundTask.setTaskHandler(MyTaskHandler());
+}
+
+class MyTaskHandler extends TaskHandler {
+  int _count = 0;
+
+  // Called when the task is started.
+  @override
+  void onStart(DateTime timestamp) {
+    print('onStart');
+  }
+
+  // Called every [ForegroundTaskOptions.interval] milliseconds.
+  @override
+  void onRepeatEvent(DateTime timestamp) {
+    print('onRepeatEvent');
+    FlutterForegroundTask.updateService(notificationText: 'count: $_count');
+
+    // Send data to main isolate.
+    FlutterForegroundTask.sendDataToMain(_count);
+
+    _count++;
+  }
+
+  // Called when the task is destroyed.
+  @override
+  void onDestroy(DateTime timestamp) {
+    print('onDestroy');
+  }
+
+  // Called when data is sent using [FlutterForegroundTask.sendDataToTask].
+  @override
+  void onReceiveData(Object data) {
+    print('onReceiveData: $data');
+  }
+
+  // Called when the notification button is pressed.
+  @override
+  void onNotificationButtonPressed(String id) {
+    print('onNotificationButtonPressed: $id');
+  }
+
+  // Called when the notification itself is pressed.
+  //
+  // AOS: "android.permission.SYSTEM_ALERT_WINDOW" permission must be granted
+  // for this function to be called.
+  @override
+  void onNotificationPressed() {
+    FlutterForegroundTask.launchApp('/');
+    print('onNotificationPressed');
+  }
+
+  // Called when the notification itself is dismissed.
+  //
+  // AOS: only work Android 14+
+  // iOS: only work iOS 10+
+  @override
+  void onNotificationDismissed() {
+    print('onNotificationDismissed');
   }
 }

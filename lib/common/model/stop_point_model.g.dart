@@ -9,8 +9,8 @@ part of 'stop_point_model.dart';
 StopPointModel _$StopPointModelFromJson(Map<String, dynamic> json) =>
     StopPointModel(
       orderId: json['orderId'] as String?,
-      stopSeq: json['stopSeq'] as int?,
-      stopNo: json['stopNo'] as int?,
+      stopSeq: (json['stopSeq'] as num?)?.toInt(),
+      stopNo: (json['stopNo'] as num?)?.toInt(),
       eComName: json['eComName'] as String?,
       eAddr: json['eAddr'] as String?,
       eAddrDetail: json['eAddrDetail'] as String?,

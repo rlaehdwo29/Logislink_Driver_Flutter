@@ -341,8 +341,8 @@ class _AppBarMyPageState extends State<AppBarMyPage> {
                       ),
                       ElevatedButton(
                           style: ElevatedButton.styleFrom(
-                            primary: sub_color,
-                            onPrimary: main_color,
+                            foregroundColor: sub_color,
+                            backgroundColor: main_color,
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(15.0),
                             ),
@@ -1607,7 +1607,7 @@ class _AppBarMyPageState extends State<AppBarMyPage> {
           return true;
         },
         child: Scaffold(
-      backgroundColor: Theme.of(context).backgroundColor,
+      backgroundColor: Colors.white,
       appBar: PreferredSize(
           preferredSize: Size.fromHeight(CustomStyle.getHeight(60.0)),
           child: Obx((){

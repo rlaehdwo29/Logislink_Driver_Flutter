@@ -365,7 +365,7 @@ class _ReceiptPageState extends State<ReceiptPage>{
           return false;
     } ,
     child: Scaffold(
-      backgroundColor: Theme.of(context).backgroundColor,
+      backgroundColor: Colors.white,
       appBar: PreferredSize(
           preferredSize: Size.fromHeight(CustomStyle.getHeight(50.0)),
           child: AppBar(

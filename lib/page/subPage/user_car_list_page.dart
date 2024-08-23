@@ -131,7 +131,7 @@ class _UserCarListPageState extends State<UserCarListPage> {
   @override
   Widget build(BuildContext context) {
    return Scaffold(
-     backgroundColor: Theme.of(context).backgroundColor,
+     backgroundColor: Colors.white,
      appBar: PreferredSize(
        preferredSize: Size.fromHeight(CustomStyle.getHeight(50.0)),
        child: AppBar(

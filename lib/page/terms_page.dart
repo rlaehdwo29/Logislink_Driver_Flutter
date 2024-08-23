@@ -404,7 +404,7 @@ class _TermsPageState extends State<TermsPage> {
     final height = MediaQuery.of(context).size.height;
     final width = MediaQuery.of(context).size.width;
     return Scaffold(
-        backgroundColor: Theme.of(context).backgroundColor,
+        backgroundColor: Colors.white,
         body: SafeArea(
               child: Obx((){
                 return Container(
