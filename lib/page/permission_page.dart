@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:app_settings/app_settings.dart';
 import 'package:app_tracking_transparency/app_tracking_transparency.dart';
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:flutter/material.dart';
@@ -295,11 +296,30 @@ class _PermissionPageState extends State<PermissionPage>{
                             crossAxisAlignment: CrossAxisAlignment.start,
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
-                              Text(
-                                "접근 권한 변경 방법",
-                                style: CustomStyle.CustomFont(
-                                    styleFontSize13, text_color_01,
-                                    font_weight: FontWeight.w700),
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                crossAxisAlignment: CrossAxisAlignment.center,
+                                children: [
+                                  Text(
+                                    "접근 권한 변경 방법",
+                                    style: CustomStyle.CustomFont(
+                                        styleFontSize13, text_color_01,
+                                        font_weight: FontWeight.w700),
+                                  ),
+                                  ElevatedButton(
+                                    style: ElevatedButton.styleFrom(
+                                        foregroundColor: main_color,
+                                        backgroundColor: sub_color
+                                    ),
+                                    onPressed: () async {
+                                      AppSettings.openAppSettings();
+                                    },
+                                    child: Text(
+                                        "권한 설정 이동",
+                                      style: TextStyle(color: Colors.white,fontSize: 13.sp),
+                                    ),
+                                  )
+                                ],
                               ),
                               CustomStyle.sizedBoxHeight(5.0),
                               Text(

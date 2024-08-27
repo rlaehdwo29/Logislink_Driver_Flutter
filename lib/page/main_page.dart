@@ -272,7 +272,7 @@ class _MainPageState extends State<MainPage> with CommonMainWidget,WidgetsBindin
   }
 
   Future<void> locationUpdate(String allocId,double lat, double lon) async {
-    if(Const.userDebugger) return;
+    //if(Const.userDebugger) return;
     var guest = await SP.getBoolean(Const.KEY_GUEST_MODE);
     if(guest) return;
 
@@ -452,7 +452,7 @@ class _MainPageState extends State<MainPage> with CommonMainWidget,WidgetsBindin
 
   @override
   void dispose() {
-    //FlutterForegroundTask.removeTaskDataCallback(_onReceiveTaskData);
+    FlutterForegroundTask.removeTaskDataCallback(_onReceiveTaskData);
     super.dispose();
   }
 
@@ -485,7 +485,7 @@ class _MainPageState extends State<MainPage> with CommonMainWidget,WidgetsBindin
     String? carType = app.carTypeCode;
     String? carTon = app.carTonCode;
     if((carType != null && carType.isNotEmpty) && (carTon != null && carTon.isNotEmpty)) {
-        await startGeoService();
+      if(!await FlutterForegroundTask.isRunningService) await startGeoService();
     }else{
       showCarSetting();
     }
@@ -583,21 +583,24 @@ class _MainPageState extends State<MainPage> with CommonMainWidget,WidgetsBindin
 
   Future<ServiceRequestResult> startGeoService() async {
     await SP.putBool(Const.KEY_SETTING_WORK, true);
-    if(await FlutterForegroundTask.isRunningService) {
-      return FlutterForegroundTask.restartService();
-    }else{
       print("startGeoService");
       await setGeofencingClient();
-      return FlutterForegroundTask.startService(
-        serviceId: 1100,
-        notificationTitle: '로지스링크에서 현재 위치를 전송중입니다.',
-        notificationText: '',
-        notificationIcon: null,
-        notificationButtons: [],
-        callback: startCallback,
-      );
-    }
+      if(await FlutterForegroundTask.isRunningService) {
+        return FlutterForegroundTask.restartService();
+      }else {
+        return FlutterForegroundTask.startService(
+          serviceId: 1100,
+          notificationTitle: '로지스링크에서 현재 위치를 전송중입니다.',
+          notificationText: '',
+          notificationIcon: null,
+          notificationButtons: [],
+          callback: startCallback,
+        );
+      }
+  }
 
+  Future<ServiceRequestResult> _stopForeGroundService() async {
+    return FlutterForegroundTask.stopService();
   }
 
   Future<void> finishService() async {
@@ -619,6 +622,7 @@ class _MainPageState extends State<MainPage> with CommonMainWidget,WidgetsBindin
      _geofenceService.clearAllListeners();
      _geofenceService.stop();
    }
+    _stopForeGroundService();
   }
 
   Future<void> goToExit() async {
@@ -1250,10 +1254,10 @@ class _MainPageState extends State<MainPage> with CommonMainWidget,WidgetsBindin
       //
       // If you do not use the onNotificationPressed or launchApp function,
       // you do not need to write this code.
-      if (!await FlutterForegroundTask.canDrawOverlays) {
+      /*if (!await FlutterForegroundTask.canDrawOverlays) {
         // This function requires `android.permission.SYSTEM_ALERT_WINDOW` permission.
         await FlutterForegroundTask.openSystemAlertWindowSettings();
-      }
+      }*/
 
       // Android 12+, there are restrictions on starting a foreground service.
       //
@@ -1406,7 +1410,7 @@ class MyTaskHandler extends TaskHandler {
   @override
   void onRepeatEvent(DateTime timestamp) {
     print('onRepeatEvent');
-    FlutterForegroundTask.updateService(notificationText: 'count: $_count');
+    FlutterForegroundTask.updateService();
 
     // Send data to main isolate.
     FlutterForegroundTask.sendDataToMain(_count);
