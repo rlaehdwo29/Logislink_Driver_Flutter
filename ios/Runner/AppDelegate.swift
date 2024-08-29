@@ -13,7 +13,7 @@ import TMapSDK
   ) -> Bool {
   
     let controller : FlutterViewController = window?.rootViewController as! FlutterViewController
-    let channel = FlutterMethodChannel(name: "logis.flutter.tmap",binaryMessenger: controller.binaryMessenger)
+    let channel = FlutterMethodChannel(name: "logis.flutter.iostmap",binaryMessenger: controller.binaryMessenger)
 
     channel.setMethodCallHandler({
       [weak self] (call: FlutterMethodCall, result: FlutterResult) -> Void in

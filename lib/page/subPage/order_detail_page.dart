@@ -69,6 +69,7 @@ class _OrderDetailPageState extends State<OrderDetailPage> with WidgetsBindingOb
 
   late KakaoMapController? mapController;
   final platform = const MethodChannel("logis.flutter.tmap");
+  final iosPlatform = const MethodChannel("logis.flutter.iostmap");
   Set<Marker> markers = {};
   final app = UserModel().obs;
   final orderItem = OrderModel().obs;
@@ -153,7 +154,11 @@ class _OrderDetailPageState extends State<OrderDetailPage> with WidgetsBindingOb
         'lat': lat,
         'lon': lon
       };
-      await platform.invokeMethod('showActivity',values);
+      if(io.Platform.isAndroid){
+        await platform.invokeMethod('showActivity',values);
+      }else{
+        await iosPlatform.invokeMethod('showActivity',values);
+      }
     } on PlatformException catch (e) {
       log("Error : $e");
     }
