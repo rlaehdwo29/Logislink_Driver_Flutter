@@ -308,8 +308,8 @@ class _PermissionPageState extends State<PermissionPage>{
                                   ),
                                   ElevatedButton(
                                     style: ElevatedButton.styleFrom(
-                                        foregroundColor: main_color,
-                                        backgroundColor: sub_color
+                                        foregroundColor: light_gray24,
+                                        backgroundColor: light_gray24
                                     ),
                                     onPressed: () async {
                                       AppSettings.openAppSettings();
@@ -324,8 +324,19 @@ class _PermissionPageState extends State<PermissionPage>{
                               CustomStyle.sizedBoxHeight(5.0),
                               Text(
                                 Platform.isAndroid ? "설정 > 애플리케이션/앱 > 로지스링크 차주용 > 권한" : "설정 > 로지스링크 차주용",
-                                style: CustomStyle.CustomFont(
-                                    styleFontSize11, text_color_02),
+                                style: CustomStyle.CustomFont(styleFontSize11, text_color_02),
+                                textAlign: TextAlign.center,
+                              ),
+                              CustomStyle.sizedBoxHeight(5.0),
+                              Text(
+                                "※ \"위치\" 권한은 [권한 설정 이동] 버튼을 눌러서\n권한 > 위치 > \"항상 허용\"으로 설정 바랍니다.",
+                                style: CustomStyle.CustomFont(styleFontSize16, text_color_02, font_weight: FontWeight.w800),
+                                textAlign: TextAlign.start,
+                              ),
+                              CustomStyle.sizedBoxHeight(10.0),
+                              Text(
+                                "▼ 아래 [확인] 버튼을 누르시면 권한이 부여됩니다. ",
+                                style: CustomStyle.CustomFont(styleFontSize16, const Color(0xffFF0033), font_weight: FontWeight.w800),
                                 textAlign: TextAlign.center,
                               ),
                             ],
@@ -346,14 +357,13 @@ class _PermissionPageState extends State<PermissionPage>{
             }
           },
           child: Container(
-            height: 60.0.h,
-            color: main_color,
-            padding:
-            const EdgeInsets.symmetric(vertical: 15.0, horizontal: 10.0),
+            height: 90.0.h,
+            color: const Color(0xffFF0033),
+            padding: const EdgeInsets.symmetric(vertical: 15.0, horizontal: 10.0),
             child: Text(
               "확인",
               textAlign: TextAlign.center,
-              style: CustomStyle.CustomFont(styleFontSize16, Colors.white),
+              style: CustomStyle.CustomFont(styleFontSize37, Colors.white, font_weight: FontWeight.w800),
             ),
           ),
         )

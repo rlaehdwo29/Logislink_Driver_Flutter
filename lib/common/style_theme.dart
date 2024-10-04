@@ -82,9 +82,11 @@ final double styleFontSize18 = CustomStyle.getSp(18.0);
 final double styleFontSize20 = CustomStyle.getSp(20.0);
 final double styleFontSize22 = CustomStyle.getSp(22.0);
 final double styleFontSize36 = CustomStyle.getSp(36.0);
+final double styleFontSize37 = CustomStyle.getSp(37.0);
 
 final double styleFontSize28 = CustomStyle.getSp(28.0);
 final double styleFontSize30 = CustomStyle.getSp(30.0);
+final double styleFontSize33 = CustomStyle.getSp(33.0);
 
 final double styleRadius2 = CustomStyle.getRadius(2.0);
 final double styleRadius3 = CustomStyle.getRadius(3.0);

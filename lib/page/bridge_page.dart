@@ -91,7 +91,7 @@ class _BridgePageState extends State<BridgePage> {
         var locationPermission = await Geolocator.checkPermission();
         if (location_per != PermissionStatus.granted) {
           return false;
-        } else if (photos_per != PermissionStatus.granted) {
+        } else if (photos_per == PermissionStatus.denied) {
           return false;
         } else if (phone_per != PermissionStatus.granted) {
           return false;
@@ -106,7 +106,7 @@ class _BridgePageState extends State<BridgePage> {
         var storage_per = await Permission.storage.status;
         if (location_per != PermissionStatus.granted) {
           return false;
-        } else if (storage_per != PermissionStatus.granted) {
+        } else if (storage_per != PermissionStatus.denied) {
           return false;
         } else if (phone_per != PermissionStatus.granted) {
           return false;

@@ -272,7 +272,7 @@ class _MainPageState extends State<MainPage> with CommonMainWidget,WidgetsBindin
   }
 
   Future<void> locationUpdate(String allocId,double lat, double lon) async {
-    //if(Const.userDebugger) return;
+    if(Const.userDebugger) return;
     var guest = await SP.getBoolean(Const.KEY_GUEST_MODE);
     if(guest) return;
 
