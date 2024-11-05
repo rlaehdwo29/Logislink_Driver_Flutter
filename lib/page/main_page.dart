@@ -88,7 +88,7 @@ class _MainPageState extends State<MainPage> with CommonMainWidget,WidgetsBindin
   List<Geofence> geofenceList = List.empty(growable: true);
 
   final _geofenceService = GeofenceService.instance.setup(
-      interval: 5000, // GeoFence 상태 확인 5초마다
+      interval:60000, // GeoFence 상태 확인 5초마다
       accuracy: 100, // GeoFence 지정 범위 100M
       loiteringDelayMs: 30000, // GeoFence 지연 설정. Enter, DWELL 상태 체크하기 위함
       statusChangeDelayMs: 10000, // GeoFence 지정 범위 경계 근처에 있을때 상태 변경
@@ -261,13 +261,7 @@ class _MainPageState extends State<MainPage> with CommonMainWidget,WidgetsBindin
     await SP.putString(Const.KEY_LAT, lat.toString());
     await SP.putString(Const.KEY_LON, lon.toString());
     List<String>? list = await SP.getStringList(Const.KEY_ALLOC_ID);
-    if(list == null || list.isEmpty) {
-      await locationUpdate("0",lat,lon);
-    }else{
-      for(var id in list){
-        await locationUpdate(id,lat,lon);
-      }
-    }
+    await locationUpdate("",lat,lon);
 
   }
 
@@ -283,6 +277,7 @@ class _MainPageState extends State<MainPage> with CommonMainWidget,WidgetsBindin
       logger.d("locationUpdate() _response -> ${_response.status} // ${_response.resultMap}");
       if(_response.status == "200") {
         if (_response.resultMap?["data"] != null) {
+
         }
       }
     }).catchError((Object obj){
@@ -331,9 +326,8 @@ class _MainPageState extends State<MainPage> with CommonMainWidget,WidgetsBindin
       await setGeofencingClient();
     });
     pullToRefreshController = (kIsWeb
-        ? null
-        : PullToRefreshController(
-      options: PullToRefreshOptions(color: Colors.blue,),
+        ? null : PullToRefreshController(
+      options: PullToRefreshOptions(color: Colors.blue),
       onRefresh: () async {
         if (defaultTargetPlatform == TargetPlatform.android) {
           webViewController.reload();
@@ -414,7 +408,6 @@ class _MainPageState extends State<MainPage> with CommonMainWidget,WidgetsBindin
         _geofenceService.addActivityChangeListener(_onActivityChanged);
         _geofenceService.addStreamErrorListener(_onError);
         _geofenceService.start(geofenceList).catchError(_onError);
-
         if (widget.allocId != null) {
           Navigator.push(context, MaterialPageRoute(
               builder: (context) => OrderDetailPage(allocId: widget.allocId)));
@@ -664,7 +657,7 @@ class _MainPageState extends State<MainPage> with CommonMainWidget,WidgetsBindin
   Future<void> getOrder(bool flag) async {
     bool data = flag;
     await getOrderList();
-    setAllocList();
+    await setAllocList();
     await setGeoList(data);
   }
 
@@ -674,7 +667,6 @@ class _MainPageState extends State<MainPage> with CommonMainWidget,WidgetsBindin
     await DioService.dioClient(header: true).getOrder(app.authorization, app.vehicId).then((it) {
       ReturnMap _response = DioService.dioResponse(it);
       logger.d("getOrder() _response -> ${_response.status} // ${_response.resultMap}");
-      //openOkBox(context,_response.resultMap!["data"].toString(),Strings.of(context)?.get("confirm")??"Error!!",() {Navigator.of(context).pop(false);});
       if(_response.status == "200") {
         if(_response.resultMap?["data"] != null) {
           if(orderList.isNotEmpty) orderList.clear();
@@ -806,12 +798,12 @@ class _MainPageState extends State<MainPage> with CommonMainWidget,WidgetsBindin
     });
   }
 
-  void setAllocList() {
+  Future<void> setAllocList() async {
     List<String> allocList = List.empty(growable: true);
     for(var data in orderList) {
       if(!(data.allocState == "20")) allocList.add(data.allocId);
     }
-    SP.putStringList(Const.KEY_ALLOC_ID, allocList);
+    await SP.putStringList(Const.KEY_ALLOC_ID, allocList);
   }
 
   void showGuestDialog(){
@@ -847,7 +839,7 @@ class _MainPageState extends State<MainPage> with CommonMainWidget,WidgetsBindin
                           List<GeofenceModel> list = await db.getAllGeoFenceList(vehic);
                           db.deleteAll(list);
                           getUserInfo();
-                          getOrderMethod(true);
+                          await getOrderMethod(true);
                           //Navigator.pop(context);
                           _scaffoldKey.currentState!.closeDrawer();
                         }
@@ -1282,7 +1274,7 @@ class _MainPageState extends State<MainPage> with CommonMainWidget,WidgetsBindin
         showNotification: true,
         playSound: false,
       ),
-      foregroundTaskOptions: const ForegroundTaskOptions(),
+      foregroundTaskOptions: const ForegroundTaskOptions(interval: 60000),
     );
   }
 
@@ -1406,15 +1398,17 @@ class MyTaskHandler extends TaskHandler {
     print('onStart');
   }
 
-  // Called every [ForegroundTaskOptions.interval] milliseconds.
+  // Called by eventAction in [ForegroundTaskOptions].
+  // - nothing() : Not use onRepeatEvent callback.
+  // - once() : Call onRepeatEvent only once.
+  // - repeat(interval) : Call onRepeatEvent at milliseconds interval.
   @override
   void onRepeatEvent(DateTime timestamp) {
     print('onRepeatEvent');
-    FlutterForegroundTask.updateService();
 
     // Send data to main isolate.
-    FlutterForegroundTask.sendDataToMain(_count);
-
+      FlutterForegroundTask.updateService();
+      FlutterForegroundTask.sendDataToMain(_count);
     _count++;
   }
 
