@@ -501,6 +501,37 @@ class _OrderDetailPageState extends State<OrderDetailPage> with WidgetsBindingOb
     });
   }
 
+  Future<void> GetCodeTask(String code) async {
+    Logger logger = Logger();
+      await DioService.dioClient(header: true).getCodeList(code).then((it) async {
+        ReturnMap _response = DioService.dioResponse(it);
+        logger.d("GetCodeTask() _response -> ${_response.status} // ${_response.resultMap}");
+        if(_response.status == "200") {
+          if(_response.resultMap?["data"] != null) {
+            logger.d("GetCodeTask() _response1111 -> ${_response.resultMap?["data"][0]["code"]}");
+            //var jsonString = jsonEncode(it.response.data);
+            //await SP.putCodeList(code, jsonString);
+            if(_response.resultMap?["data"][0]["useYn"] == "Y") {
+              if(_response.resultMap?["data"][0]["code"] == "Y") await goToPay();
+              else openOkBox(context, _response.resultMap?["data"][0]["memo"], Strings.of(context)?.get("confirm")??"Error!!",() {Navigator.of(context).pop(false);});
+            }
+          }
+        }
+      }).catchError((Object obj) async {
+        openOkBox(context, "네트워크 통신중 오류가 발생했습니다.(CODE:670)", Strings.of(context)?.get("confirm")??"Error!!",() {Navigator.of(context).pop(false);});
+        switch (obj.runtimeType) {
+          case DioError:
+          // Here's the sample to get the failed response error code and message
+            final res = (obj as DioError).response;
+            logger.e("brige_page.dart GetCodeTask() Error Default: ${res?.statusCode} -> ${res?.statusMessage}");
+            break;
+          default:
+            logger.e("brige_page.dart GetCodeTask() Error Default:");
+            break;
+        }
+      });
+  }
+
   Future<void> set_EP_SP(String code) async {
     var app = await App().getUserInfo();
     AppDataBase db = App().getRepository();
@@ -609,7 +640,7 @@ class _OrderDetailPageState extends State<OrderDetailPage> with WidgetsBindingOb
                 orderItem.value?.allocState == "05" && app_util.Util.ynToBoolean(orderItem.value?.payType)?
                 InkWell(
                     onTap: () async {
-                      goToPay();
+                      await GetCodeTask("호우호우");
                     },
                     child: Container(
                       padding: EdgeInsets.symmetric(vertical: CustomStyle.getHeight(5.0),horizontal: CustomStyle.getWidth(10.0)),
