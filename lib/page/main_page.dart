@@ -516,28 +516,15 @@ class _MainPageState extends State<MainPage> with CommonMainWidget,WidgetsBindin
   }
 
   Future<void> showTrackingPermissionDialog() async {
-    if(Platform.isAndroid){
-      return openOkBox(
-          context,
-          Strings.of(context)?.get("tracking_permission_failed")??"Not Found",
-          Strings.of(context)?.get("confirm")??"Not Found",
-              () async {
-            Navigator.of(context).pop(false);
-            await AppSettings.openAppSettings();
-          }
-      );
-    }else{
-      return openCommonConfirmBox(
-          context,
-          "'\추적 허용'\ 권한이 거부되어 있습니다.\n\n수집된 데이터는 위치기반으로\n출.도착 처리시 사용되며\n수집된 데이터는 즉시 소멸됩니다.",
-          Strings.of(context)?.get("cancel")??"Not Found",
-          Strings.of(context)?.get("confirm")??"Not Found",
-              () => Navigator.of(context).pop(false),
-              () async {
-            Navigator.of(context).pop(false);
-            await AppSettings.openAppSettings();
-          });
-    }
+    return openOkBox(
+        context,
+        Strings.of(context)?.get("tracking_permission_failed")??"Not Found",
+        Strings.of(context)?.get("confirm")??"Not Found",
+            () async {
+          Navigator.of(context).pop(false);
+          await AppSettings.openAppSettings();
+        }
+    );
   }
 
   void onCallback(bool? result) {
@@ -1295,13 +1282,7 @@ class _MainPageState extends State<MainPage> with CommonMainWidget,WidgetsBindin
         showNotification: true,
         playSound: false,
       ),
-      foregroundTaskOptions: ForegroundTaskOptions(
-        eventAction: ForegroundTaskEventAction.once(),
-        autoRunOnBoot: true,
-        autoRunOnMyPackageReplaced: true,
-        allowWakeLock: true,
-        allowWifiLock: true
-      ),
+      foregroundTaskOptions: const ForegroundTaskOptions(),
     );
   }
 
@@ -1421,7 +1402,7 @@ class MyTaskHandler extends TaskHandler {
 
   // Called when the task is started.
   @override
-    Future<void> onStart(DateTime timestamp, TaskStarter starter) async {
+  void onStart(DateTime timestamp) {
     print('onStart');
   }
 
@@ -1439,7 +1420,7 @@ class MyTaskHandler extends TaskHandler {
 
   // Called when the task is destroyed.
   @override
-  Future<void> onDestroy(DateTime timestamp) async {
+  void onDestroy(DateTime timestamp) {
     print('onDestroy');
   }
 
