@@ -501,25 +501,16 @@ class _OrderDetailPageState extends State<OrderDetailPage> with WidgetsBindingOb
     });
   }
 
-  Future<void> GetCodeTask(String code) async {
+  Future<void> GetPayTask() async {
     Logger logger = Logger();
-      await DioService.dioClient(header: true).getCodeList(code).then((it) async {
+      await DioService.dioClient(header: true).getCodeList(Const.DRIVER_POPUP_CHECK,filter1: "02").then((it) async {
         ReturnMap _response = DioService.dioResponse(it);
-        logger.d("GetCodeTask() _response -> ${_response.status} // ${_response.resultMap}");
+        logger.d("GetPayTask() _response -> ${_response.status} // ${_response.resultMap}");
         if(_response.status == "200") {
-          if(_response.resultMap?["data"] != null) {
-            logger.d("GetCodeTask() _response1111 -> ${_response.resultMap?["data"]}}");
-            Map<String,dynamic>? result = {};
-            for(var value in _response.resultMap?["data"]) {
-              if(value["code"] == "00") result.addAll(value);
-            }
-            if(result["code"] != null && result["code"] != "") {
-              List<String> parts = result["codeName"].split("::");
-              if (parts[0] == "Y") await goToPay();
-              else openOkBox(context, result["memo"], Strings.of(context)?.get("confirm") ?? "Error!!", () {Navigator.of(context).pop(false);});
-            }else{
-              openOkBox(context,"검색된 코드가 없습니다.", Strings.of(context)?.get("confirm") ?? "Error!!", () {Navigator.of(context).pop(false);});
-            }
+          if(_response.resultMap?["data"].length != 0) {
+            openOkBox(context, _response.resultMap?["data"][0]["memo"], Strings.of(context)?.get("confirm") ?? "Error!!", () {Navigator.of(context).pop(false);});
+          }else{
+            await goToPay();
           }
         }
       }).catchError((Object obj) async {
@@ -645,7 +636,7 @@ class _OrderDetailPageState extends State<OrderDetailPage> with WidgetsBindingOb
                 orderItem.value?.allocState == "05" && app_util.Util.ynToBoolean(orderItem.value?.payType)?
                 InkWell(
                     onTap: () async {
-                      await GetCodeTask(Const.USE_TYPE_CD);
+                      await GetPayTask();
                     },
                     child: Container(
                       padding: EdgeInsets.symmetric(vertical: CustomStyle.getHeight(5.0),horizontal: CustomStyle.getWidth(10.0)),
@@ -2394,7 +2385,7 @@ class _OrderDetailPageState extends State<OrderDetailPage> with WidgetsBindingOb
 
   Future<void> getPopUpTask() async {
     Logger logger = Logger();
-      await DioService.dioClient(header: true).getCodeList(Const.DRIVER_POPUP_CHECK).then((it) async {
+      await DioService.dioClient(header: true).getCodeList(Const.DRIVER_POPUP_CHECK,filter1: "01").then((it) async {
         ReturnMap _response = DioService.dioResponse(it);
         logger.d("GetPopUpTask() _response -> ${_response.status} // ${_response.resultMap}");
         if(_response.status == "200") {

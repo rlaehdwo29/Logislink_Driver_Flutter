@@ -14,7 +14,10 @@ abstract class Rest {
    */
   @FormUrlEncoded()
   @POST(URL_CODE_LIST)
-  Future<HttpResponse> getCodeList(@Field("gcode") String gcode);
+  Future<HttpResponse> getCodeList(
+        @Field("gcode") String gcode,
+        { @Field("filter1") String? filter1 }
+      );
 
   /**
    * 버전코드
