@@ -508,17 +508,22 @@ class _OrderDetailPageState extends State<OrderDetailPage> with WidgetsBindingOb
         logger.d("GetCodeTask() _response -> ${_response.status} // ${_response.resultMap}");
         if(_response.status == "200") {
           if(_response.resultMap?["data"] != null) {
-            logger.d("GetCodeTask() _response1111 -> ${_response.resultMap?["data"][0]["code"]}");
-            //var jsonString = jsonEncode(it.response.data);
-            //await SP.putCodeList(code, jsonString);
-            if(_response.resultMap?["data"][0]["useYn"] == "Y") {
-              if(_response.resultMap?["data"][0]["code"] == "Y") await goToPay();
-              else openOkBox(context, _response.resultMap?["data"][0]["memo"], Strings.of(context)?.get("confirm")??"Error!!",() {Navigator.of(context).pop(false);});
+            logger.d("GetCodeTask() _response1111 -> ${_response.resultMap?["data"]}}");
+            Map<String,dynamic>? result = {};
+            for(var value in _response.resultMap?["data"]) {
+              if(value["code"] == "00") result.addAll(value);
+            }
+            if(result["code"] != null && result["code"] != "") {
+              List<String> parts = result["codeName"].split("::");
+              if (parts[0] == "Y") await goToPay();
+              else openOkBox(context, result["memo"], Strings.of(context)?.get("confirm") ?? "Error!!", () {Navigator.of(context).pop(false);});
+            }else{
+              openOkBox(context,"검색된 코드가 없습니다.", Strings.of(context)?.get("confirm") ?? "Error!!", () {Navigator.of(context).pop(false);});
             }
           }
         }
       }).catchError((Object obj) async {
-        openOkBox(context, "네트워크 통신중 오류가 발생했습니다.(CODE:670)", Strings.of(context)?.get("confirm")??"Error!!",() {Navigator.of(context).pop(false);});
+        openOkBox(context, "네트워크 통신중 오류가 발생했습니다.(CODE:0000)", Strings.of(context)?.get("confirm")??"Error!!",() {Navigator.of(context).pop(false);});
         switch (obj.runtimeType) {
           case DioError:
           // Here's the sample to get the failed response error code and message
@@ -640,7 +645,7 @@ class _OrderDetailPageState extends State<OrderDetailPage> with WidgetsBindingOb
                 orderItem.value?.allocState == "05" && app_util.Util.ynToBoolean(orderItem.value?.payType)?
                 InkWell(
                     onTap: () async {
-                      await GetCodeTask("호우호우");
+                      await GetCodeTask(Const.USE_TYPE_CD);
                     },
                     child: Container(
                       padding: EdgeInsets.symmetric(vertical: CustomStyle.getHeight(5.0),horizontal: CustomStyle.getWidth(10.0)),
