@@ -54,7 +54,7 @@ openOkBox(BuildContext context, String msg,String okTxt, Function() okEvent,{Tex
 }
 
 openCustomOkBox(BuildContext context, String msg,String okTxt, Function() okEvent,{TextAlign? align}) {
-  return openDialogBox(context,
+  return openCustomDialogBox(context,
       msg,
       InkWell(
         onTap: okEvent,
@@ -122,8 +122,44 @@ openCommonConfirmBox(BuildContext context, String msg, String cancelTxt,
   );
 }
 
-
 openDialogBox(BuildContext context, String msg, Widget button,{TextAlign? align}) {
+  return showDialog(
+      barrierDismissible: false,
+      context: context,
+      builder: (BuildContext context) {
+        return WillPopScope(
+          onWillPop: () async => false,
+          child: AlertDialog(
+              shape: const RoundedRectangleBorder(
+                  borderRadius: BorderRadius.all(Radius.circular(0.0))
+              ),
+              insetPadding: EdgeInsets.all(CustomStyle.getHeight(10.0)),
+              contentPadding: EdgeInsets.all(CustomStyle.getWidth(0.0)),
+              content: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: <Widget>[
+                    Padding(
+                      padding: EdgeInsets.all(CustomStyle.getWidth(30.0)),
+                      child: RichText(
+                        textAlign: align ?? TextAlign.center,
+                        text: TextSpan(
+                          text: msg,
+                          style: CustomStyle.alertMsgFont(),
+                        ),
+                      ),
+                    ),
+                    button,
+                  ],
+                ),
+              )
+          ),
+        );
+      });
+}
+
+
+openCustomDialogBox(BuildContext context, String msg, Widget button,{TextAlign? align}) {
   List<String> parts = msg.split(":^:");
   String title1 = parts[0];
   String content1 = parts[1];
@@ -141,58 +177,58 @@ openDialogBox(BuildContext context, String msg, Widget button,{TextAlign? align}
               shape: const RoundedRectangleBorder(
                   borderRadius: BorderRadius.all(Radius.circular(0.0))
               ),
-            insetPadding: EdgeInsets.all(CustomStyle.getHeight(10.0)),
-            contentPadding: EdgeInsets.all(CustomStyle.getWidth(0.0)),
-            content: SingleChildScrollView(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: <Widget>[
-                  Padding(
-                    padding: EdgeInsets.all(CustomStyle.getWidth(30.0)),
-                    child: Column(
-                      children: [
-                        RichText(
-                          textAlign: TextAlign.center,
-                          text: TextSpan(
-                            text: title1,
-                            style: CustomStyle.CustomFont(styleFontSize15, Colors.black, font_weight: ui.FontWeight.w800),
-                          ),
-                        ),
-                        RichText(
-                          textAlign: TextAlign.left,
-                          text: TextSpan(
-                            text: content1,
-                            style: CustomStyle.CustomFont(styleFontSize15, Colors.black),
-                          ),
-                        ),
-                        RichText(
-                          textAlign: TextAlign.center,
-                          text: TextSpan(
-                            text: title2,
-                            style: CustomStyle.CustomFont(styleFontSize15, Colors.black, font_weight: ui.FontWeight.w800),
-                          ),
-                        ),
-                        RichText(
-                          textAlign: TextAlign.left,
-                          text: TextSpan(
-                            text: content2,
-                            style: CustomStyle.CustomFont(styleFontSize15, Colors.black),
-                          ),
-                        ),
-                        RichText(
-                          textAlign: TextAlign.center,
-                          text: TextSpan(
-                            text: footer1,
-                            style: CustomStyle.CustomFont(styleFontSize15, Colors.black),
-                          ),
-                        ),
-                      ],
-                    )
-                  ),
-                  button,
-                ],
-              ),
-            )
+              insetPadding: EdgeInsets.all(CustomStyle.getHeight(10.0)),
+              contentPadding: EdgeInsets.all(CustomStyle.getWidth(0.0)),
+              content: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: <Widget>[
+                    Padding(
+                        padding: EdgeInsets.all(CustomStyle.getWidth(30.0)),
+                        child: Column(
+                          children: [
+                            RichText(
+                              textAlign: TextAlign.center,
+                              text: TextSpan(
+                                text: title1,
+                                style: CustomStyle.CustomFont(styleFontSize15, Colors.black, font_weight: ui.FontWeight.w800),
+                              ),
+                            ),
+                            RichText(
+                              textAlign: TextAlign.left,
+                              text: TextSpan(
+                                text: content1,
+                                style: CustomStyle.CustomFont(styleFontSize15, Colors.black),
+                              ),
+                            ),
+                            RichText(
+                              textAlign: TextAlign.center,
+                              text: TextSpan(
+                                text: title2,
+                                style: CustomStyle.CustomFont(styleFontSize15, Colors.black, font_weight: ui.FontWeight.w800),
+                              ),
+                            ),
+                            RichText(
+                              textAlign: TextAlign.left,
+                              text: TextSpan(
+                                text: content2,
+                                style: CustomStyle.CustomFont(styleFontSize15, Colors.black),
+                              ),
+                            ),
+                            RichText(
+                              textAlign: TextAlign.center,
+                              text: TextSpan(
+                                text: footer1,
+                                style: CustomStyle.CustomFont(styleFontSize15, Colors.black),
+                              ),
+                            ),
+                          ],
+                        )
+                    ),
+                    button,
+                  ],
+                ),
+              )
           ),
         );
       });
