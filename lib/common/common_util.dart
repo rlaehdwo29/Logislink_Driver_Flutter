@@ -53,6 +53,29 @@ openOkBox(BuildContext context, String msg,String okTxt, Function() okEvent,{Tex
   );
 }
 
+openCustomOkBox(BuildContext context, String msg,String okTxt, Function() okEvent,{TextAlign? align}) {
+  return openDialogBox(context,
+      msg,
+      InkWell(
+        onTap: okEvent,
+        child: Container(
+          width: MediaQuery.of(context).size.width,
+          padding: EdgeInsets.symmetric(vertical: CustomStyle.getHeight(14.0)),
+          decoration: BoxDecoration(
+            color: main_color,
+            border: CustomStyle.borderAllBase(),
+          ),
+          child: Text(
+            okTxt,
+            style: CustomStyle.whiteFont15B(),
+            textAlign: TextAlign.center,
+          ),
+        ),
+      ),
+      align: align
+  );
+}
+
 openCommonConfirmBox(BuildContext context, String msg, String cancelTxt,
     String okTxt, Function() cancelEvent, Function() okEvent) {
   return openDialogBox(
@@ -101,6 +124,13 @@ openCommonConfirmBox(BuildContext context, String msg, String cancelTxt,
 
 
 openDialogBox(BuildContext context, String msg, Widget button,{TextAlign? align}) {
+  List<String> parts = msg.split(":^:");
+  String title1 = parts[0];
+  String content1 = parts[1];
+  String title2 = parts[2];
+  String content2 = parts[3];
+  String footer1 = parts[4];
+
   return showDialog(
       barrierDismissible: false,
       context: context,
@@ -119,13 +149,45 @@ openDialogBox(BuildContext context, String msg, Widget button,{TextAlign? align}
                 children: <Widget>[
                   Padding(
                     padding: EdgeInsets.all(CustomStyle.getWidth(30.0)),
-                    child: RichText(
-                      textAlign: align ?? TextAlign.center,
-                      text: TextSpan(
-                        text: msg,
-                        style: CustomStyle.alertMsgFont(),
-                      ),
-                    ),
+                    child: Column(
+                      children: [
+                        RichText(
+                          textAlign: TextAlign.center,
+                          text: TextSpan(
+                            text: title1,
+                            style: CustomStyle.CustomFont(styleFontSize15, Colors.black, font_weight: ui.FontWeight.w800),
+                          ),
+                        ),
+                        RichText(
+                          textAlign: TextAlign.left,
+                          text: TextSpan(
+                            text: content1,
+                            style: CustomStyle.CustomFont(styleFontSize15, Colors.black),
+                          ),
+                        ),
+                        RichText(
+                          textAlign: TextAlign.center,
+                          text: TextSpan(
+                            text: title2,
+                            style: CustomStyle.CustomFont(styleFontSize15, Colors.black, font_weight: ui.FontWeight.w800),
+                          ),
+                        ),
+                        RichText(
+                          textAlign: TextAlign.left,
+                          text: TextSpan(
+                            text: content2,
+                            style: CustomStyle.CustomFont(styleFontSize15, Colors.black),
+                          ),
+                        ),
+                        RichText(
+                          textAlign: TextAlign.center,
+                          text: TextSpan(
+                            text: footer1,
+                            style: CustomStyle.CustomFont(styleFontSize15, Colors.black),
+                          ),
+                        ),
+                      ],
+                    )
                   ),
                   button,
                 ],

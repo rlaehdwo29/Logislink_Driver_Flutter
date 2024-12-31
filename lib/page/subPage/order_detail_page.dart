@@ -508,7 +508,7 @@ class _OrderDetailPageState extends State<OrderDetailPage> with WidgetsBindingOb
         logger.d("GetPayTask() _response -> ${_response.status} // ${_response.resultMap}");
         if(_response.status == "200") {
           if(_response.resultMap?["data"].length != 0) {
-            openOkBox(context, _response.resultMap?["data"][0]["memo"], Strings.of(context)?.get("confirm") ?? "Error!!", () {Navigator.of(context).pop(false);});
+            openCustomOkBox(context, _response.resultMap?["data"][0]["memo"], Strings.of(context)?.get("confirm") ?? "Error!!", () {Navigator.of(context).pop(false);},align: TextAlign.left);
           }else{
             await goToPay();
           }
