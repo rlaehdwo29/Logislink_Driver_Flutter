@@ -4,10 +4,10 @@ class Const {
 
  // 디버그 모드 개발 true, 운영 false
  static final bool debugEnable = false;
- static final bool userDebugger = false;
+ static final bool userDebugger = true;
 
  // 버전명
- static final APP_VERSION = "1.1.73";
+ static final APP_VERSION = "1.1.79";
 
  //스토어 주소
  static final ANDROID_STORE = "https://play.google.com/store/apps/details?id=com.logislink.driver";
@@ -251,10 +251,6 @@ class Const {
 
  // 차주 팝업 체크
  static final DRIVER_POPUP_CHECK = "MOBILE_POPUP";
-
-
- // 차주 빠른지급 신청 사용 유무 코드
- static final USE_PAY_CD = "USE_PAY_CD";
 
  /**
   * 날짜/시간 포맷(2) : "MM.dd"

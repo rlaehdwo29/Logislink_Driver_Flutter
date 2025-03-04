@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:convert';
 import 'dart:io';
 
 import 'package:app_settings/app_settings.dart';
@@ -644,8 +643,7 @@ class _MainPageState extends State<MainPage> with CommonMainWidget,WidgetsBindin
     });
   }
 
-  Future<void> goToHistory() async {
-    await Util.setEventLog(URL_USER_LOGIN, "모바일로그인", loginYn: "Y");
+  void goToHistory() {
     Navigator.of(context).push(MaterialPageRoute(
         builder: (context) => HistoryPage()
     ));
@@ -1396,9 +1394,10 @@ void startCallback() {
 class MyTaskHandler extends TaskHandler {
   int _count = 0;
 
+  // Called when the task is started.
   @override
   Future<void> onStart(DateTime timestamp, TaskStarter starter) async {
-    print('onStart(starter: ${starter.name})');
+    print('onStart');
   }
 
   // Called by eventAction in [ForegroundTaskOptions].

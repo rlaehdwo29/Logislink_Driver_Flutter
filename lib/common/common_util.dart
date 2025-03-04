@@ -1,16 +1,9 @@
-import 'dart:async';
-import 'dart:convert';
-import 'dart:io';
+
 import 'dart:ui' as ui;
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:get/get.dart';
 import 'package:logislink_driver_flutter/common/style_theme.dart';
-import 'package:url_launcher/url_launcher.dart';
-import 'package:http/http.dart' as http;
-
-import 'config_url.dart';
 
 class ReturnMap {
   String? status;

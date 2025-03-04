@@ -8,7 +8,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_inappwebview/flutter_inappwebview.dart';
+import 'package:flutter_direct_caller_plugin/flutter_direct_caller_plugin.dart' show FlutterDirectCallerPlugin;
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 import 'package:kakao_flutter_sdk_navi/kakao_flutter_sdk_navi.dart';
@@ -32,7 +32,6 @@ import 'package:logislink_driver_flutter/provider/order_service.dart';
 import 'package:logislink_driver_flutter/utils/sp.dart';
 import 'package:logislink_driver_flutter/utils/util.dart' as app_util;
 import 'package:logislink_driver_flutter/widget/show_bank_check_widget.dart';
-import 'package:phone_call/phone_call.dart';
 import 'package:progress_dialog_null_safe/progress_dialog_null_safe.dart';
 import 'package:provider/provider.dart';
 import 'package:dio/dio.dart';
@@ -280,7 +279,7 @@ class _OrderDetailPageState extends State<OrderDetailPage> with WidgetsBindingOb
                                       DeviceInfoPlugin deviceInfo = DeviceInfoPlugin();
                                       AndroidDeviceInfo info = await deviceInfo.androidInfo;
                                       if (info.version.sdkInt >= 23) {
-                                        await PhoneCall.calling("${iData.eTel}");
+                                        await FlutterDirectCallerPlugin.callNumber("${iData.eTel}");
                                       }else{
                                         await launch("tel://${iData.eTel}");
                                       }
@@ -855,7 +854,7 @@ class _OrderDetailPageState extends State<OrderDetailPage> with WidgetsBindingOb
                         DeviceInfoPlugin deviceInfo = DeviceInfoPlugin();
                         AndroidDeviceInfo info = await deviceInfo.androidInfo;
                         if (info.version.sdkInt >= 23) {
-                          await PhoneCall.calling("${_type == "wayon" ? orderItem.value?.sTel : orderItem.value?.eTel}");
+                          await FlutterDirectCallerPlugin.callNumber("${_type == "wayon" ? orderItem.value?.sTel : orderItem.value?.eTel}");
                         }else{
                           await launch("tel://${_type == "wayon" ? orderItem.value?.sTel : orderItem.value?.eTel}");
                         }
@@ -2315,9 +2314,7 @@ class _OrderDetailPageState extends State<OrderDetailPage> with WidgetsBindingOb
   }
 
   Future<void> IntentTax() async {
-    var results = await Navigator.of(context).push(MaterialPageRoute(
-        builder: (BuildContext context) => TaxPage(item: orderItem.value))
-    );
+    var results = await Navigator.of(context).push(MaterialPageRoute(builder: (BuildContext context) => TaxPage(item: orderItem.value)));
 
     if(results != null && results.containsKey("code")){
       //print("IntentTax CallBack!! => ${results["code"]}");
@@ -2917,7 +2914,7 @@ class _OrderDetailPageState extends State<OrderDetailPage> with WidgetsBindingOb
                                 DeviceInfoPlugin deviceInfo = DeviceInfoPlugin();
                                 AndroidDeviceInfo info = await deviceInfo.androidInfo;
                                 if (info.version.sdkInt >= 23) {
-                                  await PhoneCall.calling("${orderItem.value?.sellStaffTel}");
+                                  await FlutterDirectCallerPlugin.callNumber("${orderItem.value?.sellStaffTel}");
                                 }else{
                                   await launch("tel://${orderItem.value?.sellStaffTel}");
                                 }

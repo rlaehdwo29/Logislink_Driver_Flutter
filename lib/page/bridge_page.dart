@@ -164,9 +164,9 @@ class _BridgePageState extends State<BridgePage> {
             VersionModel? appVersion = VersionModel.fromJSON(list[1]);
             String? shareVersion = await SP.get(Const.CD_VERSION);
             var server_version_arr = appVersion.versionCode?.split('.');
-            String server_version = server_version_arr!.elementAt(0) + "." + server_version_arr!.elementAt(1) + server_version_arr!.elementAt(2);
-            var app_version_arr = packageInfo.version?.split('.');
-            String app_version = app_version_arr!.elementAt(0) + "." + app_version_arr!.elementAt(1) + app_version_arr!.elementAt(2);
+            String server_version = server_version_arr!.elementAt(0) + "." + server_version_arr.elementAt(1) + server_version_arr.elementAt(2);
+            var app_version_arr = packageInfo.version.split('.');
+            String app_version = app_version_arr.elementAt(0) + "." + app_version_arr.elementAt(1) + app_version_arr.elementAt(2);
             if (appVersion.updateCode == "1") {
               if(double.parse(app_version) < double.parse(server_version)){
                 Util.toast("새로운 앱 버전이 있습니다.");
@@ -177,16 +177,14 @@ class _BridgePageState extends State<BridgePage> {
                 }
               }else{
                 if (shareVersion != codeVersion.versionCode) {
-                  await SP.putString(
-                      Const.CD_VERSION, codeVersion.versionCode ?? "");
+                  await SP.putString(Const.CD_VERSION, codeVersion.versionCode ?? "");
                   await GetCodeTask();
                 }
                 await checkLogin();
               }
             } else{
               if (shareVersion != codeVersion.versionCode) {
-                await SP.putString(
-                    Const.CD_VERSION, codeVersion.versionCode ?? "");
+                await SP.putString(Const.CD_VERSION, codeVersion.versionCode ?? "");
                 await GetCodeTask();
               }
               await checkLogin();
@@ -272,7 +270,7 @@ class _BridgePageState extends State<BridgePage> {
     Logger logger = Logger();
     UserModel? nowUser = await controller.getUserInfo();
     await pr?.show();
-    await DioService.dioClient(header: true).getUserInfo(nowUser?.authorization, nowUser?.vehicId).then((it) async {
+    await DioService.dioClient(header: true).getUserInfo(nowUser.authorization, nowUser.vehicId).then((it) async {
       await pr?.hide();
       ReturnMap _response = DioService.dioResponse(it);
       logger.i("getUserInfo() _response -> ${_response.status} // ${_response.resultMap}");
@@ -280,7 +278,7 @@ class _BridgePageState extends State<BridgePage> {
         if(_response.resultMap?["data"] != null) {
           try {
             UserModel newUser = UserModel.fromJSON(it.response.data["data"]);
-            newUser.authorization = nowUser?.authorization;
+            newUser.authorization = nowUser.authorization;
             controller.setUserInfo(newUser);
             await sendDeviceInfo();
           }catch(e) {
@@ -315,7 +313,7 @@ class _BridgePageState extends State<BridgePage> {
     var setting_push = await SP.getDefaultTrueBoolean(Const.KEY_SETTING_PUSH);
     var setting_talk = await  SP.getDefaultTrueBoolean(Const.KEY_SETTING_TALK);
     await DioService.dioClient(header: true).deviceUpdate(
-        user?.authorization,
+        user.authorization,
         Util.booleanToYn(setting_push),
         Util.booleanToYn(setting_talk),
         push_id,
@@ -376,10 +374,12 @@ class _BridgePageState extends State<BridgePage> {
 
       if(!Const.userDebugger) {
         if (telNum.isEmpty) {
-          Util.toast("단말기의 정보를 가져오는 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.");
-          Future.delayed(const Duration(milliseconds: 300), () {
-            exit(0);
-          });
+          openOkBox(context, "로지스링크 차주 앱은 휴대폰 번호 없이 사용이 불가능합니다. USIM을 삽입해주세요.",
+              Strings.of(context)?.get("confirm") ?? "Error!!", () {
+                Future.delayed(const Duration(milliseconds: 300), () {
+                  exit(0);
+                });
+              });
         }
       }
     }else{

@@ -1,12 +1,10 @@
 import 'package:get/get.dart';
-import 'package:logislink_driver_flutter/common/model/bank_info_model.dart';
 import 'package:logislink_driver_flutter/common/model/car_model.dart';
 import 'package:logislink_driver_flutter/common/model/user_model.dart';
 import 'package:logislink_driver_flutter/constants/const.dart';
 import 'package:logislink_driver_flutter/db/appdatabase.dart';
 import 'package:logislink_driver_flutter/interfaces/rest.dart';
 import 'package:logislink_driver_flutter/utils/sp.dart';
-import 'package:sqflite/sqflite.dart';
 
 class App extends GetxController{
 

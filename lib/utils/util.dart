@@ -12,6 +12,7 @@ import 'package:logger/logger.dart';
 import 'package:logislink_driver_flutter/common/app.dart';
 import 'package:logislink_driver_flutter/common/common_util.dart';
 import 'package:logislink_driver_flutter/common/model/notice_model.dart';
+import 'package:logislink_driver_flutter/common/model/user_model.dart';
 import 'package:logislink_driver_flutter/common/style_theme.dart';
 import 'package:logislink_driver_flutter/constants/const.dart';
 import 'package:logislink_driver_flutter/provider/dio_service.dart';
@@ -494,7 +495,7 @@ class Util {
           webViewController?.loadUrl(urlRequest: URLRequest(url: await webViewController?.getUrl()));}
       },
     ))!;
-    Uri myUrl = Uri.parse(SERVER_URL + URL_NOTICE_DETAIL + seq.toString());
+    String myUrl = SERVER_URL + URL_NOTICE_DETAIL + seq.toString();
 
     return showDialog(
         context: context,
@@ -519,7 +520,7 @@ class Util {
                               children: [
                                 InAppWebView(
                                   key: webviewKey,
-                                  initialUrlRequest: URLRequest(url: myUrl),
+                                  initialUrlRequest: URLRequest(url: WebUri(myUrl)),
                                   initialOptions: InAppWebViewGroupOptions(
                                     crossPlatform: InAppWebViewOptions(
                                         javaScriptCanOpenWindowsAutomatically: true,
@@ -548,10 +549,10 @@ class Util {
                                   ),
                                   pullToRefreshController: pullToRefreshController,
                                   onLoadStart: (InAppWebViewController controller, uri) {
-                                    setState(() {myUrl = uri!;});
+                                    setState(() {myUrl = uri.toString();});
                                   },
                                   onLoadStop: (InAppWebViewController controller, uri) {
-                                    setState(() {myUrl = uri!;});
+                                    setState(() {myUrl = uri.toString();});
                                   },
                                   onProgressChanged: (controller, progress) {
                                     if (progress == 100) {pullToRefreshController?.endRefreshing();}
@@ -641,6 +642,50 @@ class Util {
           );
         }
     );
+  }
+
+  static Future<String> getVersionName() async {
+    try {
+      var package_info = await PackageInfo.fromPlatform();
+      return package_info.version;
+    } catch (e) {
+      return Const.APP_VERSION;
+    }
+  }
+
+  static Future<void> setEventLog(String menuUrl, String menuName, {String? loginYn}) async {
+    Logger logger = Logger();
+    UserModel? user = await App().getUserInfo();
+    var app_version = await Util.getVersionName();
+    await DioService.dioClient(header: true).setEventLog(
+        user.driverId,
+        menuUrl,
+        menuName,
+        "D${Platform.isAndroid ? "A" : "I"}",
+        app_version,
+        loginYn??"N"
+    ).then((it) async {
+      ReturnMap response = DioService.dioResponse(it);
+      logger.d("setEventLog() _response -> ${response.status} // ${response.resultMap}");
+      if(response.status == "200") {
+        if(response.resultMap?["result"] == true) {
+
+        }else{
+          toast(response.resultMap?["msg"]);
+        }
+      }
+    }).catchError((Object obj) async {
+      switch (obj.runtimeType) {
+        case DioError:
+        // Here's the sample to get the failed response error code and message
+          final res = (obj as DioError).response;
+          print("setEventLog() Error => ${res?.statusCode} // ${res?.statusMessage}");
+          break;
+        default:
+          print("setEventLog() Error Default => ");
+          break;
+      }
+    });
   }
 
 }

@@ -108,7 +108,7 @@ class AppDataBase {
     if(result == null || result.length <= 0){
       return null;
     }else{
-      return GeofenceModel.fromMap(result![0]);
+      return GeofenceModel.fromMap(result[0]);
     }
   }
 
@@ -123,7 +123,7 @@ class AppDataBase {
     if(result == null || result.length <= 0){
       return null;
     }else{
-      return GeofenceModel.fromMap(result![0]);
+      return GeofenceModel.fromMap(result[0]);
     }
   }
 
@@ -133,7 +133,7 @@ class AppDataBase {
     if(result == null || result.length <= 0){
       return null;
     }else{
-      return GeofenceModel.fromMap(result![0]);
+      return GeofenceModel.fromMap(result[0]);
     }
   }
 

@@ -4,8 +4,8 @@ package com.logislink.driver;
 import android.content.Intent;
 import android.net.Uri;
 
-import com.logislink.driver.logislink_driver_flutter.NativeViewFactory;
-import com.logislink.driver.logislink_driver_flutter.util.Const;
+import com.logislink.driver.NativeViewFactory;
+import com.logislink.driver.util.Const;
 import com.skt.Tmap.TMapTapi;
 
 import io.flutter.embedding.android.FlutterActivity;

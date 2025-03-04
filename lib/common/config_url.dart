@@ -10,7 +10,7 @@
 
   const String m_ServerTest = "http://211.252.86.30:806";           // Test 서버
   //const String m_ServerTest = "http://211.252.86.30:8005";
-  const String SERVER_URL = m_ServerRelease;
+  const String SERVER_URL = m_ServerDebug;
 
   const String RECEIPT_PATH = "/files/receipt/";
 
@@ -33,7 +33,8 @@
   const String URL_CODE_LIST = "/cmm/code/list";
   // 버전코드
   const String URL_VERSION_CODE = "/cmm/version/list";
-
+ // 로그 저장
+ const String URL_EVENT_LOG = "/cmm/insert/eventLog";
 
   // 스마트로 MID
   const String URL_SMARTRO_MID = "/api/card/getMidMB";

@@ -21,7 +21,7 @@ class _AppBarNoticeDetailPageState extends State<AppBarNoticeDetailPage> {
   late final InAppWebViewController webViewController;
   late final PullToRefreshController pullToRefreshController;
   ProgressDialog? pr;
-  late Uri myUrl;
+  late String myUrl;
   double progress = 0;
 
   @override
@@ -40,7 +40,7 @@ class _AppBarNoticeDetailPageState extends State<AppBarNoticeDetailPage> {
       },
     ))!;
 
-    myUrl = Uri.parse(SERVER_URL + URL_NOTICE_DETAIL + widget.item.boardSeq.toString());
+    myUrl = SERVER_URL + URL_NOTICE_DETAIL + widget.item.boardSeq.toString();
 
   }
 
@@ -87,7 +87,7 @@ class _AppBarNoticeDetailPageState extends State<AppBarNoticeDetailPage> {
           children: [
             InAppWebView(
           key: webViewKey,
-          initialUrlRequest: URLRequest(url: myUrl),
+          initialUrlRequest: URLRequest(url: WebUri(myUrl)),
           initialOptions: InAppWebViewGroupOptions(
             crossPlatform: InAppWebViewOptions(
                 javaScriptCanOpenWindowsAutomatically: true,
@@ -116,10 +116,10 @@ class _AppBarNoticeDetailPageState extends State<AppBarNoticeDetailPage> {
           ),
           pullToRefreshController: pullToRefreshController,
           onLoadStart: (InAppWebViewController controller, uri) {
-            setState(() {myUrl = uri!;});
+            setState(() {myUrl = uri.toString();});
           },
           onLoadStop: (InAppWebViewController controller, uri) {
-            setState(() {myUrl = uri!;});
+            setState(() {myUrl = uri.toString();});
           },
           onProgressChanged: (controller, progress) {
             if (progress == 100) {pullToRefreshController.endRefreshing();}
