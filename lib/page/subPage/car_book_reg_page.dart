@@ -1721,8 +1721,7 @@ class _CarBookRegPageState extends State<CarBookRegPage>{
           case DioError:
           // Here's the sample to get the failed response error code and message
             final res = (obj as DioError).response;
-            print(
-                "carBookDel() Error => ${res?.statusCode} // ${res?.statusMessage}");
+            print("carBookDel() Error => ${res?.statusCode} // ${res?.statusMessage}");
             break;
           default:
             print("carBookDel() Error Default => ");

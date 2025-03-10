@@ -172,8 +172,7 @@ class _CarListPageState extends State<CarListPage> {
         case DioError:
         // Here's the sample to get the failed response error code and message
           final res = (obj as DioError).response;
-          print(
-              "carDel() Error => ${res?.statusCode} // ${res?.statusMessage}");
+          print("carDel() Error => ${res?.statusCode} // ${res?.statusMessage}");
           break;
         default:
           print("carDel() Error Default => ");

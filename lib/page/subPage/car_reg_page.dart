@@ -118,8 +118,7 @@ class _CarRegPageState extends State<CarRegPage> {
           case DioError:
           // Here's the sample to get the failed response error code and message
             final res = (obj as DioError).response;
-            print(
-                "carReg() Error => ${res?.statusCode} // ${res?.statusMessage}");
+            print("carReg() Error => ${res?.statusCode} // ${res?.statusMessage}");
             break;
           default:
             print("carReg() Error Default => ");
@@ -159,8 +158,7 @@ class _CarRegPageState extends State<CarRegPage> {
           case DioError:
           // Here's the sample to get the failed response error code and message
             final res = (obj as DioError).response;
-            print(
-                "carEdit() Error => ${res?.statusCode} // ${res?.statusMessage}");
+            print("carEdit() Error => ${res?.statusCode} // ${res?.statusMessage}");
             break;
           default:
             print("carEdit() Error Default => ");
@@ -210,8 +208,7 @@ class _CarRegPageState extends State<CarRegPage> {
           case DioError:
           // Here's the sample to get the failed response error code and message
             final res = (obj as DioError).response;
-            print(
-                "carDel() Error => ${res?.statusCode} // ${res?.statusMessage}");
+            print("carDel() Error => ${res?.statusCode} // ${res?.statusMessage}");
             break;
           default:
             print("carDel() Error Default => ");
