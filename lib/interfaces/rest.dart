@@ -26,6 +26,21 @@ abstract class Rest {
   @POST(URL_VERSION_CODE)
   Future<HttpResponse> getVersion(@Field("versionKind") String versionKind);
 
+
+  /**
+   * 로그 저장
+   */
+  @FormUrlEncoded()
+  @POST(URL_EVENT_LOG)
+  Future<HttpResponse> setEventLog(
+      @Field("userId") String? userId,
+      @Field("menu_url") String? menu_url,
+      @Field("menu_name") String? menu_name,
+      @Field("mobile_type") String? mobile_type,
+      @Field("app_version") String? app_version,
+      @Field("loginYn") String? loginYn
+   );
+
   /**
    * 스마트로 MID
    */

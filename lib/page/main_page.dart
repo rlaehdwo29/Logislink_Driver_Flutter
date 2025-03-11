@@ -10,11 +10,12 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_activity_recognition/flutter_activity_recognition.dart';
 import 'package:flutter_foreground_task/flutter_foreground_task.dart';
 import 'package:flutter_foreground_task/ui/with_foreground_task.dart';
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:geofence_service/geofence_service.dart';
+import 'package:geofencing_api/geofencing_api.dart';
 import 'package:geolocator/geolocator.dart' as geolocation;
 
 import 'package:get/get.dart';
@@ -83,35 +84,27 @@ class _MainPageState extends State<MainPage> with CommonMainWidget,WidgetsBindin
   final orderList = List.empty(growable: true).obs;
   final pGpsStop = List.empty(growable: true).obs;
 
-  final _activityStreamController = StreamController<Activity>();
-  final _geofenceStreamController = StreamController<Geofence>();
-  List<Geofence> geofenceList = List.empty(growable: true);
+  Set<GeofenceRegion> geofenceList = {};
 
-  final _geofenceService = GeofenceService.instance.setup(
-      interval:60000, // GeoFence 상태 확인 5초마다
-      accuracy: 100, // GeoFence 지정 범위 100M
-      loiteringDelayMs: 30000, // GeoFence 지연 설정. Enter, DWELL 상태 체크하기 위함
-      statusChangeDelayMs: 10000, // GeoFence 지정 범위 경계 근처에 있을때 상태 변경
-      useActivityRecognition: true, // 활동 인식 API 여부
-      allowMockLocations: true, // 모의 위치 허용 여부
-      printDevLog: true, // 개발자 로그 표시 여부
-      geofenceRadiusSortType: GeofenceRadiusSortType.DESC); // GeoFence 지정 리스트 정렬 유형
+  final _geofenceService = Geofencing.instance.setup(
+        interval:60000, // GeoFence 상태 확인 5초마다
+        accuracy: 100, // GeoFence 지정 범위 100M
+        statusChangeDelay: 10000, // GeoFence 지정 범위 경계 근처에 있을때 상태 변경
+        allowsMockLocation: true, // 모의 위치 허용 여부
+        printsDebugLog: true, // 개발자 로그 표시 여부
+      );
 
   Future<void> _onGeofenceStatusChanged(
-      Geofence geofence,
-      GeofenceRadius geofenceRadius,
+      GeofenceRegion geofenceRegion,
       GeofenceStatus geofenceStatus,
       Location location) async {
-    print('geofence: ${geofence.toJson()}');
-    print('geofenceRadius: ${geofenceRadius.toJson()}');
-    print('geofenceStatus: ${geofenceStatus.toString()}');
-    _geofenceStreamController.sink.add(geofence);
+    print('region(id: ${geofenceRegion.id}) ${geofenceStatus.name}');
     AppDataBase db = App().getRepository();
     var app = await App().getUserInfo();
-    GeofenceModel? data = await db.getGeoFence(app.vehicId, int.parse(geofence.id));
+    GeofenceModel? data = await db.getGeoFence(app.vehicId, int.parse(geofenceRegion.id));
     if(data != null) {
       if(data.flag == "Y") {
-        if(geofenceStatus == GeofenceStatus.ENTER) {
+        if(geofenceStatus == GeofenceStatus.enter) {
           if(data.allocState == "E") {
             if(await db.checkEndGeo(app.vehicId, data.orderId) == 1) {
               setOrderState(data, "05");
@@ -126,7 +119,7 @@ class _MainPageState extends State<MainPage> with CommonMainWidget,WidgetsBindin
           }else{
             setOrderState(data, "12");
           }
-        }else if(geofenceStatus == GeofenceStatus.EXIT) {
+        }else if(geofenceStatus == GeofenceStatus.exit) {
           if(data.allocState == "E") {
             if(await db.checkStartGeo(app.vehicId, data.orderId) == 0) {
               setOrderState(data, "06");
@@ -249,7 +242,6 @@ class _MainPageState extends State<MainPage> with CommonMainWidget,WidgetsBindin
   void _onActivityChanged(Activity prevActivity, Activity currActivity) {
     print('prevActivity: ${prevActivity.toJson()}');
     print('currActivity: ${currActivity.toJson()}');
-    _activityStreamController.sink.add(currActivity);
   }
 
   // This function is to be called when the location has changed.
@@ -295,21 +287,9 @@ class _MainPageState extends State<MainPage> with CommonMainWidget,WidgetsBindin
 
   }
 
-  // This function is to be called when a location services status change occurs
-  // since the service was started.
-  void _onLocationServicesStatusChanged(bool status) {
-    print('isLocationServicesEnabled: $status');
-  }
-
   // This function is used to handle errors that occur in the service.
-  void _onError(error) {
-    final errorCode = getErrorCodesFromError(error);
-    if (errorCode == null) {
-      print('Undefined error: $error');
-      return;
-    }
-
-    print('ErrorCode: $errorCode');
+  void _onGeofenceError(Object error, StackTrace stackTrace) {
+    print('error: $error\n$stackTrace');
   }
 
   @override
@@ -399,15 +379,12 @@ class _MainPageState extends State<MainPage> with CommonMainWidget,WidgetsBindin
 
   }
 
-  void _onReceiveTaskData(Object data) {
+  void _onReceiveTaskData(Object data) async {
     if (data is int) {
-      if(!_geofenceService.isRunningService) {
-        _geofenceService.addGeofenceStatusChangeListener(_onGeofenceStatusChanged);
-        _geofenceService.addLocationChangeListener(_onLocationChanged);
-        _geofenceService.addLocationServicesStatusChangeListener(_onLocationServicesStatusChanged);
-        _geofenceService.addActivityChangeListener(_onActivityChanged);
-        _geofenceService.addStreamErrorListener(_onError);
-        _geofenceService.start(geofenceList).catchError(_onError);
+      if(!Geofencing.instance.isRunningService) {
+        Geofencing.instance.addGeofenceStatusChangedListener(_onGeofenceStatusChanged);
+        Geofencing.instance.addGeofenceErrorCallbackListener(_onGeofenceError);
+        await Geofencing.instance.start(regions: geofenceList);
         if (widget.allocId != null) {
           Navigator.push(context, MaterialPageRoute(
               builder: (context) => OrderDetailPage(allocId: widget.allocId)));
@@ -459,18 +436,18 @@ class _MainPageState extends State<MainPage> with CommonMainWidget,WidgetsBindin
     if(list != null && list.length != 0) {
       if(geofenceList.isNotEmpty) geofenceList.clear();
       for(var data in list) {
-        geofenceList?.add(Geofence(id: data.id.toString(),data: {"orderId": data.orderId,"vehicId":data.vehicId,"allocId":data.allocId,"allocState":data.allocState}, latitude: double.parse(data.lat), longitude: double.parse(data.lon), radius: [GeofenceRadius(id: 'radius_150', length: double.parse(Const.GEOFENCE_RADIUS_IN_METERS.toString()))]));
+        geofenceList.add(GeofenceRegion.circular(id: data.id.toString(),data: {"orderId": data.orderId,"vehicId":data.vehicId,"allocId":data.allocId,"allocState":data.allocState}, center: LatLng(double.parse(data.lat), double.parse(data.lon)) , radius: double.parse(Const.GEOFENCE_RADIUS_IN_METERS.toString())));
       }
     }
     await addGeofence();
   }
 
   Future<void> removeGeofence() async {
-    _geofenceService.removeGeofenceList(geofenceList);
+    Geofencing.instance.removeRegions(geofenceList);
   }
 
   Future<void> addGeofence() async {
-    GeofenceService.instance.addGeofenceList(geofenceList);
+    Geofencing.instance.addRegions(geofenceList);
   }
 
   Future<void> checkCarInfo() async {
@@ -611,9 +588,9 @@ class _MainPageState extends State<MainPage> with CommonMainWidget,WidgetsBindin
 
   Future<void> stopService() async {
     SP.putBool(Const.KEY_SETTING_WORK, false);
-   if(_geofenceService.isRunningService) {
-     _geofenceService.clearAllListeners();
-     _geofenceService.stop();
+   if(Geofencing.instance.isRunningService) {
+     Geofencing.instance.clearAllListeners();
+     Geofencing.instance.stop();
    }
     _stopForeGroundService();
   }
@@ -1274,7 +1251,9 @@ class _MainPageState extends State<MainPage> with CommonMainWidget,WidgetsBindin
         showNotification: true,
         playSound: false,
       ),
-      foregroundTaskOptions: const ForegroundTaskOptions(interval: 60000),
+      foregroundTaskOptions: ForegroundTaskOptions(
+          eventAction: ForegroundTaskEventAction.repeat(60000),
+      ),
     );
   }
 
@@ -1394,7 +1373,7 @@ class MyTaskHandler extends TaskHandler {
 
   // Called when the task is started.
   @override
-  void onStart(DateTime timestamp) {
+  Future<void> onStart(DateTime timestamp, TaskStarter starter) async {
     print('onStart');
   }
 
@@ -1414,7 +1393,7 @@ class MyTaskHandler extends TaskHandler {
 
   // Called when the task is destroyed.
   @override
-  void onDestroy(DateTime timestamp) {
+  Future<void> onDestroy(DateTime timestamp) async {
     print('onDestroy');
   }
 

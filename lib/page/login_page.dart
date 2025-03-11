@@ -1,6 +1,5 @@
 import 'dart:io';
 
-import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -24,6 +23,8 @@ import 'package:dio/dio.dart';
 import 'package:logislink_driver_flutter/utils/util.dart';
 import 'package:mobile_number/mobile_number.dart';
 import 'package:progress_dialog_null_safe/progress_dialog_null_safe.dart';
+
+import '../common/config_url.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({Key? key}) : super(key:key);
@@ -65,12 +66,13 @@ class _LoginPageState extends State<LoginPage> with CommonMainWidget {
     if(defaultTargetPlatform == TargetPlatform.android) {
       mobileNumber.value = await Util.getPhoneNum();
       if(mobileNumber.value.isEmpty) {
-        Util.toast("단말기의 정보를 가져오는 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.");
-        Future.delayed(const Duration(milliseconds: 300), () {
-          exit(0);
-          //SystemNavigator.pop();
-        });
-        return;
+        openOkBox(context, "로지스링크 차주 앱은 휴대폰 번호 없이 사용이 불가능합니다. USIM을 삽입해주세요.",
+            Strings.of(context)?.get("confirm") ?? "Error!!", () {
+              Future.delayed(const Duration(milliseconds: 300), () {
+                exit(0);
+                return;
+              });
+            });
       }
     }
   }
@@ -86,11 +88,12 @@ class _LoginPageState extends State<LoginPage> with CommonMainWidget {
     setState(() async {
       mobileNumber.value = await Util.getPhoneNum();
       if(mobileNumber.value.isEmpty) {
-        Util.toast("단말기의 정보를 가져오는 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.");
-        Future.delayed(const Duration(milliseconds: 300), () {
-          exit(0);
-        });
-          //SystemNavigator.pop();
+        openOkBox(context, "로지스링크 차주 앱은 휴대폰 번호 없이 사용이 불가능합니다. USIM을 삽입해주세요.",
+            Strings.of(context)?.get("confirm") ?? "Error!!", () {
+              Future.delayed(const Duration(milliseconds: 300), () {
+                exit(0);
+              });
+            });
       }
     });
   }
@@ -372,6 +375,7 @@ class _LoginPageState extends State<LoginPage> with CommonMainWidget {
       logger.i("userLogin() _response -> ${_response.status} // ${_response.resultMap}");
       if (_response.status == "200") {
         if(_response.resultMap?["data"] != null) {
+          await Util.setEventLog(URL_USER_LOGIN, "모바일로그인", loginYn: "Y");
           var app = await controller.getUserInfo();
             UserModel userInfo = UserModel.fromJSON(it.response.data["data"]);
             if (userInfo != null) {
@@ -422,6 +426,7 @@ class _LoginPageState extends State<LoginPage> with CommonMainWidget {
       logger.i("userLogin() _response -> ${_response.status} // ${_response.resultMap}");
       if (_response.status == "200") {
         if(_response.resultMap?["data"] != null) {
+          await Util.setEventLog(URL_USER_LOGIN, "모바일로그인", loginYn: "Y");
           var app = await controller.getUserInfo();
           UserModel userInfo = UserModel.fromJSON(it.response.data["data"]);
           if (userInfo != null) {

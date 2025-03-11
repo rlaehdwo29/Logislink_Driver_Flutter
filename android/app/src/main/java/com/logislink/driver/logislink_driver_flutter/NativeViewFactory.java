@@ -1,4 +1,4 @@
-package com.logislink.driver.logislink_driver_flutter;
+package com.logislink.driver;
 
 import android.content.Context;
 import io.flutter.embedding.android.FlutterActivity;

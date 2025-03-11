@@ -30,7 +30,7 @@ class _CollapsingListTileState extends State<CollapsingListTile>{
         width: CustomStyle.getWidth(30.0) +
             CustomStyle.getWidth(20.0) +
             CustomStyle.getWidth(20.0) +
-            (CustomStyle.getWidth(8.0) * widget.title!.length),
+            (CustomStyle.getWidth(8.0) * widget.title.length),
         height: CustomStyle.getHeight(50.0),
         margin: EdgeInsets.only(right: CustomStyle.getWidth(16.0)),
         padding:
@@ -46,7 +46,7 @@ class _CollapsingListTileState extends State<CollapsingListTile>{
             CustomStyle.sizedBoxWidth(10.0),
             Expanded(
               child: Text(
-                widget.title!,
+                widget.title,
                 style: CustomStyle.baseColFont(),
               ),
             ),

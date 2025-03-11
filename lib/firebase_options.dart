@@ -73,7 +73,7 @@ class DefaultFirebaseOptions {
     messagingSenderId: '443385345478',
     projectId: 'logislink-driver',
     storageBucket: 'logislink-driver.appspot.com',
-    iosBundleId: 'com.logislink.driver.logislinkDriverFlutter',
+    iosBundleId: 'com.logislink.driver',
   );
 
   static const FirebaseOptions windows = FirebaseOptions(

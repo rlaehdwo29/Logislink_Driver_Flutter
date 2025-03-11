@@ -1,4 +1,4 @@
-package com.logislink.driver.logislink_driver_flutter.util;
+package com.logislink.driver.util;
 
 public class Const {
     // T맵 API KEY

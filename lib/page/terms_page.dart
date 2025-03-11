@@ -67,11 +67,12 @@ class _TermsPageState extends State<TermsPage> {
     if(defaultTargetPlatform == TargetPlatform.android) {
       m_Number = await Util.getPhoneNum();
       if(m_Number.isEmpty) {
-        Util.toast("단말기의 정보를 가져오는 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.");
-        Future.delayed(const Duration(milliseconds: 300), () {
-          exit(0);
-          //SystemNavigator.pop();
-        });
+        openOkBox(context, "로지스링크 차주 앱은 휴대폰 번호 없이 사용이 불가능합니다. USIM을 삽입해주세요.",
+            Strings.of(context)?.get("confirm") ?? "Error!!", () {
+              Future.delayed(const Duration(milliseconds: 300), () {
+                exit(0);
+              });
+            });
       }
     }
 

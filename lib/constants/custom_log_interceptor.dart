@@ -17,8 +17,7 @@ class CustomLogInterceptor extends Interceptor {
 
   @override
   void onError(DioError err, ErrorInterceptorHandler handler) {
-    print(
-      'ERROR[${err.response?.statusCode}] => PATH: ${err.requestOptions.path}',
+    print('ERROR[${err.response?.statusCode}] => PATH: ${err.requestOptions.path}',
     );
     super.onError(err, handler);
   }

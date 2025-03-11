@@ -1,4 +1,3 @@
-import 'package:get/get.dart';
 import 'package:json_annotation/json_annotation.dart';
 import 'package:logislink_driver_flutter/common/model/result_model.dart';
 

@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:logislink_driver_flutter/common/strings.dart';
-import 'common_util.dart';
 
 mixin CommonMainWidget {
   WillPopScope

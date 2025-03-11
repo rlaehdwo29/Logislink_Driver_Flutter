@@ -1038,8 +1038,7 @@ class _AppBarSalesDetailPageState extends State<AppBarSalesDetailPage> {
         case DioError:
           // Here's the sample to get the failed response error code and message
           final res = (obj as DioError).response;
-          print(
-              "deleteDataAPI() Error => ${res?.statusCode} // ${res?.statusMessage}");
+          print("deleteDataAPI() Error => ${res?.statusCode} // ${res?.statusMessage}");
           break;
         default:
           print("deleteDataAPI() Error Default => ");
@@ -1105,8 +1104,7 @@ class _AppBarSalesDetailPageState extends State<AppBarSalesDetailPage> {
         case DioError:
         // Here's the sample to get the failed response error code and message
           final res = (obj as DioError).response;
-          print(
-              "updateDataAPI() Error => ${res?.statusCode} // ${res?.statusMessage}");
+          print("updateDataAPI() Error => ${res?.statusCode} // ${res?.statusMessage}");
           break;
         default:
           print("updateDataAPI() Error Default => ");
@@ -1171,8 +1169,7 @@ class _AppBarSalesDetailPageState extends State<AppBarSalesDetailPage> {
         case DioError:
         // Here's the sample to get the failed response error code and message
           final res = (obj as DioError).response;
-          print(
-              "insertRegisterAPI() Error => ${res?.statusCode} // ${res?.statusMessage}");
+          print("insertRegisterAPI() Error => ${res?.statusCode} // ${res?.statusMessage}");
           break;
         default:
           print("insertRegisterAPI() Error Default => ");
