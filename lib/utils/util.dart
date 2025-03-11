@@ -661,7 +661,8 @@ class Util {
         user.driverId,
         menuUrl,
         menuName,
-        "D${Platform.isAndroid ? "A" : "I"}",
+        "차주",
+        Platform.isAndroid ? "Android" : "IOS",
         app_version,
         loginYn??"N"
     ).then((it) async {

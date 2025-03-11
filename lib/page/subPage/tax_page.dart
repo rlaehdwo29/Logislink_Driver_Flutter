@@ -19,6 +19,8 @@ import 'package:progress_dialog_null_safe/progress_dialog_null_safe.dart';
 import 'package:table_calendar/table_calendar.dart';
 import 'package:dio/dio.dart';
 
+import '../../common/config_url.dart';
+
 class TaxPage extends StatefulWidget {
   OrderModel? item;
 
@@ -363,6 +365,7 @@ class _TaxPageState extends State<TaxPage> {
       logger.d("writeTax() _response -> ${_response.status} // ${_response.resultMap}");
       if(_response.status == "200") {
         if (_response.resultMap?["result"] == true) {
+          await Util.setEventLog(URL_TAX_WRITE, "전자세금계산서 저장");
           widget.item?.invId = it.response.data["invId"];
           issueTax();
         } else {
@@ -396,6 +399,7 @@ class _TaxPageState extends State<TaxPage> {
       await pr?.hide();
       ReturnMap _response = DioService.dioResponse(it);
       if(_response.status == "200") {
+        await Util.setEventLog(URL_TAX_ISSUE, "전자세금계산서 발행");
         Navigator.of(context).pop({'code':200});
       }else{
         Util.toast(_response.message);

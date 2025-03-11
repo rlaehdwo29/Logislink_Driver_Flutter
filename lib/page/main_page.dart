@@ -318,6 +318,7 @@ class _MainPageState extends State<MainPage> with CommonMainWidget,WidgetsBindin
     handleDeepLink();
     Future.delayed(Duration.zero, () async {
       _nowUser.value = await controller.getUserInfo();
+      await Util.setEventLog(URL_USER_LOGIN, "모바일로그인", loginYn: "Y");
       await setGeofencingClient();
       var first_screen = await SP.getFirstScreen(context);
       switch (first_screen) {
@@ -641,9 +642,10 @@ class _MainPageState extends State<MainPage> with CommonMainWidget,WidgetsBindin
   Future<void> getOrderList() async {
     Logger logger = Logger();
     var app = await App().getUserInfo();
-    await DioService.dioClient(header: true).getOrder(app.authorization, app.vehicId).then((it) {
+    await DioService.dioClient(header: true).getOrder(app.authorization, app.vehicId).then((it) async {
       ReturnMap _response = DioService.dioResponse(it);
       logger.d("getOrder() _response -> ${_response.status} // ${_response.resultMap}");
+      await Util.setEventLog(URL_USER_LOGIN, "모바일로그인", loginYn: "Y");
       if(_response.status == "200") {
         if(_response.resultMap?["data"] != null) {
           if(orderList.isNotEmpty) orderList.clear();

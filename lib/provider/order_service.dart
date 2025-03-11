@@ -10,6 +10,9 @@ import 'package:logislink_driver_flutter/provider/dio_service.dart';
 import 'package:dio/dio.dart';
 import 'package:path/path.dart';
 
+import '../common/config_url.dart';
+import '../utils/util.dart';
+
 class OrderService with ChangeNotifier {
 
   final orderList = List.empty(growable: true).obs;
@@ -32,10 +35,11 @@ class OrderService with ChangeNotifier {
     Logger logger = Logger();
     var app = await App().getUserInfo();
     historyList = List.empty(growable: true);
-    await DioService.dioClient(header: true).getHistory(app.authorization, _fromDate, _toDate, app.vehicId, _receiptYn, _taxYn, _payType, _payYn).then((it) {
+    await DioService.dioClient(header: true).getHistory(app.authorization, _fromDate, _toDate, app.vehicId, _receiptYn, _taxYn, _payType, _payYn).then((it) async {
       ReturnMap _response = DioService.dioResponse(it);
       logger.d("getHistory() _response -> ${_response.status} // ${_response.resultMap}");
       if(_response.status == "200") {
+        await Util.setEventLog(URL_ORDER_HISTORY_LIST, "운송실적");
         if (_response.resultMap?["data"] != null) {
           var list = _response.resultMap?["data"] as List;
           List<OrderModel> itemsList = list.map((i) => OrderModel.fromJSON(i)).toList();
