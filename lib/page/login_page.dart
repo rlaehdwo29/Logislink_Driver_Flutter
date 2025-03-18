@@ -566,15 +566,16 @@ class _LoginPageState extends State<LoginPage> with CommonMainWidget {
                             return Container(
                               alignment: Alignment.centerLeft,
                               width: width,
-                              height: CustomStyle.getHeight(50.0),
-                              padding: EdgeInsets.symmetric(horizontal: 15),
+                              height: CustomStyle.getHeight(60.0),
+                              padding: const EdgeInsets.symmetric(horizontal: 15),
                               decoration: BoxDecoration(
                                 color: styleWhiteCol,
-                                border: CustomStyle.borderAllBase()
+                                border: Border.all(color: sub_color,width: 1),
+                                borderRadius: BorderRadius.circular(5)
                               ),
                               child: Text(
-                                "$mobileNumber",
-                                style: CustomStyle.baseFont()
+                                Util.makePhoneNumber(mobileNumber.value)??"",
+                                style: CustomStyle.CustomFont(styleFontSize20,main_color,font_weight: FontWeight.w800)
                               ),
                               );
                             }),

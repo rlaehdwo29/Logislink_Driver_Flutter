@@ -481,7 +481,8 @@ class _MainPageState extends State<MainPage> with CommonMainWidget,WidgetsBindin
         Strings.of(context)?.get("confirm")??"Not Found",
             () async {
           Navigator.of(context).pop(false);
-          await AppSettings.openAppSettings();
+          await Permission.activityRecognition.request();
+          //await AppSettings.openAppSettings();
         }
     );
   }
@@ -493,7 +494,8 @@ class _MainPageState extends State<MainPage> with CommonMainWidget,WidgetsBindin
         Strings.of(context)?.get("confirm")??"Not Found",
             () async {
           Navigator.of(context).pop(false);
-          await AppSettings.openAppSettings();
+          await Permission.appTrackingTransparency.request();
+          //await AppSettings.openAppSettings();
         }
     );
   }
@@ -547,7 +549,8 @@ class _MainPageState extends State<MainPage> with CommonMainWidget,WidgetsBindin
   Future<void> goToAppSetting() async {
     var locationPermission = await geolocation.Geolocator.checkPermission();
     if(locationPermission != geolocation.LocationPermission.always) {
-      AppSettings.openAppSettings();
+      await Permission.locationAlways.request();
+      //AppSettings.openAppSettings();
     }
     await finishService();
   }
@@ -614,6 +617,7 @@ class _MainPageState extends State<MainPage> with CommonMainWidget,WidgetsBindin
 
   Future<void> logout() async {
     await stopService();
+    //App().setUserInfo(UserModel());
     Future.delayed(const Duration(milliseconds: 300), () {
       Navigator.pushNamedAndRemoveUntil(context, '/', (route) => false);
       exit(0);
