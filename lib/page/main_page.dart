@@ -498,12 +498,14 @@ class _MainPageState extends State<MainPage> with CommonMainWidget,WidgetsBindin
         Strings.of(context)?.get("confirm")??"Not Found",
             () async {
           Navigator.of(context).pop(false);
-          await AppSettings.openAppSettings();
+          await Permission.activityRecognition.request();
+          //await AppSettings.openAppSettings();
         }
     );
   }
 
   Future<void> showTrackingPermissionDialog() async {
+<<<<<<< HEAD
        if(Platform.isAndroid){
       return openOkBox(
           context,
@@ -527,6 +529,18 @@ class _MainPageState extends State<MainPage> with CommonMainWidget,WidgetsBindin
           });
     }
 
+=======
+    return openOkBox(
+        context,
+        Strings.of(context)?.get("tracking_permission_failed")??"Not Found",
+        Strings.of(context)?.get("confirm")??"Not Found",
+            () async {
+          Navigator.of(context).pop(false);
+          await Permission.appTrackingTransparency.request();
+          //await AppSettings.openAppSettings();
+        }
+    );
+>>>>>>> 91a2918c27002cde9116722c3e1ff1486ccc3169
   }
 
   void onCallback(bool? result) {
@@ -578,7 +592,8 @@ class _MainPageState extends State<MainPage> with CommonMainWidget,WidgetsBindin
   Future<void> goToAppSetting() async {
     var locationPermission = await geolocation.Geolocator.checkPermission();
     if(locationPermission != geolocation.LocationPermission.always) {
-      AppSettings.openAppSettings();
+      await Permission.locationAlways.request();
+      //AppSettings.openAppSettings();
     }
     await finishService();
   }
@@ -645,6 +660,7 @@ class _MainPageState extends State<MainPage> with CommonMainWidget,WidgetsBindin
 
   Future<void> logout() async {
     await stopService();
+    //App().setUserInfo(UserModel());
     Future.delayed(const Duration(milliseconds: 300), () {
       Navigator.pushNamedAndRemoveUntil(context, '/', (route) => false);
       exit(0);

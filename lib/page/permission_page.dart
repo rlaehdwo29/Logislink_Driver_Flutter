@@ -15,6 +15,9 @@ import 'package:logislink_driver_flutter/page/bridge_page.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:logislink_driver_flutter/utils/util.dart' as app_util;
 
+import '../common/common_util.dart';
+import '../utils/util.dart';
+
 class PermissionPage extends StatefulWidget {
   const PermissionPage({Key? key}) : super(key:key);
 
@@ -35,19 +38,13 @@ Future<bool> requestPermission() async {
       AndroidDeviceInfo info  = await deviceInfo.androidInfo;
       // Android 13 버전 이상.
       if(info.version.sdkInt >= 29) {
-        var phone_per = await Permission.phone.request();
-        var photos_per = await Permission.photos.request();
-        var location_per = await Permission.location.request();
-        var activityRecognition_per = await Permission.activityRecognition.request();
-        var camera_per = await Permission.camera.request();
+        var phone_per = await Permission.phone.request();           // 전화 걸기 위한 권한
+        var photos_per = await Permission.photos.request();         // 갤러리에 접근하기 위한 권한
+        var location_per = await Permission.location.request();     // 위치정보 권한
+        var activityRecognition_per = await Permission.activityRecognition.request();   // 활동권한(Geofence)
+        var camera_per = await Permission.camera.request();         // 사진촬영 권한
 
         var locationPermission = await Geolocator.checkPermission();
-        /*print("위치 => ${location_per}");
-        print("위치 => ${await Geolocator.checkPermission()}");
-        print("저장소 => ${photos_per}");
-        print("폰 => ${phone_per}");
-        print("신체활동 => ${activityRecognition_per}");*/
-
         var requiredPermission = true;
         if (phone_per != PermissionStatus.granted) {
           requiredPermission = false;
@@ -58,18 +55,12 @@ Future<bool> requestPermission() async {
 
       }else {
         Map<Permission, PermissionStatus> statuses = await [
-          Permission.phone,
-          Permission.storage,
-          Permission.location,
-          Permission.activityRecognition,
-          Permission.camera
+          Permission.phone,               // 전화 걸기 위한 권한
+          Permission.storage,             // 단말기 내 폴더에 접근하기 위한 권한
+          Permission.location,            // 위치정보 권한
+          Permission.activityRecognition, // 활동권한(Geofence)
+          Permission.camera               // 사진촬영 권한
         ].request();
-
-        /*print("Notification => ${statuses[Permission.notification]}");
-        print("위치 => ${statuses[Permission.location]}");
-        print("저장소 => ${statuses[Permission.storage]}");
-        print("폰 => ${statuses[Permission.phone]}");
-        print("신체활동 => ${statuses[Permission.activityRecognition]}");*/
         var requiredPermission = true;
         if (statuses[Permission.phone] != PermissionStatus.granted) {
           requiredPermission = false;
@@ -352,6 +343,7 @@ class _PermissionPageState extends State<PermissionPage>{
               Navigator.of(context).pop({'code': 200});
             }else{
               openOkBox(
+<<<<<<< HEAD
                       context,
                       Strings.of(context)?.get("permission_failed")??"Not Found",
                       Strings.of(context)?.get("confirm")??"Not Found",
@@ -360,6 +352,18 @@ class _PermissionPageState extends State<PermissionPage>{
                       }
                   );
 
+=======
+                  context,
+                  Strings.of(context)?.get("permission_failed")??"필요한 권한을 설정해 주세요. 앱이 종료됩니다.",
+                  Strings.of(context)?.get("confirm")??"Not Found",
+                      () async {
+                        AppSettings.openAppSettings();
+                        Future.delayed(const Duration(milliseconds: 300), () {
+                          exit(0);
+                        });
+                  }
+              );
+>>>>>>> 91a2918c27002cde9116722c3e1ff1486ccc3169
             }
           },
           child: Container(

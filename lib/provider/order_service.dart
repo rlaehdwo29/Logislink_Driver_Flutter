@@ -12,6 +12,9 @@ import 'package:dio/dio.dart';
 import 'package:logislink_driver_flutter/utils/util.dart';
 import 'package:path/path.dart';
 
+import '../common/config_url.dart';
+import '../utils/util.dart';
+
 class OrderService with ChangeNotifier {
 
   final orderList = List.empty(growable: true).obs;
@@ -39,6 +42,7 @@ class OrderService with ChangeNotifier {
       logger.d("getHistory() _response -> ${_response.status} // ${_response.resultMap}");
       await Util.setEventLog(URL_ORDER_HISTORY_LIST, "운송실적");
       if(_response.status == "200") {
+        await Util.setEventLog(URL_ORDER_HISTORY_LIST, "운송실적");
         if (_response.resultMap?["data"] != null) {
           var list = _response.resultMap?["data"] as List;
           List<OrderModel> itemsList = list.map((i) => OrderModel.fromJSON(i)).toList();
