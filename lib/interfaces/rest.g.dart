@@ -21,11 +21,19 @@ class _Rest implements Rest {
   String? baseUrl;
 
   @override
-  Future<HttpResponse<dynamic>> getCodeList(gcode) async {
+  Future<HttpResponse<dynamic>> getCodeList(
+    gcode, {
+    filter1,
+  }) async {
     const _extra = <String, dynamic>{};
     final queryParameters = <String, dynamic>{};
+    queryParameters.removeWhere((k, v) => v == null);
     final _headers = <String, dynamic>{};
-    final _data = {'gcode': gcode};
+    final _data = {
+      'gcode': gcode,
+      'filter1': filter1,
+    };
+    _data.removeWhere((k, v) => v == null);
     final _result =
         await _dio.fetch(_setStreamType<HttpResponse<dynamic>>(Options(
       method: 'POST',
@@ -61,6 +69,110 @@ class _Rest implements Rest {
             .compose(
               _dio.options,
               '/cmm/version/list',
+              queryParameters: queryParameters,
+              data: _data,
+            )
+            .copyWith(baseUrl: baseUrl ?? _dio.options.baseUrl)));
+    final value = _result.data;
+    final httpResponse = HttpResponse(value, _result);
+    return httpResponse;
+  }
+
+  @override
+  Future<HttpResponse<dynamic>> setEventLog(
+    userId,
+    menu_url,
+    menu_name,
+    mobile_type,
+    app_version,
+    loginYn,
+  ) async {
+    const _extra = <String, dynamic>{};
+    final queryParameters = <String, dynamic>{};
+    queryParameters.removeWhere((k, v) => v == null);
+    final _headers = <String, dynamic>{};
+    final _data = {
+      'userId': userId,
+      'menu_url': menu_url,
+      'menu_name': menu_name,
+      'mobile_type': mobile_type,
+      'app_version': app_version,
+      'loginYn': loginYn,
+    };
+    _data.removeWhere((k, v) => v == null);
+    final _result =
+        await _dio.fetch(_setStreamType<HttpResponse<dynamic>>(Options(
+      method: 'POST',
+      headers: _headers,
+      extra: _extra,
+      contentType: 'application/x-www-form-urlencoded',
+    )
+            .compose(
+              _dio.options,
+              '/cmm/insert/eventLog',
+              queryParameters: queryParameters,
+              data: _data,
+            )
+            .copyWith(baseUrl: baseUrl ?? _dio.options.baseUrl)));
+    final value = _result.data;
+    final httpResponse = HttpResponse(value, _result);
+    return httpResponse;
+  }
+
+  @override
+  Future<HttpResponse<dynamic>> sendSmartroMid(
+    Authorization,
+    custId,
+    deptId,
+    driverId,
+    vehicId,
+    ceo,
+    mobile,
+    socNo,
+    driverEmail,
+    bizNum,
+    bizName,
+    bankCode,
+    bankAccount,
+    bankCnnm,
+    bizAddr,
+    bizAddrDetail,
+    bizPost,
+  ) async {
+    const _extra = <String, dynamic>{};
+    final queryParameters = <String, dynamic>{};
+    queryParameters.removeWhere((k, v) => v == null);
+    final _headers = <String, dynamic>{r'Authorization': Authorization};
+    _headers.removeWhere((k, v) => v == null);
+    final _data = {
+      'custId': custId,
+      'deptId': deptId,
+      'driverId': driverId,
+      'vehicId': vehicId,
+      'ceo': ceo,
+      'mobile': mobile,
+      'socNo': socNo,
+      'driverEmail': driverEmail,
+      'bizNum': bizNum,
+      'bizName': bizName,
+      'bankCode': bankCode,
+      'bankAccount': bankAccount,
+      'bankCnnm': bankCnnm,
+      'bizAddr': bizAddr,
+      'bizAddrDetail': bizAddrDetail,
+      'bizPost': bizPost,
+    };
+    _data.removeWhere((k, v) => v == null);
+    final _result =
+        await _dio.fetch(_setStreamType<HttpResponse<dynamic>>(Options(
+      method: 'POST',
+      headers: _headers,
+      extra: _extra,
+      contentType: 'application/x-www-form-urlencoded',
+    )
+            .compose(
+              _dio.options,
+              '/api/card/getMidMB',
               queryParameters: queryParameters,
               data: _data,
             )
@@ -194,6 +306,7 @@ class _Rest implements Rest {
     bizPost,
     bizAddr,
     bizAddrDetail,
+    socNo,
     bizCond,
     bizKind,
     driverEmail,
@@ -219,6 +332,7 @@ class _Rest implements Rest {
       'bizPost': bizPost,
       'bizAddr': bizAddr,
       'bizAddrDetail': bizAddrDetail,
+      'socNo': socNo,
       'bizCond': bizCond,
       'bizKind': bizKind,
       'driverEmail': driverEmail,

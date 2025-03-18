@@ -10,7 +10,7 @@
 
   const String m_ServerTest = "http://211.252.86.30:806";           // Test 서버
   //const String m_ServerTest = "http://211.252.86.30:8005";
-  const String SERVER_URL = m_ServerDebug;
+  const String SERVER_URL = m_ServerRelease;
 
   const String RECEIPT_PATH = "/files/receipt/";
 

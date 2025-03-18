@@ -14,6 +14,7 @@ import 'package:logislink_driver_flutter/utils/util.dart';
 import 'package:progress_dialog_null_safe/progress_dialog_null_safe.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:dio/dio.dart';
+import 'package:platform/platform.dart';
 import 'package:wakelock_plus/wakelock_plus.dart';
 
 import '../../constants/const.dart';
@@ -243,7 +244,8 @@ class _AppBarSettingPageState extends State<AppBarSettingPage> {
         // 길안내 설정
         InkWell(
           onTap: (){
-              openSelectDialog(Const.navi_setting,"N");
+            Platform.android == true? openSelectDialog(Const.navi_setting,"N") : openSelectDialog(Const.ios_navi_setting,"N");
+
           },
           child: Container(
             padding: const EdgeInsets.all(10.0),

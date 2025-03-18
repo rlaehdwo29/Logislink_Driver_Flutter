@@ -8,6 +8,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_activity_recognition/flutter_activity_recognition.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:geolocator/geolocator.dart';
+import 'package:logislink_driver_flutter/common/common_util.dart';
 import 'package:logislink_driver_flutter/common/strings.dart';
 import 'package:logislink_driver_flutter/common/style_theme.dart';
 import 'package:logislink_driver_flutter/page/bridge_page.dart';
@@ -350,10 +351,15 @@ class _PermissionPageState extends State<PermissionPage>{
             if(result){
               Navigator.of(context).pop({'code': 200});
             }else{
-              app_util.Util.toast("${Strings.of(context)?.get("permission_failed") ?? "필요한 권한을 설정해 주세요. 앱이 종료됩니다."}");
-              Future.delayed(const Duration(milliseconds: 300), () {
-                exit(0);
-              });
+              openOkBox(
+                      context,
+                      Strings.of(context)?.get("permission_failed")??"Not Found",
+                      Strings.of(context)?.get("confirm")??"Not Found",
+                          () async {
+                       await AppSettings.openAppSettings();
+                      }
+                  );
+
             }
           },
           child: Container(

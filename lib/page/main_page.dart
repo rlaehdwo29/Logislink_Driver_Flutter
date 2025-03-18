@@ -62,6 +62,8 @@ class _MainPageState extends State<MainPage> with CommonMainWidget,WidgetsBindin
   final controller = Get.find<App>();
   final beforeUser = UserModel().obs;
   final _nowUser = UserModel().obs;
+    Location? _lastPosition;
+
 
   static bool? isRunning;
 
@@ -250,6 +252,21 @@ class _MainPageState extends State<MainPage> with CommonMainWidget,WidgetsBindin
     double lat = location.latitude;
     double lon = location.longitude;
 
+    if(_lastPosition != null) {
+      double lastLat = _lastPosition!.latitude;
+      double lastLon = _lastPosition!.longitude;
+      double distance = geolocation.Geolocator.distanceBetween(lastLat,lastLon,lat,lon);
+
+      if(distance < 50) {
+        print("Ignoring duplication location update.");
+        return;
+      }
+    }
+
+    _lastPosition =  Location(latitude: lat, longitude: lon, accuracy: 0, altitude: 0, heading: 0, speed: 0, speedAccuracy: 0, millisecondsSinceEpoch: 1000, timestamp: DateTime.now(), isMock: false);
+    print('Update location: ${location.toJson()}');
+
+
     await SP.putString(Const.KEY_LAT, lat.toString());
     await SP.putString(Const.KEY_LON, lon.toString());
     List<String>? list = await SP.getStringList(Const.KEY_ALLOC_ID);
@@ -318,6 +335,7 @@ class _MainPageState extends State<MainPage> with CommonMainWidget,WidgetsBindin
     handleDeepLink();
     Future.delayed(Duration.zero, () async {
       _nowUser.value = await controller.getUserInfo();
+      await Util.setEventLog(URL_USER_LOGIN, "모바일로그인", loginYn: "Y");
       await setGeofencingClient();
       var first_screen = await SP.getFirstScreen(context);
       switch (first_screen) {
@@ -486,15 +504,29 @@ class _MainPageState extends State<MainPage> with CommonMainWidget,WidgetsBindin
   }
 
   Future<void> showTrackingPermissionDialog() async {
-    return openOkBox(
-        context,
-        Strings.of(context)?.get("tracking_permission_failed")??"Not Found",
-        Strings.of(context)?.get("confirm")??"Not Found",
-            () async {
-          Navigator.of(context).pop(false);
-          await AppSettings.openAppSettings();
-        }
-    );
+       if(Platform.isAndroid){
+      return openOkBox(
+          context,
+          Strings.of(context)?.get("tracking_permission_failed")??"Not Found",
+          Strings.of(context)?.get("confirm")??"Not Found",
+              () async {
+            Navigator.of(context).pop(false);
+            await AppSettings.openAppSettings();
+          }
+      );
+    }else{
+      return openCommonConfirmBox(
+          context,
+          "'\추적 허용'\ 권한이 거부되어 있습니다.\n\n앱의 콘텐츠와 기능에 액세스하려면 사용자가 추적을 활성화해야 합니다.\n\n수집된 데이터는 위치기반으로\n출.도착 처리시 사용되며\n수집된 데이터는 즉시 소멸됩니다.",
+          Strings.of(context)?.get("cancel")??"Not Found",
+          Strings.of(context)?.get("confirm")??"Not Found",
+              () => Navigator.of(context).pop(false),
+              () async {
+            Navigator.of(context).pop(false);
+            await AppSettings.openAppSettings();
+          });
+    }
+
   }
 
   void onCallback(bool? result) {
@@ -641,9 +673,10 @@ class _MainPageState extends State<MainPage> with CommonMainWidget,WidgetsBindin
   Future<void> getOrderList() async {
     Logger logger = Logger();
     var app = await App().getUserInfo();
-    await DioService.dioClient(header: true).getOrder(app.authorization, app.vehicId).then((it) {
+    await DioService.dioClient(header: true).getOrder(app.authorization, app.vehicId).then((it) async {
       ReturnMap _response = DioService.dioResponse(it);
       logger.d("getOrder() _response -> ${_response.status} // ${_response.resultMap}");
+      await Util.setEventLog(URL_USER_LOGIN, "모바일로그인", loginYn: "Y");
       if(_response.status == "200") {
         if(_response.resultMap?["data"] != null) {
           if(orderList.isNotEmpty) orderList.clear();
@@ -1248,12 +1281,17 @@ class _MainPageState extends State<MainPage> with CommonMainWidget,WidgetsBindin
         priority: NotificationPriority.LOW,
       ),
       iosNotificationOptions: const IOSNotificationOptions(
-        showNotification: true,
+        showNotification: false,
         playSound: false,
       ),
-      foregroundTaskOptions: ForegroundTaskOptions(
-          eventAction: ForegroundTaskEventAction.repeat(60000),
+        foregroundTaskOptions: ForegroundTaskOptions(
+        eventAction: ForegroundTaskEventAction.repeat(60000),
+        autoRunOnBoot: true,
+        autoRunOnMyPackageReplaced: true,
+        allowWakeLock: true,
+        allowWifiLock: true
       ),
+
     );
   }
 

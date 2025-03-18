@@ -7,7 +7,7 @@ class Const {
  static final bool userDebugger = false;
 
  // 버전명
- static final APP_VERSION = "1.1.79";
+ static final APP_VERSION = "5.0.00";
 
  //스토어 주소
  static final ANDROID_STORE = "https://play.google.com/store/apps/details?id=com.logislink.driver";
@@ -19,6 +19,7 @@ class Const {
 
  static final List<String> first_screen = ["기본", "운송실적", "실적현황", "차계부"];
  static final List<String> navi_setting = ["카카오내비", "T map"];
+ static final List<String> ios_navi_setting = ["카카오내비", "T map","Apple Map"];
 
  /**
   * PUSH SERVICE

@@ -2,20 +2,18 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
-	<key>ANDROID_CLIENT_ID</key>
-	<string>843222466718-3kq6577vb9l8tq9sme6cbedj8ab4hpqj.apps.googleusercontent.com</string>
 	<key>API_KEY</key>
-	<string>AIzaSyCJLsG1os71SDt_mWBogWEIoaRN5bDgkew</string>
+	<string>AIzaSyCcYQfFQOplcKTRM86K_nBg4_MFv0o2YqA</string>
 	<key>GCM_SENDER_ID</key>
-	<string>843222466718</string>
+	<string>443385345478</string>
 	<key>PLIST_VERSION</key>
 	<string>1</string>
 	<key>BUNDLE_ID</key>
 	<string>com.logislink.driver</string>
 	<key>PROJECT_ID</key>
-	<string>logislinkflutter-9f180</string>
+	<string>logislink-driver</string>
 	<key>STORAGE_BUCKET</key>
-	<string>logislinkflutter-9f180.appspot.com</string>
+	<string>logislink-driver.firebasestorage.app</string>
 	<key>IS_ADS_ENABLED</key>
 	<false></false>
 	<key>IS_ANALYTICS_ENABLED</key>
@@ -27,6 +25,6 @@
 	<key>IS_SIGNIN_ENABLED</key>
 	<true></true>
 	<key>GOOGLE_APP_ID</key>
-	<string>1:843222466718:ios:b00be4f2cb5d8a3ce9bb8f</string>
+	<string>1:443385345478:ios:235bef95aabf8a6e6ceec7</string>
 </dict>
 </plist>

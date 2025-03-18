@@ -176,10 +176,18 @@ class _OrderDetailPageState extends State<OrderDetailPage> with WidgetsBindingOb
       }else{
         launchBrowserTab(Uri.parse(NaviApi.webNaviInstall));
       }
-    }else {
+    }else if(navi == "Apple Map"){
+         final appleMapsUrl = 'http://maps.apple.com/?ll=$lat,$lon';
+          if (await canLaunch(appleMapsUrl)) {
+            await launch(appleMapsUrl);
+          } else {
+            throw 'Apple Maps를 열 수 없습니다.';
+          }
+    } else {
       _showActivity(name,lat,lon);
     }
   }
+
 
   Widget setStopPointPanel(AsyncSnapshot snapshot) {
     if(stopPointList.isNotEmpty) stopPointList.clear();

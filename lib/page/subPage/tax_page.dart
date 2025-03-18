@@ -5,6 +5,7 @@ import 'package:get/get.dart';
 import 'package:logger/logger.dart';
 import 'package:logislink_driver_flutter/common/app.dart';
 import 'package:logislink_driver_flutter/common/common_util.dart';
+import 'package:logislink_driver_flutter/common/config_url.dart';
 import 'package:logislink_driver_flutter/common/model/order_model.dart';
 import 'package:logislink_driver_flutter/common/model/user_model.dart';
 import 'package:logislink_driver_flutter/common/strings.dart';
@@ -363,6 +364,7 @@ class _TaxPageState extends State<TaxPage> {
       logger.d("writeTax() _response -> ${_response.status} // ${_response.resultMap}");
       if(_response.status == "200") {
         if (_response.resultMap?["result"] == true) {
+          await Util.setEventLog(URL_TAX_WRITE, "전자세금계산서 저장");
           widget.item?.invId = it.response.data["invId"];
           issueTax();
         } else {
@@ -396,6 +398,7 @@ class _TaxPageState extends State<TaxPage> {
       await pr?.hide();
       ReturnMap _response = DioService.dioResponse(it);
       if(_response.status == "200") {
+        await Util.setEventLog(URL_TAX_ISSUE, "전자세금계산서 발행");
         Navigator.of(context).pop({'code':200});
       }else{
         Util.toast(_response.message);
