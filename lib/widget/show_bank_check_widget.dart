@@ -170,12 +170,12 @@ class ShowBankCheckWidget{
                                                       onChanged: (value) {
                                                         setState(() {
                                                           if(value.isNotEmpty) {
-                                                            mData.value?.acctNo = value;
-                                                            if(mData.value?.chkDate?.isEmpty != true){
+                                                            mData.value.acctNo = value;
+                                                            if(mData.value.chkDate?.isEmpty != true){
                                                               isChecked.value = mData == tempData ? true:false;
                                                             }
                                                           }else{
-                                                            mData.value?.acctNo = "";
+                                                            mData.value.acctNo = "";
                                                             isChecked.value = false;
                                                           }
                                                         });
@@ -189,7 +189,10 @@ class ShowBankCheckWidget{
                                                             vertical: CustomStyle.getHeight(0.0)
                                                         ),
                                                         suffixIcon: _controller.text.isNotEmpty ? IconButton(
-                                                          onPressed: _controller.clear,
+                                                          onPressed: (){
+                                                            _controller.clear();
+                                                            mData.value.acctNo = null;
+                                                          },
                                                           icon: const Icon(Icons.clear,size: 15),
                                                         ) : const SizedBox(),
                                                       ),

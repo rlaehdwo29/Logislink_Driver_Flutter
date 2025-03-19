@@ -1176,11 +1176,11 @@ class _OrderDetailPageState extends State<OrderDetailPage> with WidgetsBindingOb
       await pr?.hide();
       ReturnMap _response = DioService.dioResponse(it);
       if(_response.status == "200") {
-        orderItem.value?.reqPayYN = "Y";
+        orderItem.value.reqPayYN = "Y";
         setCalcView();
         await updateUser(_result);
         app_util.Util.toast("빠른지급 신청이 완료되었습니다.");
-        if(orderItem.value?.receiptYn == "N") {
+        if(orderItem.value.receiptYn == "N") {
           await showNextReceiptDialog();
         }
       }else{
@@ -1256,12 +1256,22 @@ class _OrderDetailPageState extends State<OrderDetailPage> with WidgetsBindingOb
   }
 
   Future<void> checkAccNm(Map<String,String>? _result) async {
-    Logger logger = Logger();
     var app = await App().getUserInfo();
+    if(app.bankCode == null || app.bankCode == "") {
+      app_util.Util.toast("은행명을 선택해 주세요.");
+      return;
+    }
+    if(app.bankAccount == null || app.bankAccount == "") {
+      app_util.Util.toast("계좌번호를 입력해 주세요.");
+      return;
+    }
+
+    Logger logger = Logger();
     await pr?.show();
     await DioService.dioClient(header: true).checkAccNm(app.authorization, app.vehicId, app.bankCode, app.bankAccount,app.bankCnnm).then((it) async {
       await pr?.hide();
       ReturnMap _response = DioService.dioResponse(it);
+      logger.i("checkAccNm() _response -> ${_response.status} // ${_response.resultMap}");
       if(_response.status == "200") {
         updateBank(_result);
       }else{
@@ -2245,9 +2255,9 @@ class _OrderDetailPageState extends State<OrderDetailPage> with WidgetsBindingOb
     }else if(app.value.bizAddr == null || app.value.bizAddr?.isEmpty == true) {
       app_util.Util.toast("신청정보에 \'사업자등록주소\'를 입력해주세요.");
     }*/
-    if(socNoControllerText == null || socNoControllerText?.isEmpty == true) {
+    if(socNoControllerText == null || socNoControllerText.isEmpty == true) {
       app_util.Util.toast("신청정보에 \'생년월일\'를 입력해주세요.");
-    } else if(emailControllerText == null || emailControllerText?.isEmpty == true){
+    } else if(emailControllerText == null || emailControllerText.isEmpty == true){
       app_util.Util.toast("신청정보에 \'이메일\'를 입력해주세요.");
     } else if(!_isChecked.value){
       app_util.Util.toast("빠른지급신청에 동의해주세요.");
