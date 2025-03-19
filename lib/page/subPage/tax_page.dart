@@ -435,8 +435,16 @@ class _TaxPageState extends State<TaxPage> {
 
   Future<void> checkAccNm() async {
     Logger logger = Logger();
-    await pr?.show();
     var user = await controller.getUserInfo();
+    if(user.bankCode == null || user.bankCode == "") {
+      Util.toast("은행명을 선택해 주세요.");
+      return;
+    }
+    if(user.bankAccount == null || user.bankAccount == "") {
+      Util.toast("계좌번호를 입력해 주세요.");
+      return;
+    }
+    await pr?.show();
     await DioService.dioClient(header: true).checkAccNm(user.authorization, user.vehicId, user.bankCode,user.bankAccount, user.bankCnnm).then((it) async {
       await pr?.hide();
       ReturnMap _response = DioService.dioResponse(it);
