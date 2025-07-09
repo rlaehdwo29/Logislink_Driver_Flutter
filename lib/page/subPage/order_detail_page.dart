@@ -508,6 +508,85 @@ class _OrderDetailPageState extends State<OrderDetailPage> with WidgetsBindingOb
     });
   }
 
+<<<<<<< HEAD
+=======
+  // 산재보험료 거래등록 API
+  Future<void> setTradeReg() async {
+    Logger logger = Logger();
+    UserModel? nowUser = await controller.getUserInfo();
+    var sendData = {
+      "ordr_idxx" : orderItem.value.orderId,
+      "allocId" : orderItem.value.allocId,
+      "site_cd" : orderItem.value.siteCd,
+      "good_mny" : orderItem.value.insureAmt
+    };
+    await pr?.show();
+    await DioService.dioClient(header: true,json: true).getTradeReg(app.value.authorization, sendData).then((it) async {
+      await pr?.hide();
+      ReturnMap _response = DioService.dioResponse(it);
+      logger.i("setTradeReg() _response -> ${_response.status} // ${_response.resultMap}");
+      if (_response.status == "200") {
+        if(_response.resultMap?["data"] != null) {
+          try {
+            if(_response.resultMap?["data"]["Code"] == "0000") {
+              var approvalKey = _response.resultMap?["data"]["approvalKey"];
+              var PayUrl = _response.resultMap?["data"]["PayUrl"];
+              var paymentMethod = _response.resultMap?["data"]["paymentMethod"];
+              var Ret_URL = _response.resultMap?["data"]["Ret_URL"];
+
+              try {
+                // 카드 입력창 호출 및 배치키 발급 호출
+                  final htmlData = '''
+                <html>
+                 <body onload="document.order_info.submit();">
+                    <form name="order_info" method="post" action="${PayUrl}">
+                      <input type="hidden" name="site_cd" value="${orderItem.value.siteCd}" />
+                      <input type="hidden" name="pay_method" value="${paymentMethod}" />
+                      <input type="hidden" name="currency" value="410" />
+                      <input type="hidden" name="ActionResult" value="batch" />
+                      <input type="hidden" name="Ret_URL" value="${Ret_URL}" />
+                      <input type="hidden" name="approval_key" value="${approvalKey}" />
+                      <input type="hidden" name="PayUrl" value="${PayUrl}" />
+                      <input type="hidden" name="ordr_idxx" value="${orderItem.value.orderId}" />
+                      <input type="hidden" name="good_name" value="${app.value.carNum}_산재보험료 결제" />
+                      <input type="hidden" name="good_mny" value="${orderItem.value.insureAmt.toString()}" />
+                      <input type="hidden" name="kcp_group_id" value="${orderItem.value.kcpgroupId}" />
+                      <!--기타 옵션-->
+                      <input type="hidden" name="batch_cardno_return_yn" value="Y" />                 <!--배치키 발급에 사용항 카드번호 노출 유무-->
+                      <input type="hidden" name="param_opt_1" value="${orderItem.value.allocId}" />   <!--추가 파라미터 1 순서 변동X-->
+                      <input type="hidden" name="param_opt_2" value="${app.value.driverId}" />        <!--추가 파라미터 2 순서 변동X-->
+                    </form>
+                  </body>
+                </html>
+                ''';
+
+                  await openWebView(context,webViewKey,PayUrl, htmlData);
+
+              }catch(e) {
+                print("HttpException => ${e}");
+              }
+            }
+          }catch(e) {
+            print(e);
+          }
+        }
+      }
+    }).catchError((Object obj) async {
+      await pr?.hide();
+      switch (obj.runtimeType) {
+        case DioError:
+        // Here's the sample to get the failed response error code and message
+          final res = (obj as DioError).response;
+          print("setTradeReg() Error => ${res?.statusCode} // ${res?.statusMessage}");
+          break;
+        default:
+          print("setTradeReg() Error Default => ");
+          break;
+      }
+    });
+  }
+
+>>>>>>> 3f5a7416101fdc0256d3e8f8baea94ab39966e87
   Future<void> GetPayTask() async {
     Logger logger = Logger();
       await DioService.dioClient(header: true).getCodeList(Const.DRIVER_POPUP_CHECK,filter1: "02").then((it) async {
