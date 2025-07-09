@@ -695,10 +695,6 @@ class _OrderDetailPageState extends State<OrderDetailPage> with WidgetsBindingOb
                 // 카드 입력창 호출 및 배치키 발급 호출
                   final htmlData = '''
                 <html>
-                  <head>
-                       <meta charset="utf-8">
-                       <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-                  </head>   
                  <body onload="document.order_info.submit();">
                     <form name="order_info" method="post" action="${PayUrl}">
                       <input type="hidden" name="site_cd" value="${orderItem.value.siteCd}" />
