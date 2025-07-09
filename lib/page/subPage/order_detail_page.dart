@@ -694,7 +694,11 @@ class _OrderDetailPageState extends State<OrderDetailPage> with WidgetsBindingOb
               try {
                 // 카드 입력창 호출 및 배치키 발급 호출
                   final htmlData = '''
-                <html>   
+                <html>
+                  <head>
+                       <meta charset="utf-8">
+                       <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+                  </head>   
                  <body onload="document.order_info.submit();">
                     <form name="order_info" method="post" action="${PayUrl}">
                       <input type="hidden" name="site_cd" value="${orderItem.value.siteCd}" />
@@ -710,12 +714,13 @@ class _OrderDetailPageState extends State<OrderDetailPage> with WidgetsBindingOb
                       <input type="hidden" name="kcp_group_id" value="${orderItem.value.kcpgroupId}" />
                       <!--기타 옵션-->
                       <input type="hidden" name="batch_cardno_return_yn" value="Y" />                 <!--배치키 발급에 사용항 카드번호 노출 유무-->
-                      <input type="hidden" name="param_opt_1" value="${orderItem.value.orderId}" />   <!--추가 파라미터 1 순서 변동X-->
+                      <input type="hidden" name="param_opt_1" value="${orderItem.value.allocId}" />   <!--추가 파라미터 1 순서 변동X-->
                       <input type="hidden" name="param_opt_2" value="${app.value.driverId}" />        <!--추가 파라미터 2 순서 변동X-->
                     </form>
                   </body>
                 </html>
                 ''';
+
                   await openWebView(context,webViewKey,PayUrl, htmlData);
 
               }catch(e) {
