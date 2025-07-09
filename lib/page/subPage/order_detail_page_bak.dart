@@ -3,8 +3,8 @@ import 'dart:developer';
 import 'dart:io' as io;
 
 import 'package:device_info_plus/device_info_plus.dart';
-import 'package:fbroadcast/fbroadcast.dart' as broadcast;
-import 'package:flutter/cupertino.dart' as cpino;
+import 'package:fbroadcast/fbroadcast.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -54,6 +54,8 @@ class OrderDetailPage extends StatefulWidget {
 class _OrderDetailPageState extends State<OrderDetailPage> with WidgetsBindingObserver {
 
   final GlobalKey webViewKey = GlobalKey();
+  late final InAppWebViewController webViewController;
+  late final PullToRefreshController pullToRefreshController;
 
   final controller = Get.find<App>();
   final isExpanded = [].obs;
@@ -82,16 +84,18 @@ class _OrderDetailPageState extends State<OrderDetailPage> with WidgetsBindingOb
 
   final mAllocId = "".obs;
   final mOrderId = "".obs;
+  final kcpCertInfo = "".obs;
 
   late AppLifecycleState _notification;
 
   @override
   void initState() {
-    broadcast.FBroadcast.instance().register(Const.INTENT_DETAIL_REFRESH, (value, callback) async {
+    FBroadcast.instance().register(Const.INTENT_DETAIL_REFRESH, (value, callback) async {
       await getOrderDetail(orderItem.value?.allocId);
     });
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       app.value = await controller.getUserInfo();
+      //cpCertInfo.value = await loadPemFile();
       if(widget.item != null) {
         //orderItem.value = widget.item!;
         await getOrderDetail(widget.item!.allocId);   // 신한카드 KCP 연동으로 CertInfo 값을 가져오기 위한 목록 상세 API. 2025.07.03
@@ -114,6 +118,15 @@ class _OrderDetailPageState extends State<OrderDetailPage> with WidgetsBindingOb
   void dispose() {
     super.dispose();
   }
+
+/*  Future<String> loadPemFile() async {
+    //return await rootBundle.loadString('assets/cert/${Const.userDebugger?'debug':'release'}/KCP_AUTH_AO6Y0_CERT.pem');
+
+    var pemFile = await rootBundle.loadString('assets/cert/release/KCP_AUTH_AO6Y0_CERT.pem');
+    final escapedPem = pemFile.replaceAll('\n', '').replaceAll('\r', '');
+    print("흠흠흠 => ${escapedPem}");
+    return escapedPem;
+  }*/
 
   void _callback(String? bankCd, String? acctNm, String? acctNo) async {
     UserModel user = await controller.getUserInfo();
@@ -184,168 +197,6 @@ class _OrderDetailPageState extends State<OrderDetailPage> with WidgetsBindingOb
     }else {
       _showActivity(name,lat,lon);
     }
-  }
-
-  Future<void> openWebView(BuildContext context,GlobalKey webviewKey, String url, var htmlData){
-
-    InAppWebViewController? webViewController;
-    PullToRefreshController? pullToRefreshController;
-    double _progress = 0;
-
-    pullToRefreshController = (kIsWeb
-        ? null
-        : PullToRefreshController(
-      options: PullToRefreshOptions(color: Colors.red),
-      onRefresh: () async {
-        if (defaultTargetPlatform == TargetPlatform.android) {
-          webViewController?.reload();
-        } else if (defaultTargetPlatform == TargetPlatform.iOS || defaultTargetPlatform == TargetPlatform.macOS) {
-          webViewController?.loadUrl(urlRequest: URLRequest(url: await webViewController?.getUrl()));}
-      },
-    ))!;
-    String myUrl = url;
-
-    return showDialog(
-        context: context,
-        barrierDismissible: false,
-        builder: (BuildContext context) {
-          return StatefulBuilder(
-              builder: (BuildContext context, StateSetter setState) {
-                return AlertDialog(
-                  contentPadding: EdgeInsets.all(CustomStyle.getWidth(0.0)),
-                  titlePadding: EdgeInsets.all(CustomStyle.getWidth(0.0)),
-                  shape: const RoundedRectangleBorder(
-                      borderRadius: BorderRadius.all(Radius.circular(0.0))
-                  ),
-                  content: Container(
-                      width: MediaQuery.of(context).size.width,
-                      height: MediaQuery.of(context).size.height * 0.75,
-                      child: Column(children: <Widget>[
-                        _progress < 1.0
-                            ? LinearProgressIndicator(value: _progress, color: Colors.red)
-                            : Container(),
-                        Expanded(
-                          child: Stack(
-                            children: [
-                              InAppWebView(
-                                key: webviewKey,
-                                //initialUrlRequest: URLRequest(url: WebUri(myUrl)),
-                                initialData: InAppWebViewInitialData(data: htmlData),
-                                initialOptions: InAppWebViewGroupOptions(
-                                  crossPlatform: InAppWebViewOptions(
-                                      javaScriptCanOpenWindowsAutomatically: true,
-                                      javaScriptEnabled: true,
-                                      useOnDownloadStart: true,
-                                      useOnLoadResource: true,
-                                      useShouldOverrideUrlLoading: true,
-                                      mediaPlaybackRequiresUserGesture: true,
-                                      allowFileAccessFromFileURLs: true,
-                                      allowUniversalAccessFromFileURLs: true,
-                                      verticalScrollBarEnabled: true,
-                                      userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/81.0.4044.122 Safari/537.36'
-                                  ),
-                                  android: AndroidInAppWebViewOptions(
-                                      useHybridComposition: true,
-                                      allowContentAccess: true,
-                                      builtInZoomControls: true,
-                                      thirdPartyCookiesEnabled: true,
-                                      allowFileAccess: true,
-                                      supportMultipleWindows: true
-                                  ),
-                                  ios: IOSInAppWebViewOptions(
-                                    allowsInlineMediaPlayback: true,
-                                    allowsBackForwardNavigationGestures: true,
-                                  ),
-                                ),
-                                pullToRefreshController: pullToRefreshController,
-                                onLoadStart: (InAppWebViewController controller, uri) {
-                                  setState(() {
-                                    myUrl = uri.toString();
-                                  });
-                                },
-                                onLoadStop: (InAppWebViewController controller, uri) {
-                                  setState(() {myUrl = uri.toString();});
-                                },
-                                onProgressChanged: (controller, progress) {
-                                  if (progress == 100) {pullToRefreshController?.endRefreshing();}
-                                  setState(() {_progress = progress / 100;});
-                                },
-                                androidOnPermissionRequest: (controller, origin, resources) async {
-                                  return PermissionRequestResponse(
-                                      resources: resources,
-                                      action: PermissionRequestResponseAction.GRANT);
-                                },
-                                onWebViewCreated: (InAppWebViewController controller) {
-                                  webViewController = controller;
-                                  controller.addJavaScriptHandler(
-                                      handlerName: 'resKcp',
-                                      callback: (args) {
-                                        print('Received data from JavaScript: $args');
-                                        print('Received data from JavaScript: ${args[0]["res_cd"]}');
-                                        var res_cd = args[0]["res_cd"];
-                                        var res_msg = args[0]["res_msg"];
-                                        if(res_cd == "0000") {
-                                          Navigator.pop(context);
-                                          broadcast.FBroadcast.instance().broadcast(Const.INTENT_DETAIL_REFRESH,value: 0);
-                                          GetPayTask();
-                                        }else{
-                                          openOkBox(context, res_msg, Strings.of(context)?.get("confirm")??"Error!!",() {Navigator.of(context).pop(false);});
-                                        }
-                                      });
-                                },
-                                onCreateWindow: (controller, createWindowRequest) async{
-                                    showDialog(
-                                      context: context, builder: (context) {
-                                      return AlertDialog(
-                                        shape: const RoundedRectangleBorder(
-                                            borderRadius: BorderRadius.all(Radius.circular(0.0))
-                                        ),
-                                        content: SizedBox(
-                                          width: MediaQuery.of(context).size.width,
-                                          height: 400,
-                                          child: InAppWebView(
-                                            // Setting the windowId property is important here!
-                                            windowId: createWindowRequest.windowId,
-                                            initialOptions: InAppWebViewGroupOptions(
-                                              android: AndroidInAppWebViewOptions(
-                                                builtInZoomControls: true,
-                                                thirdPartyCookiesEnabled: true,
-                                              ),
-                                              crossPlatform: InAppWebViewOptions(
-                                                  cacheEnabled: true,
-                                                  javaScriptEnabled: true,
-                                                  userAgent: "Mozilla/5.0 (Linux; Android 9; LG-H870 Build/PKQ1.190522.001) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/83.0.4103.106 Mobile Safari/537.36"
-                                              ),
-                                              ios: IOSInAppWebViewOptions(
-                                                allowsInlineMediaPlayback: true,
-                                                allowsBackForwardNavigationGestures: true,
-                                              ),
-                                            ),
-                                            onCloseWindow: (controller) async{
-                                              if (Navigator.canPop(context)) {
-                                                Navigator.pop(context);
-                                              }
-                                            },
-                                          ),
-                                        ),);
-                                    },
-                                  );
-                                  return true;
-                                },
-                              )
-                            ],
-                          ),
-                        ),
-                      ])
-                  ),
-                  actions: [
-
-                  ],
-                );
-              }
-          );
-        }
-    );
   }
 
   Widget setStopPointPanel(AsyncSnapshot snapshot) {
@@ -670,76 +521,60 @@ class _OrderDetailPageState extends State<OrderDetailPage> with WidgetsBindingOb
   // 산재보험료 거래등록 API
   Future<void> setTradeReg() async {
     Logger logger = Logger();
-    UserModel? nowUser = await controller.getUserInfo();
-    var sendData = {
-      "ordr_idxx" : orderItem.value.orderId,
-      "allocId" : orderItem.value.allocId,
-      "site_cd" : orderItem.value.siteCd,
-      "good_mny" : orderItem.value.insureAmt
-    };
-    await pr?.show();
-    await DioService.dioClient(header: true,json: true).getTradeReg(app.value.authorization, sendData).then((it) async {
-      await pr?.hide();
-      ReturnMap _response = DioService.dioResponse(it);
-      logger.i("setTradeReg() _response -> ${_response.status} // ${_response.resultMap}");
-      if (_response.status == "200") {
-        if(_response.resultMap?["data"] != null) {
-          try {
-            if(_response.resultMap?["data"]["Code"] == "0000") {
-              var approvalKey = _response.resultMap?["data"]["approvalKey"];
-              var PayUrl = _response.resultMap?["data"]["PayUrl"];
-              var paymentMethod = _response.resultMap?["data"]["paymentMethod"];
-              var Ret_URL = _response.resultMap?["data"]["Ret_URL"];
+    final request = PaymentRequestModel(
+      siteCd: orderItem.value.siteCd??"",
+      kcpCertInfo: kcpCertInfo.value,
+      ordrIdxx: orderItem.value.orderId??"",
+      payMethod: "AUTH",
+      goodName: "${app.value.driverName}_산재보험료 결제",
+      //goodMny: orderItem.value.insureAmt.toString(),
+      goodMny: "3800",
+      retUrl: "http://211.252.86.30:805/kcp/getKcpApiTradeReg.do"
+    );
+    print("으엥? =>${orderItem.value.insureAmt.toString()}");
+    final jsonBody = jsonEncode(request.toJson());
 
-              try {
-                // 카드 입력창 호출 및 배치키 발급 호출
-                  final htmlData = '''
-                <html>   
-                 <body onload="document.order_info.submit();">
-                    <form name="order_info" method="post" action="${PayUrl}">
-                      <input type="hidden" name="site_cd" value="${orderItem.value.siteCd}" />
-                      <input type="hidden" name="pay_method" value="${paymentMethod}" />
-                      <input type="hidden" name="currency" value="410" />
-                      <input type="hidden" name="ActionResult" value="batch" />
-                      <input type="hidden" name="Ret_URL" value="${Ret_URL}" />
-                      <input type="hidden" name="approval_key" value="${approvalKey}" />
-                      <input type="hidden" name="PayUrl" value="${PayUrl}" />
-                      <input type="hidden" name="ordr_idxx" value="${orderItem.value.orderId}" />
-                      <input type="hidden" name="good_name" value="${app.value.carNum}_산재보험료 결제" />
-                      <input type="hidden" name="good_mny" value="${orderItem.value.insureAmt.toString()}" />
-                      <input type="hidden" name="kcp_group_id" value="${orderItem.value.kcpgroupId}" />
-                      <!--기타 옵션-->
-                      <input type="hidden" name="batch_cardno_return_yn" value="Y" />                 <!--배치키 발급에 사용항 카드번호 노출 유무-->
-                      <input type="hidden" name="param_opt_1" value="${orderItem.value.orderId}" />   <!--추가 파라미터 1 순서 변동X-->
-                      <input type="hidden" name="param_opt_2" value="${app.value.driverId}" />        <!--추가 파라미터 2 순서 변동X-->
-                    </form>
-                  </body>
-                </html>
-                ''';
-                  await openWebView(context,webViewKey,PayUrl, htmlData);
+    try {
+      Dio dio = Dio()..interceptors.add(CustomLogInterceptor());
+      dio.options.headers["Content-Type"] = "application/json";
+      dio.options.connectTimeout = Duration(seconds: Const.CONNECT_TIMEOUT);
+      //final response = await dio.post(TRADEREG_URL_DEBUG, data: jsonBody);
+      final response = await dio.post("", data: jsonBody);
+      print("하아앙 => $response");
+      var responseData = response.data;
+      if(responseData["Code"] == "0000") {
+        var url = "${responseData["PayUrl"]}";
 
-              }catch(e) {
-                print("HttpException => ${e}");
-              }
-            }
-          }catch(e) {
-            print(e);
-          }
-        }
+        final htmlData = '''
+<html>   
+  <body onload="document.order_info.submit();">
+    <form name="order_info" method="post" action="${responseData["PayUrl"]}">
+      <input type="hidden" name="site_cd" value="${request.siteCd}" />
+      <input type="hidden" name="pay_method" value="${responseData["paymentMethod"]}" />
+      <input type="hidden" name="currency" value="410" />
+      <input type="hidden" name="ActionResult" value="batch" />
+      <input type="hidden" name="Ret_URL" value="${request.retUrl}" />
+      <input type="hidden" name="approval_key" value="${responseData["approvalKey"]}" />
+      <input type="hidden" name="PayUrl" value="${responseData["PayUrl"]}" />
+      <input type="hidden" name="ordr_idxx" value="${request.ordrIdxx}" />
+      <input type="hidden" name="good_name" value="${request.goodName}" />
+      <input type="hidden" name="good_mny" value="${request.goodMny}" />
+      <input type="hidden" name="kcp_group_id" value="${orderItem.value.kcpgroupId}" />
+    </form>
+  </body>
+</html>
+''';
+
+        print("보자보자 ==>>> ${htmlData}");
+
+        await app_util.Util.openWebView(context,webViewKey,url, htmlData);
+        //launchUrl(Uri.parse("${responseData["PayUrl"]}?site_cd=AO6Y0&pay_method=AUTH&ActionResult=batch&currency=410&approval_key=${responseData["approvalKey"]}&Ret_URL=http://testpay.kcp.co.kr?test1=1&test2=2&PayUrl=${responseData["PayUrl"]}&ordr_idxx=${orderItem.value.orderId??""}&buyr_name=${app.value.driverName}&kcp_group_id=${app.value.kcpGroupId}"));
+      }else{
+
       }
-    }).catchError((Object obj) async {
-      await pr?.hide();
-      switch (obj.runtimeType) {
-        case DioError:
-        // Here's the sample to get the failed response error code and message
-          final res = (obj as DioError).response;
-          print("setTradeReg() Error => ${res?.statusCode} // ${res?.statusMessage}");
-          break;
-        default:
-          print("setTradeReg() Error Default => ");
-          break;
-      }
-    });
+    }catch(e) {
+      print("하아앙eeeeeeee => $e");
+    }
   }
 
   Future<void> GetPayTask() async {
@@ -878,14 +713,16 @@ class _OrderDetailPageState extends State<OrderDetailPage> with WidgetsBindingOb
             orderItem.value?.sellCustId == "C20210802130835001" ?
               orderItem.value?.taxinvYn == "N" ?
                 orderItem.value?.allocState == "05" && app_util.Util.ynToBoolean(orderItem.value?.payType)?
-                  orderItem.value.mid != null || orderItem.value.mid?.isNotEmpty == true ? // 빠른지급은 운송비 결제가 선행이 되어야함.운송비 결제(운송비와 산재보험 결제는 다름.)가되면 MID가 생성되는데 MID값이 없을 경우에 빠른지급 신청 불가하여 disable.
+                  //orderItem.value.mid == null || orderItem.value.mid?.isEmpty == true ? // 빠른지급은 운송비 결제가 선행이 되어야함.운송비 결제(운송비와 산재보험 결제는 다름.)가되면 MID가 생성되는데 MID값이 없을 경우에 빠른지급 신청 불가하여 disable.
                   InkWell(
                       onTap: () async {
-                        if(orderItem.value.batchKey == null || orderItem.value.batchKey?.isEmpty == true) {
+                        /*if(orderItem.value.batch_key == null || orderItem.value.batch_key?.isEmpty == true) {
+                          //openOkBox(context, "Batch_key가 존재하지 않습니다.\n ${tvPay.value} // ${app.value.siteCd == null || app.value.siteCd?.isEmpty == true}", Strings.of(context)?.get("confirm")??"확인", () {Navigator.of(context).pop(false);});
                           await setTradeReg();
                         }else{
                           await GetPayTask();
-                        }
+                        }*/
+                        await GetPayTask();
                       },
                       child: Container(
                         padding: EdgeInsets.symmetric(vertical: CustomStyle.getHeight(5.0),horizontal: CustomStyle.getWidth(10.0)),
@@ -896,7 +733,7 @@ class _OrderDetailPageState extends State<OrderDetailPage> with WidgetsBindingOb
                         ),
                       )
                   ) : const SizedBox()
-               : const SizedBox()
+               //: const SizedBox()
               :const SizedBox()
             : const SizedBox()
           ],
@@ -1590,7 +1427,9 @@ class _OrderDetailPageState extends State<OrderDetailPage> with WidgetsBindingOb
     _isChecked.value = false;
     final sellChargeFix = (int.parse(orderItem.value.sellCharge??"0") * 1.1).toInt().toString().obs;
     TextEditingController socNoController = TextEditingController();
-    socNoController.text =  app_util.Util.getSocNumStrToStr(app.value.socNo)??"";;
+    socNoController.text =  app_util.Util.getSocNumStrToStr(app.value.socNo)??"";
+    TextEditingController emailController = TextEditingController();
+    emailController.text = app.value.driverEmail??"";
 
     return showDialog(
         context: context,
@@ -1607,11 +1446,11 @@ class _OrderDetailPageState extends State<OrderDetailPage> with WidgetsBindingOb
                   borderRadius: BorderRadius.all(Radius.circular(0.0))
               ),
               title: Container(
-                  padding: EdgeInsets.symmetric(vertical: CustomStyle.getHeight(10.0),horizontal: CustomStyle.getWidth(15.0)),
+                  padding: EdgeInsets.symmetric(vertical: CustomStyle.getHeight(15.0),horizontal: CustomStyle.getWidth(15.0)),
                   decoration: CustomStyle.customBoxDeco(main_color,radius: 0),
                   child: Text(
                     '${Strings.of(context)?.get("pay_title")}',
-                    style: CustomStyle.CustomFont(styleFontSize18, styleWhiteCol,font_weight: FontWeight.w800),
+                    style: CustomStyle.CustomFont(styleFontSize16, styleWhiteCol),
                   )
               ),
 
@@ -1730,7 +1569,6 @@ class _OrderDetailPageState extends State<OrderDetailPage> with WidgetsBindingOb
                                     ])
                                 )
                               ),
-                              CustomStyle.sizedBoxHeight(CustomStyle.getHeight(5.0)),
                               Container(
                                 margin: EdgeInsets.symmetric(horizontal: CustomStyle.getWidth(10)),
                                 child: Row(
@@ -1755,7 +1593,16 @@ class _OrderDetailPageState extends State<OrderDetailPage> with WidgetsBindingOb
                                       crossAxisAlignment: CrossAxisAlignment.start,
                                       children: [
                                         Text(
+                                          "* 위 금액은 부가세가 포함된 가격입니다.",
+                                          style: CustomStyle.CustomFont(styleFontSize11, addr_zip_no,font_weight: FontWeight.w600),
+                                        ),
+                                        Text(
                                           "* 왼쪽의 빠른지급신청에 동의해주세요.",
+                                          textAlign: TextAlign.start,
+                                          style: CustomStyle.CustomFont(styleFontSize11, addr_zip_no,font_weight: FontWeight.w600),
+                                        ),
+                                        Text(
+                                          "* 산재금액(${app_util.Util.getInCodeCommaWon(orderItem.value.insureAmt)} 원) 예치금에서 공제됩니다.",
                                           textAlign: TextAlign.start,
                                           style: CustomStyle.CustomFont(styleFontSize11, addr_zip_no,font_weight: FontWeight.w600),
                                         ),
@@ -1771,13 +1618,9 @@ class _OrderDetailPageState extends State<OrderDetailPage> with WidgetsBindingOb
                                   ]
                                 )
                               ),
+                              CustomStyle.sizedBoxHeight(CustomStyle.getHeight(10.0)),
                               Container(
-                                height: 1.h,
-                                color: light_gray18,
-                                margin: EdgeInsets.symmetric(vertical: CustomStyle.getHeight(5)),
-                              ),
-                              Container(
-                                  margin:EdgeInsets.symmetric(horizontal: CustomStyle.getWidth(10.0)),
+                                  padding:EdgeInsets.symmetric(horizontal: CustomStyle.getWidth(5.0)),
                                   child: Row(
                                       crossAxisAlignment: CrossAxisAlignment.center,
                                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -1794,11 +1637,24 @@ class _OrderDetailPageState extends State<OrderDetailPage> with WidgetsBindingOb
                                             ),
                                           ]
                                         ),
+                                        InkWell(
+                                            onTap: () async {
+                                              Navigator.push(context, MaterialPageRoute(builder: (context) => AppBarMyPage(code:"edit_biz",onCallback: onCallback,)));
+                                            },
+                                            child: Container(
+                                                decoration: CustomStyle.customBoxDeco(sub_color),
+                                                padding: EdgeInsets.symmetric(vertical: CustomStyle.getHeight(5.0),horizontal: CustomStyle.getWidth(10.0)),
+                                                child:Text(
+                                                    "개인정보변경",
+                                                    style: CustomStyle.CustomFont(styleFontSize10, styleWhiteCol)
+                                                )
+                                            )
+                                        ),
                                       ]
                                   )
                               ),
                               Container(
-                              margin: EdgeInsets.symmetric(horizontal: CustomStyle.getWidth(10.0), vertical:CustomStyle.getHeight(5.0) ),
+                              margin: const EdgeInsets.all(10.0),
                               decoration: BoxDecoration(
                                 border: CustomStyle.borderAllBase(),
                               ),
@@ -1844,9 +1700,97 @@ class _OrderDetailPageState extends State<OrderDetailPage> with WidgetsBindingOb
                                                   ),
                                                   child: Text(
                                                     "${app.value.ceo??""} ",
-                                                    textAlign: TextAlign.left,
+                                                    textAlign: TextAlign.center,
                                                     style: CustomStyle.CustomFont(styleFontSize12, text_color_01),
                                                   )
+                                              )
+                                          )
+                                        ]
+                                    ),
+                                    Row(
+                                        children: [
+                                          Expanded(
+                                              flex: 1,
+                                              child: Container(
+                                                height: CustomStyle.getHeight(35),
+                                                padding: const EdgeInsets.all(5.0),
+                                                decoration: BoxDecoration(
+                                                    border: Border(
+                                                        bottom: BorderSide(
+                                                            color: line,
+                                                            width: CustomStyle.getWidth(1.0)
+                                                        ),
+                                                        right: BorderSide(
+                                                            color: line,
+                                                            width: CustomStyle.getWidth(1.0)
+                                                        )
+                                                    )
+                                                ),
+                                                child: Text(
+                                                  "생년월일",
+                                                  textAlign: TextAlign.center,
+                                                  style: CustomStyle.CustomFont(styleFontSize12, text_color_01),
+                                                ),
+                                              )
+                                          ),
+                                          Expanded(
+                                              flex: 3,
+                                              child: Container(
+                                                  height: CustomStyle.getHeight(35),
+                                                  //padding: const EdgeInsets.all(7.0),
+                                                  decoration: BoxDecoration(
+                                                      border: Border(
+                                                        bottom: BorderSide(
+                                                            color: line,
+                                                            width: CustomStyle.getWidth(1.0)
+                                                        ),
+                                                      )
+                                                  ),
+                                                  child: TextField(
+                                                    maxLines: 1,
+                                                    keyboardType: TextInputType.datetime,
+                                                    style: CustomStyle.CustomFont(styleFontSize12, Colors.black),
+                                                    maxLengthEnforcement: MaxLengthEnforcement.enforced,
+                                                    textAlignVertical: TextAlignVertical.center,
+                                                    textAlign: TextAlign.center,
+                                                    controller: socNoController,
+                                                    decoration: socNoController.text.isNotEmpty ? InputDecoration(
+                                                      border: InputBorder.none,
+                                                      hintText: "생년월일을 입력해주세요.",
+                                                      hintStyle: CustomStyle.CustomFont(styleFontSize12, light_gray23),
+                                                      suffixIcon: IconButton(
+                                                        onPressed: () {
+                                                          socNoController.clear();
+                                                        },
+                                                        icon: const Icon(Icons.clear, size: 18,color: Colors.black,),
+                                                      ),
+                                                    ) : InputDecoration(
+                                                      border: InputBorder.none,
+                                                      hintText: "생년월일을 입력해주세요.",
+                                                      hintStyle: CustomStyle.CustomFont(styleFontSize12, light_gray23),
+                                                    ),
+                                                    onChanged: (socNoText) {
+                                                      if (socNoText.isNotEmpty) {
+                                                        if(socNoController.text.replaceAll(".","").length > 6) {
+                                                           String subText = socNoText.replaceAll(".", "").substring(0,6);
+                                                           socNoController.text = app_util.Util.getSocNumStrToStr(subText)!;
+                                                           app_util.Util.toast("생년월일은 6자리를 넘길 수 없습니다.");
+                                                        }else{
+                                                          socNoController.text = app_util.Util.getSocNumStrToStr(socNoText.replaceAll(".", ""))!;
+                                                          socNoController.selection = TextSelection.fromPosition(TextPosition(offset: socNoController.text.length));
+                                                        }
+                                                      } else {
+                                                        socNoController.text = "";
+                                                      }
+                                                      setState(() {});
+                                                    },
+                                                  )
+
+                                                  /*Text(
+                                                    "${app_util.Util.getSocNumStrToStr(app.value.socNo)}",
+                                                    textAlign: TextAlign.center,
+                                                    style: CustomStyle.CustomFont(styleFontSize12, text_color_01),
+                                                  )*/
                                               )
                                           )
                                         ]
@@ -1879,7 +1823,7 @@ class _OrderDetailPageState extends State<OrderDetailPage> with WidgetsBindingOb
                                           Expanded(
                                               flex: 3,
                                               child: Container(
-                                                  padding: const EdgeInsets.all(6.0),
+                                                  padding: const EdgeInsets.all(8.0),
                                                   decoration: BoxDecoration(
                                                       border: Border(
                                                         bottom: BorderSide(
@@ -1890,7 +1834,7 @@ class _OrderDetailPageState extends State<OrderDetailPage> with WidgetsBindingOb
                                                   ),
                                                   child: Text(
                                                     "${app_util.Util.makePhoneNumber(app.value.mobile)}",
-                                                    textAlign: TextAlign.left,
+                                                    textAlign: TextAlign.center,
                                                     style: CustomStyle.CustomFont(styleFontSize12, text_color_01),
                                                   )
                                               )
@@ -1902,7 +1846,8 @@ class _OrderDetailPageState extends State<OrderDetailPage> with WidgetsBindingOb
                                           Expanded(
                                               flex: 1,
                                               child: Container(
-                                                padding: const EdgeInsets.all(6.0),
+                                                height: CustomStyle.getHeight(35),
+                                                padding: const EdgeInsets.all(5.0),
                                                 decoration: BoxDecoration(
                                                     border: Border(
                                                         bottom: BorderSide(
@@ -1925,7 +1870,8 @@ class _OrderDetailPageState extends State<OrderDetailPage> with WidgetsBindingOb
                                           Expanded(
                                               flex: 3,
                                               child: Container(
-                                                  padding: const EdgeInsets.all(6.0),
+                                                  height: CustomStyle.getHeight(35),
+                                                  //padding: const EdgeInsets.all(7.0),
                                                   decoration: BoxDecoration(
                                                       border: Border(
                                                         bottom: BorderSide(
@@ -1934,11 +1880,45 @@ class _OrderDetailPageState extends State<OrderDetailPage> with WidgetsBindingOb
                                                         ),
                                                       )
                                                   ),
-                                                  child: Text(
-                                                    "${app.value.driverEmail}",
-                                                    textAlign: TextAlign.left,
-                                                    style: CustomStyle.CustomFont(styleFontSize12, text_color_01),
+                                                  child:
+                                                  TextField(
+                                                    maxLines: 1,
+                                                    keyboardType: TextInputType.emailAddress,
+                                                    style: CustomStyle.CustomFont(styleFontSize12, Colors.black),
+                                                    maxLengthEnforcement: MaxLengthEnforcement.enforced,
+                                                    textAlignVertical: TextAlignVertical.center,
+                                                    textAlign: TextAlign.center,
+                                                    controller: emailController,
+                                                    decoration: emailController.text.isNotEmpty ? InputDecoration(
+                                                      border: InputBorder.none,
+                                                      hintText: "이메일을 입력해주세요.",
+                                                      hintStyle: CustomStyle.CustomFont(styleFontSize12, light_gray23),
+                                                      suffixIcon: IconButton(
+                                                        onPressed: () {
+                                                          emailController.clear();
+                                                        },
+                                                        icon: const Icon(Icons.clear, size: 18,color: Colors.black,),
+                                                      ),
+                                                    ) : InputDecoration(
+                                                      border: InputBorder.none,
+                                                      hintText: "이메일을 입력해주세요.",
+                                                      hintStyle: CustomStyle.CustomFont(styleFontSize12, light_gray23),
+                                                    ),
+                                                    onChanged: (emailText) {
+                                                      if (emailText.isNotEmpty) {
+                                                        emailController.selection = TextSelection.fromPosition(TextPosition(offset: emailController.text.length));
+                                                        emailController.text = emailText;
+                                                      } else {
+                                                        emailController.text = "";
+                                                      }
+                                                      setState(() {});
+                                                    },
                                                   )
+                                                  /*Text(
+                                                    "${app.value.driverEmail}",
+                                                    textAlign: TextAlign.center,
+                                                    style: CustomStyle.CustomFont(styleFontSize12, text_color_01),
+                                                  )*/
                                               )
                                           )
                                         ]
@@ -1948,7 +1928,7 @@ class _OrderDetailPageState extends State<OrderDetailPage> with WidgetsBindingOb
                                           Expanded(
                                               flex: 1,
                                               child: Container(
-                                                padding: const EdgeInsets.all(6.0),
+                                                padding: const EdgeInsets.all(5.0),
                                                 decoration: BoxDecoration(
                                                     border: Border(
                                                         bottom: BorderSide(
@@ -1971,7 +1951,7 @@ class _OrderDetailPageState extends State<OrderDetailPage> with WidgetsBindingOb
                                           Expanded(
                                               flex: 3,
                                               child: Container(
-                                                  padding: const EdgeInsets.all(6.0),
+                                                  padding: const EdgeInsets.all(7.0),
                                                   decoration: BoxDecoration(
                                                       border: Border(
                                                         bottom: BorderSide(
@@ -1982,7 +1962,7 @@ class _OrderDetailPageState extends State<OrderDetailPage> with WidgetsBindingOb
                                                   ),
                                                   child: Text(
                                                     "${app_util.Util.makeBizNum(app.value.bizNum)}",
-                                                    textAlign: TextAlign.left,
+                                                    textAlign: TextAlign.center,
                                                     style: CustomStyle.CustomFont(styleFontSize12, text_color_01),
                                                   )
                                               )
@@ -1994,7 +1974,7 @@ class _OrderDetailPageState extends State<OrderDetailPage> with WidgetsBindingOb
                                           Expanded(
                                               flex: 1,
                                               child: Container(
-                                                padding: const EdgeInsets.all(6.0),
+                                                padding: const EdgeInsets.all(5.0),
                                                 decoration: BoxDecoration(
                                                     border: Border(
                                                         bottom: BorderSide(
@@ -2017,7 +1997,7 @@ class _OrderDetailPageState extends State<OrderDetailPage> with WidgetsBindingOb
                                           Expanded(
                                               flex: 3,
                                               child: Container(
-                                                  padding: const EdgeInsets.all(6.0),
+                                                  padding: const EdgeInsets.all(5.0),
                                                   decoration: BoxDecoration(
                                                     border: Border(
                                                       bottom: BorderSide(
@@ -2028,168 +2008,112 @@ class _OrderDetailPageState extends State<OrderDetailPage> with WidgetsBindingOb
                                                   ),
                                                   child: Text(
                                                     "${app.value.bizName}",
-                                                    textAlign: TextAlign.left,
+                                                    textAlign: TextAlign.center,
                                                     style: CustomStyle.CustomFont(styleFontSize12, text_color_01),
                                                   )
                                               )
                                           )
                                         ]
-                                    )
+                                    ),
+                                    Row(
+                                        children: [
+                                          Expanded(
+                                              flex: 1,
+                                              child: Container(
+                                                height:CustomStyle.getHeight(45),
+                                                padding: const EdgeInsets.all(5.0),
+                                                alignment: Alignment.center,
+                                                decoration: BoxDecoration(
+                                                    border: Border(
+                                                        bottom: BorderSide(
+                                                            color: line,
+                                                            width: CustomStyle.getWidth(1.0)
+                                                        ),
+                                                        right: BorderSide(
+                                                            color: line,
+                                                            width: CustomStyle.getWidth(1.0)
+                                                        )
+                                                    )
+                                                ),
+                                                child: Text(
+                                                  "사업자등록주소",
+                                                  textAlign: TextAlign.center,
+                                                  style: CustomStyle.CustomFont(styleFontSize12, text_color_01),
+                                                ),
+                                              )
+                                          ),
+                                          Expanded(
+                                              flex: 3,
+                                              child: Container(
+                                                  height:CustomStyle.getHeight(45),
+                                                  padding: const EdgeInsets.all(5.0),
+                                                  alignment: Alignment.center,
+                                                  decoration: BoxDecoration(
+                                                      border: Border(
+                                                        bottom: BorderSide(
+                                                            color: line,
+                                                            width: CustomStyle.getWidth(1.0)
+                                                        ),
+                                                      )
+                                                  ),
+                                                  child: Text(
+                                                    "${app.value.bizAddr}",
+                                                    textAlign: TextAlign.center,
+                                                    maxLines: 2,
+                                                    overflow: TextOverflow.ellipsis,
+                                                    style: CustomStyle.CustomFont(styleFontSize12, text_color_01),
+                                                  )
+                                              )
+                                          )
+                                        ]
+                                    ),
+                                    Row(
+                                      crossAxisAlignment: CrossAxisAlignment.center,
+                                        mainAxisAlignment: MainAxisAlignment.center,
+                                        children: [
+                                          Expanded(
+                                              flex: 1,
+                                              child: Container(
+                                                height:CustomStyle.getHeight(45),
+                                                padding: const EdgeInsets.all(5.0),
+                                                alignment: Alignment.center,
+                                                decoration: BoxDecoration(
+                                                    border: Border(
+                                                        right: BorderSide(
+                                                            color: line,
+                                                            width: CustomStyle.getWidth(1.0)
+                                                        )
+                                                    )
+                                                ),
+                                                child: Text(
+                                                  "상세주소",
+                                                  textAlign: TextAlign.center,
+                                                  style: CustomStyle.CustomFont(styleFontSize12, text_color_01),
+                                                ),
+                                              )
+                                          ),
+                                          Expanded(
+                                              flex: 3,
+                                              child: Container(
+                                                  height:CustomStyle.getHeight(45),
+                                                  padding: const EdgeInsets.all(5.0),
+                                                  alignment: Alignment.center,
+                                                  child: Text(
+                                                    "${app.value.bizAddrDetail}",
+                                                    textAlign: TextAlign.center,
+                                                    maxLines: 2,
+                                                    overflow: TextOverflow.ellipsis,
+                                                    style: CustomStyle.CustomFont(styleFontSize12, text_color_01),
+                                                  )
+                                              )
+                                          )
+                                        ]
+                                    ),
                                   ]
                                 )
                               ),
                               Container(
-                                  margin:EdgeInsets.symmetric(horizontal: CustomStyle.getWidth(10.0)),
-                                  child: Row(
-                                      crossAxisAlignment: CrossAxisAlignment.center,
-                                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                      children: [
-                                        Text(
-                                          "산재보험료 결제정보",
-                                          style: CustomStyle.CustomFont(styleFontSize15, text_color_01,font_weight: FontWeight.w600),
-                                        )
-                                      ]
-                                  )
-                              ),
-                              Container(
-                                  margin: EdgeInsets.symmetric(horizontal: CustomStyle.getWidth(10.0), vertical:CustomStyle.getHeight(5.0) ),
-                                  decoration: BoxDecoration(
-                                    border: CustomStyle.borderAllBase(),
-                                  ),
-                                  child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                                    children: [
-                                      Row(
-                                          children: [
-                                            Expanded(
-                                                flex: 1,
-                                                child: Container(
-                                                  padding: const EdgeInsets.all(6.0),
-                                                  decoration: BoxDecoration(
-                                                      border: Border(
-                                                          bottom: BorderSide(
-                                                              color: line,
-                                                              width: CustomStyle.getWidth(1.0)
-                                                          ),
-                                                          right: BorderSide(
-                                                              color: line,
-                                                              width: CustomStyle.getWidth(1.0)
-                                                          )
-                                                      )
-                                                  ),
-                                                  child: Text(
-                                                    "금액",
-                                                    textAlign: TextAlign.center,
-                                                    style: CustomStyle.CustomFont(styleFontSize12, text_color_01),
-                                                  ),
-                                                )
-                                            ),
-                                            Expanded(
-                                                flex: 3,
-                                                child: Container(
-                                                    padding: const EdgeInsets.all(6.0),
-                                                    decoration: BoxDecoration(
-                                                        border: Border(
-                                                          bottom: BorderSide(
-                                                              color: line,
-                                                              width: CustomStyle.getWidth(1.0)
-                                                          ),
-                                                        )
-                                                    ),
-                                                    child: Text(
-                                                      "${app_util.Util.getInCodeCommaWon(sellChargeFix.value)}원",
-                                                      textAlign: TextAlign.left,
-                                                      style: CustomStyle.CustomFont(styleFontSize12, text_color_01),
-                                                    )
-                                                )
-                                            )
-                                          ]
-                                      ),
-                                      Row(
-                                          children: [
-                                            Expanded(
-                                                flex: 1,
-                                                child: Container(
-                                                  padding: const EdgeInsets.all(6.0),
-                                                  decoration: BoxDecoration(
-                                                      border: Border(
-                                                          bottom: BorderSide(
-                                                              color: line,
-                                                              width: CustomStyle.getWidth(1.0)
-                                                          ),
-                                                          right: BorderSide(
-                                                              color: line,
-                                                              width: CustomStyle.getWidth(1.0)
-                                                          )
-                                                      )
-                                                  ),
-                                                  child: Text(
-                                                    "카드사",
-                                                    textAlign: TextAlign.center,
-                                                    style: CustomStyle.CustomFont(styleFontSize12, text_color_01),
-                                                  ),
-                                                )
-                                            ),
-                                            Expanded(
-                                                flex: 3,
-                                                child: Container(
-                                                    padding: const EdgeInsets.all(6.0),
-                                                    decoration: BoxDecoration(
-                                                        border: Border(
-                                                          bottom: BorderSide(
-                                                              color: line,
-                                                              width: CustomStyle.getWidth(1.0)
-                                                          ),
-                                                        )
-                                                    ),
-                                                    child: Text(
-                                                      "${app.value.bankAccount??"-"} ",
-                                                      textAlign: TextAlign.left,
-                                                      style: CustomStyle.CustomFont(styleFontSize12, text_color_01),
-                                                    )
-                                                )
-                                            )
-                                          ]
-                                      ),
-                                      Row(
-                                          children: [
-                                            Expanded(
-                                                flex: 1,
-                                                child: Container(
-                                                  padding: const EdgeInsets.all(6.0),
-                                                  decoration: BoxDecoration(
-                                                      border: Border(
-                                                          right: BorderSide(
-                                                              color: line,
-                                                              width: CustomStyle.getWidth(1.0)
-                                                          )
-                                                      )
-                                                  ),
-                                                  child: Text(
-                                                    "카드번호",
-                                                    textAlign: TextAlign.center,
-                                                    style: CustomStyle.CustomFont(styleFontSize12, text_color_01),
-                                                  ),
-                                                )
-                                            ),
-                                            Expanded(
-                                                flex: 3,
-                                                child: Container(
-                                                    padding: const EdgeInsets.all(6.0),
-                                                    child: Text(
-                                                      "${app.value.bankCnnm??"-"} ",
-                                                      textAlign: TextAlign.left,
-                                                      style: CustomStyle.CustomFont(styleFontSize12, text_color_01),
-                                                    )
-                                                )
-                                            )
-                                          ]
-                                      ),
-                                    ],
-                                  )
-                              ),
-                              Container(
-                                  margin:EdgeInsets.symmetric(horizontal: CustomStyle.getWidth(10.0)),
+                                  padding:EdgeInsets.symmetric(horizontal: CustomStyle.getWidth(5.0)),
                                   child: Row(
                                       crossAxisAlignment: CrossAxisAlignment.center,
                                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -2197,12 +2121,26 @@ class _OrderDetailPageState extends State<OrderDetailPage> with WidgetsBindingOb
                                         Text(
                                           "계좌정보",
                                           style: CustomStyle.CustomFont(styleFontSize15, text_color_01,font_weight: FontWeight.w600),
-                                        )
+                                        ),
+                                        InkWell(
+                                            onTap: () async {
+                                              var app = await App().getUserInfo();
+                                              ShowBankCheckWidget(context: context,callback: _callback).showBankCheckDialog(app);
+                                            },
+                                            child: Container(
+                                                decoration: CustomStyle.customBoxDeco(sub_color),
+                                                padding: EdgeInsets.symmetric(vertical: CustomStyle.getHeight(5.0),horizontal: CustomStyle.getWidth(10.0)),
+                                                child:Text(
+                                                    "계좌정보변경",
+                                                    style: CustomStyle.CustomFont(styleFontSize10, styleWhiteCol)
+                                                )
+                                            )
+                                        ),
                                       ]
                                   )
                               ),
                               Container(
-                                  margin: EdgeInsets.symmetric(horizontal: CustomStyle.getWidth(10.0), vertical:CustomStyle.getHeight(5.0) ),
+                                  margin: const EdgeInsets.all(10.0),
                                   decoration: BoxDecoration(
                                     border: CustomStyle.borderAllBase(),
                                   ),
@@ -2214,7 +2152,7 @@ class _OrderDetailPageState extends State<OrderDetailPage> with WidgetsBindingOb
                                             Expanded(
                                                 flex: 1,
                                                 child: Container(
-                                                  padding: const EdgeInsets.all(6.0),
+                                                  padding: const EdgeInsets.all(10.0),
                                                   decoration: BoxDecoration(
                                                       border: Border(
                                                           bottom: BorderSide(
@@ -2237,7 +2175,7 @@ class _OrderDetailPageState extends State<OrderDetailPage> with WidgetsBindingOb
                                             Expanded(
                                                 flex: 3,
                                                 child: Container(
-                                                    padding: const EdgeInsets.all(6.0),
+                                                    padding: const EdgeInsets.all(10.0),
                                                     decoration: BoxDecoration(
                                                         border: Border(
                                                           bottom: BorderSide(
@@ -2248,7 +2186,7 @@ class _OrderDetailPageState extends State<OrderDetailPage> with WidgetsBindingOb
                                                     ),
                                                     child: Text(
                                                       "${getBankName(app.value.bankCode??"")} ",
-                                                      textAlign: TextAlign.left,
+                                                      textAlign: TextAlign.center,
                                                       style: CustomStyle.CustomFont(styleFontSize12, text_color_01),
                                                     )
                                                 )
@@ -2260,7 +2198,7 @@ class _OrderDetailPageState extends State<OrderDetailPage> with WidgetsBindingOb
                                             Expanded(
                                                 flex: 1,
                                                 child: Container(
-                                                  padding: const EdgeInsets.all(6.0),
+                                                  padding: const EdgeInsets.all(10.0),
                                                   decoration: BoxDecoration(
                                                       border: Border(
                                                           bottom: BorderSide(
@@ -2283,7 +2221,7 @@ class _OrderDetailPageState extends State<OrderDetailPage> with WidgetsBindingOb
                                             Expanded(
                                                 flex: 3,
                                                 child: Container(
-                                                    padding: const EdgeInsets.all(6.0),
+                                                    padding: const EdgeInsets.all(12.0),
                                                     decoration: BoxDecoration(
                                                         border: Border(
                                                           bottom: BorderSide(
@@ -2294,13 +2232,47 @@ class _OrderDetailPageState extends State<OrderDetailPage> with WidgetsBindingOb
                                                     ),
                                                     child: Text(
                                                       "${app.value.bankAccount??"-"} ",
-                                                      textAlign: TextAlign.left,
+                                                      textAlign: TextAlign.center,
                                                       style: CustomStyle.CustomFont(styleFontSize12, text_color_01),
                                                     )
                                                 )
                                             )
                                           ]
-                                      )
+                                      ),
+                                      Row(
+                                          children: [
+                                            Expanded(
+                                                flex: 1,
+                                                child: Container(
+                                                  padding: const EdgeInsets.all(10.0),
+                                                  decoration: BoxDecoration(
+                                                      border: Border(
+                                                          right: BorderSide(
+                                                              color: line,
+                                                              width: CustomStyle.getWidth(1.0)
+                                                          )
+                                                      )
+                                                  ),
+                                                  child: Text(
+                                                    "예금주",
+                                                    textAlign: TextAlign.center,
+                                                    style: CustomStyle.CustomFont(styleFontSize12, text_color_01),
+                                                  ),
+                                                )
+                                            ),
+                                            Expanded(
+                                                flex: 3,
+                                                child: Container(
+                                                    padding: const EdgeInsets.all(10.0),
+                                                    child: Text(
+                                                      "${app.value.bankCnnm??"-"} ",
+                                                      textAlign: TextAlign.center,
+                                                      style: CustomStyle.CustomFont(styleFontSize12, text_color_01),
+                                                    )
+                                                )
+                                            )
+                                          ]
+                                      ),
                                     ],
                                   )
                               ),
@@ -2311,10 +2283,29 @@ class _OrderDetailPageState extends State<OrderDetailPage> with WidgetsBindingOb
                                       crossAxisAlignment: CrossAxisAlignment.start,
                                       children :[
                                         Text(
-                                          "위와 같이 로지스링크에 빠른운임을 신청합니다.",
+                                          "위와 같이 로지스링크에",
                                           textAlign: TextAlign.start,
-                                          style: CustomStyle.CustomFont(styleFontSize12, text_color_01),
+                                          style: CustomStyle.CustomFont(styleFontSize14, text_color_01),
                                         ),
+                                        Row(
+                                          children: [
+                                            Text(
+                                              "빠른운임 ",
+                                              textAlign: TextAlign.start,
+                                              style: CustomStyle.CustomFont(styleFontSize14, text_color_01),
+                                            ),
+                                            Text(
+                                              charge,
+                                              textAlign: TextAlign.start,
+                                              style: CustomStyle.CustomFont(styleFontSize16, addr_zip_no, font_weight: FontWeight.w700),
+                                            ),
+                                            Text(
+                                              " 원을 신청합니다.",
+                                              textAlign: TextAlign.start,
+                                              style: CustomStyle.CustomFont(styleFontSize14, text_color_01),
+                                            )
+                                          ]
+                                        )
                                       ]
                                   )
                               ),
@@ -2334,13 +2325,11 @@ class _OrderDetailPageState extends State<OrderDetailPage> with WidgetsBindingOb
                                 },
                                 child: Container(
                                     decoration: CustomStyle.customBoxDeco(cancel_btn,radius: 0),
-                                    alignment: Alignment.center,
-                                    height: 50.h,
-                                    //padding: EdgeInsets.symmetric(vertical: CustomStyle.getHeight(15.0)),
+                                    padding: EdgeInsets.symmetric(vertical: CustomStyle.getHeight(15.0)),
                                     child:Text(
                                       "취소",
                                       textAlign: TextAlign.center,
-                                      style: CustomStyle.CustomFont(styleFontSize14, styleWhiteCol),
+                                      style: CustomStyle.CustomFont(styleFontSize16, styleWhiteCol),
                                     )
                                 )
                             )
@@ -2349,31 +2338,19 @@ class _OrderDetailPageState extends State<OrderDetailPage> with WidgetsBindingOb
                             flex: 4,
                             child: InkWell(
                                 onTap: (){
-                                  confirm(socNoController.text, app.value.driverEmail, _showPayCallback);
+                                  confirm(socNoController.text, emailController.text, _showPayCallback);
                                 },
                                 child: Container(
                                     decoration: CustomStyle.customBoxDeco(main_color,radius: 0),
-                                    alignment: Alignment.center,
-                                    height: 50.h,
-                                    //padding: EdgeInsets.symmetric(vertical: CustomStyle.getHeight(15.0)),
-                                    child: Row(
-                                      crossAxisAlignment: CrossAxisAlignment.center,
-                                      mainAxisAlignment: MainAxisAlignment.center,
-                                      children: [
-                                        Text(
-                                          "$charge원",
-                                          textAlign: TextAlign.center,
-                                          style: CustomStyle.CustomFont(styleFontSize14, styleWhiteCol,font_weight: FontWeight.w800),
-                                        ),
-                                        Text(
-                                          " 지급신청",
-                                          textAlign: TextAlign.center,
-                                          style: CustomStyle.CustomFont(styleFontSize14, styleWhiteCol),
-                                        )
-                                      ])
-                                  )
-                              )
-                          )
+                                    padding: EdgeInsets.symmetric(vertical: CustomStyle.getHeight(15.0)),
+                                    child:Text(
+                                      "빠른지급신청",
+                                      textAlign: TextAlign.center,
+                                      style: CustomStyle.CustomFont(styleFontSize16, styleWhiteCol),
+                                    )
+                                )
+                            )
+                        )
                       ],
                     )
             ])
@@ -2864,7 +2841,7 @@ class _OrderDetailPageState extends State<OrderDetailPage> with WidgetsBindingOb
     }else if(code == "20"){
       db.deleteAll(await db.getRemoveGeoList(app.vehicId, widget.orderId));
     }
-    broadcast.FBroadcast.instance().broadcast(Const.INTENT_GEOFENCE);
+    FBroadcast.instance().broadcast(Const.INTENT_GEOFENCE);
   }
 
   Future<void> removeAllocList() async {
@@ -2907,7 +2884,7 @@ class _OrderDetailPageState extends State<OrderDetailPage> with WidgetsBindingOb
     //openOkBox(context, msg, Strings.of(context)?.get("confirm")??"Error!!",() {Navigator.of(context).pop(false);});
     return WillPopScope(
         onWillPop: () async {
-          broadcast.FBroadcast.instance().broadcast(Const.INTENT_ORDER_REFRESH);
+          FBroadcast.instance().broadcast(Const.INTENT_ORDER_REFRESH);
           Navigator.of(context).pop({'code':200});
           return false;
         },
@@ -2923,7 +2900,7 @@ class _OrderDetailPageState extends State<OrderDetailPage> with WidgetsBindingOb
                   ),
                   leading: IconButton(
                     onPressed: (){
-                      broadcast.FBroadcast.instance().broadcast(Const.INTENT_ORDER_REFRESH);
+                      FBroadcast.instance().broadcast(Const.INTENT_ORDER_REFRESH);
                       Navigator.of(context).pop({'code':200});
                     },
                     color: styleWhiteCol,

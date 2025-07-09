@@ -100,7 +100,17 @@ class OrderModel extends ResultModel {
 
   String? autoCarTimeYn;       //Geo 값 On/Off 업체 설정 (Y: 출입차 자동 처리, N: 업체 미 적용)
 
-  String? insureAmt;  //산재금액
+  String? insureAmt;         // 산재금액
+  String? siteCd;            // (산재결제) 로지스유 가맹점코드
+  String? kcpgroupId;        // (산재결제) 로지스유 가맹점 그룹코드
+  String? batchKey;          // (산재결제) 차주 카드별 배치키
+  String? cardCd;            // (산재결제) 카드사 코드
+  String? cardName;          // (산재결제) 카드사명
+  String? kcpCertInfo;       // (산재결제)KCP 인증값
+  String? mid;               // (운송비결제) 차주상점 고유값
+
+
+
 
   OrderModel({
     this.orderId,
@@ -188,7 +198,14 @@ class OrderModel extends ResultModel {
     this.reqPayFee,
     this.finishYn,
     this.autoCarTimeYn,
-    this.insureAmt
+    this.insureAmt,
+    this.siteCd,
+    this.kcpgroupId,
+    this.batchKey,
+    this.cardCd,
+    this.cardName,
+    this.kcpCertInfo,
+    this.mid
   });
 
   factory OrderModel.fromJSON(Map<String,dynamic> json) {
@@ -278,7 +295,14 @@ class OrderModel extends ResultModel {
       reqPayFee:double.parse((json['reqPayFee'] ?? 0.0).toString()),
       finishYn:json['finishYn'],
       autoCarTimeYn:json['autoCarTimeYn'],
-      insureAmt:json['insureAmt']
+      insureAmt:json['insureAmt'],
+      siteCd: json['siteCd'],
+      kcpgroupId: json['kcpgroupId'],
+      batchKey: json['batchKey'],
+      cardCd: json['cardCd'],
+      cardName: json['cardName'],
+      kcpCertInfo: json['kcpCertInfo'],
+      mid: json['mid']
     );
     return order;
   }
