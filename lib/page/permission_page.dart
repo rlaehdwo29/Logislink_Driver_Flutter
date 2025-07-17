@@ -95,9 +95,9 @@ class _PermissionPageState extends State<PermissionPage>{
         onWillPop: () {
           return Future(() => false);
         },
-        child: Scaffold(
-        body: SafeArea(
-            child: Container(
+        child: SafeArea(
+            child: Scaffold(
+        body: Container(
                 alignment: Alignment.center,
                 padding: const EdgeInsets.all(10.0),
                 color: Colors.white,
@@ -334,7 +334,7 @@ class _PermissionPageState extends State<PermissionPage>{
                           )
                         ]),
                   ],
-                ))),
+                )),
         bottomNavigationBar: InkWell(
           onTap: () async {
             bool? result = await requestPermission();
@@ -365,7 +365,7 @@ class _PermissionPageState extends State<PermissionPage>{
             ),
           ),
         )
-    )
+    ))
     );
   }
 }

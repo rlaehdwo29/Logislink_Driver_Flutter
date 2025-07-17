@@ -130,7 +130,8 @@ class _UserCarListPageState extends State<UserCarListPage> {
 
   @override
   Widget build(BuildContext context) {
-   return Scaffold(
+   return SafeArea(
+       child: Scaffold(
      backgroundColor: Colors.white,
      appBar: PreferredSize(
        preferredSize: Size.fromHeight(CustomStyle.getHeight(50.0)),
@@ -151,8 +152,7 @@ class _UserCarListPageState extends State<UserCarListPage> {
          ),
        )
      ),
-     body: SafeArea(
-       child: Container(
+     body:  Container(
              child: Column(
              children :[
                Container(
@@ -166,8 +166,8 @@ class _UserCarListPageState extends State<UserCarListPage> {
                getUserCarInfoFuture()
               ]
              )
-         )
-     ),
+         ),
+       )
    );
   }
 

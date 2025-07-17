@@ -1185,7 +1185,8 @@ class _AppBarSalesDetailPageState extends State<AppBarSalesDetailPage> {
   @override
   Widget build(BuildContext context) {
     pr = Util.networkProgress(context);
-    return Scaffold(
+    return SafeArea(
+        child: Scaffold(
       backgroundColor: styleWhiteCol,
       appBar: PreferredSize(
           preferredSize: Size.fromHeight(CustomStyle.getHeight(50.0)),
@@ -1203,16 +1204,14 @@ class _AppBarSalesDetailPageState extends State<AppBarSalesDetailPage> {
               icon: const Icon(Icons.arrow_back),
             ),
           )),
-      body: SafeArea(
-          child: Obx((){
+      body: Obx((){
             return SingleChildScrollView(
               child: SizedBox(
                 width: MediaQuery.of(context).size.width,
                 child: bodyWidget(),
               )
             );
-        })
-      ),
+        }),
         bottomNavigationBar: Row(
         children : [
           // 취소 버튼
@@ -1297,7 +1296,7 @@ class _AppBarSalesDetailPageState extends State<AppBarSalesDetailPage> {
               )
           ) : const SizedBox()
       ])
-    );
+    ));
   }
 
 }

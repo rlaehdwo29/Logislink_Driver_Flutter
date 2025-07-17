@@ -1035,7 +1035,8 @@ class _AppBarSalesPageState extends State<AppBarSalesPage> {
   @override
   Widget build(BuildContext context) {
     pr = Util.networkProgress(context);
-    return Scaffold(
+    return SafeArea(
+        child: Scaffold(
       backgroundColor: order_item_background,
       appBar: PreferredSize(
           preferredSize: Size.fromHeight(CustomStyle.getHeight(50.0)),
@@ -1053,8 +1054,7 @@ class _AppBarSalesPageState extends State<AppBarSalesPage> {
               icon: const Icon(Icons.arrow_back),
             ),
           )),
-      body: SafeArea(
-          child: Obx(() {
+      body: Obx(() {
             return Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 mainAxisAlignment: MainAxisAlignment.start,
@@ -1063,8 +1063,7 @@ class _AppBarSalesPageState extends State<AppBarSalesPage> {
                   itemListFuture()
                 ]
             );
-          })
-      ),
+          }),
         bottomNavigationBar: InkWell(
           onTap: () async {
             await goToSalesReg();
@@ -1081,7 +1080,7 @@ class _AppBarSalesPageState extends State<AppBarSalesPage> {
                     ),
           ),
         )
-    );
+    ));
   }
   
 }

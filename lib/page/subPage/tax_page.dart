@@ -122,7 +122,8 @@ class _TaxPageState extends State<TaxPage> {
           Navigator.of(context).pop({'code':100});
           return false;
         } ,
-        child: Scaffold(
+        child: SafeArea(
+            child: Scaffold(
             backgroundColor: Colors.white,
             appBar: PreferredSize(
                 preferredSize: Size.fromHeight(CustomStyle.getHeight(50.0)),
@@ -140,8 +141,7 @@ class _TaxPageState extends State<TaxPage> {
                   ),
                 )),
             body: Obx((){
-              return SafeArea(
-                  child: SingleChildScrollView(
+              return SingleChildScrollView(
                       child: Container(
                           color: styleWhiteCol,
                           padding: const EdgeInsets.all(16.0),
@@ -161,8 +161,7 @@ class _TaxPageState extends State<TaxPage> {
                               ]
                           )
                       )
-                  )
-              );
+                  );
             }),
             bottomNavigationBar: InkWell(
               onTap: () async {
@@ -179,7 +178,9 @@ class _TaxPageState extends State<TaxPage> {
                   style: CustomStyle.CustomFont(styleFontSize16, Colors.white),
                 ),
               ),
-            )));
+            )
+        ))
+    );
   }
 
   void initView() {

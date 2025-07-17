@@ -78,7 +78,8 @@ class _NotificationPageState extends State<NotificationPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    return SafeArea(
+        child: Scaffold(
         backgroundColor: Colors.white,
         appBar: PreferredSize(
             preferredSize: Size.fromHeight(CustomStyle.getHeight(50.0)),
@@ -95,11 +96,11 @@ class _NotificationPageState extends State<NotificationPage> {
                 icon: const Icon(Icons.arrow_back),
               ),
             )),
-        body: SafeArea(
-            child: Container(
+        body:  Container(
               child: itemListFuture()
           )
-        ));
+        )
+    );
   }
 
   Widget getNotificationListWidget() {

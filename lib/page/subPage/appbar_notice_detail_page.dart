@@ -57,7 +57,8 @@ class _AppBarNoticeDetailPageState extends State<AppBarNoticeDetailPage> {
   Widget build(BuildContext context) {
 
     pr = Util.networkProgress(context);
-    return Scaffold(
+    return SafeArea(
+        child: Scaffold(
       backgroundColor: styleWhiteCol,
       appBar: PreferredSize(
           preferredSize: Size.fromHeight(CustomStyle.getHeight(50.0)),
@@ -75,8 +76,7 @@ class _AppBarNoticeDetailPageState extends State<AppBarNoticeDetailPage> {
               icon: const Icon(Icons.arrow_back),
             ),
           )),
-      body:  SafeArea(
-        child: WillPopScope(
+      body: WillPopScope(
             onWillPop: () => _goBack(context),
         child: Column(children: <Widget>[
       progress < 1.0
@@ -177,8 +177,8 @@ class _AppBarNoticeDetailPageState extends State<AppBarNoticeDetailPage> {
         ),
       ),
       ])
-    ))
-    );
+    )
+    ));
   }
 
 }

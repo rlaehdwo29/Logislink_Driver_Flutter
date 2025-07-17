@@ -1267,7 +1267,8 @@ class _MainPageState extends State<MainPage> with CommonMainWidget,WidgetsBindin
   Widget build(BuildContext context) {
     Util.notificationDialog(context,"기본",webViewKey);
     return WithForegroundTask(
-            child: Scaffold(
+            child: SafeArea(
+                child: Scaffold(
                   key: _scaffoldKey,
                   backgroundColor: order_item_background,
                   appBar: AppBar(
@@ -1306,8 +1307,7 @@ class _MainPageState extends State<MainPage> with CommonMainWidget,WidgetsBindin
                     ),
                   ),
                   drawer: getAppBarMenu(),
-                  body: SafeArea(
-                      child: Obx((){
+                  body: Obx((){
                         return orderList.isNotEmpty ? ListView.builder(
                           scrollDirection: Axis.vertical,
                           shrinkWrap: true,
@@ -1325,8 +1325,7 @@ class _MainPageState extends State<MainPage> with CommonMainWidget,WidgetsBindin
                                 )
                             )
                         );
-                      })
-                  ),
+                      }),
                   bottomNavigationBar:  SizedBox(
                       height: CustomStyle.getHeight(60.0),
                       child: Row(
@@ -1363,7 +1362,7 @@ class _MainPageState extends State<MainPage> with CommonMainWidget,WidgetsBindin
                         ],
                       )
                   ),
-                )
+                ))
           );
   }
 }

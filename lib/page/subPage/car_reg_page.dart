@@ -492,7 +492,8 @@ class _CarRegPageState extends State<CarRegPage> {
   Widget build(BuildContext context) {
     pr = Util.networkProgress(context);
 
-    return Scaffold(
+    return SafeArea(
+        child: Scaffold(
         backgroundColor: Colors.white,
       appBar: PreferredSize(
           preferredSize: Size.fromHeight(CustomStyle.getHeight(60.0)),
@@ -512,10 +513,8 @@ class _CarRegPageState extends State<CarRegPage> {
           )
       ),
       body:Obx(() {
-      return SafeArea(
-          child: SingleChildScrollView(
+      return  SingleChildScrollView(
             child: bodyWidget()
-          )
         );
       }),
         bottomNavigationBar: Row(
@@ -578,6 +577,6 @@ class _CarRegPageState extends State<CarRegPage> {
                   )
               ) : const SizedBox()
             ])
-    );
+    ));
   }
 }

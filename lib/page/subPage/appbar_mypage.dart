@@ -1606,7 +1606,8 @@ class _AppBarMyPageState extends State<AppBarMyPage> {
           }
           return true;
         },
-        child: Scaffold(
+        child: SafeArea(
+            child: Scaffold(
       backgroundColor: Colors.white,
       appBar: PreferredSize(
           preferredSize: Size.fromHeight(CustomStyle.getHeight(60.0)),
@@ -1659,8 +1660,7 @@ class _AppBarMyPageState extends State<AppBarMyPage> {
         })
       ),
       body: Obx((){
-        return SafeArea(
-          child: SingleChildScrollView(
+        return SingleChildScrollView(
               child: Column(
                 children: [
                   topWidget(),
@@ -1678,11 +1678,10 @@ class _AppBarMyPageState extends State<AppBarMyPage> {
                   )
                 ],
               )
-          ),
-        );
+          );
       },
       )
-    )
+    ))
     );
   }
 

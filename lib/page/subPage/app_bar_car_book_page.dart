@@ -1020,7 +1020,8 @@ class _AppBarCarBookPageState extends State<AppBarCarBookPage> with TickerProvid
   Widget build(BuildContext context) {
     pr = Util.networkProgress(context);
     Util.notificationDialog(context,"차계부",webViewKey);
-    return Scaffold(
+    return SafeArea(
+        child: Scaffold(
       backgroundColor: Colors.white,
       appBar: PreferredSize(
           preferredSize: Size.fromHeight(CustomStyle.getHeight(60.0)),
@@ -1039,9 +1040,7 @@ class _AppBarCarBookPageState extends State<AppBarCarBookPage> with TickerProvid
               )
           )
       ),
-      body: SafeArea(
-            child: carServiceFuture()
-        ),
+      body:  carServiceFuture(),
         bottomNavigationBar: InkWell(
           onTap: () async {
             if(mCarList.isNotEmpty){
@@ -1071,7 +1070,7 @@ class _AppBarCarBookPageState extends State<AppBarCarBookPage> with TickerProvid
             ])
           ),
         )
-    );
+    ));
   }
 
 }

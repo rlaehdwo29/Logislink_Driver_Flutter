@@ -601,7 +601,8 @@ class _AppBarSettingPageState extends State<AppBarSettingPage> {
   @override
   Widget build(BuildContext context) {
     pr = Util.networkProgress(context);
-    return Scaffold(
+    return SafeArea(
+        child: Scaffold(
       backgroundColor: const Color(0xffececec),
       appBar: PreferredSize(
           preferredSize: Size.fromHeight(CustomStyle.getHeight(50.0)),
@@ -619,8 +620,7 @@ class _AppBarSettingPageState extends State<AppBarSettingPage> {
               icon: const Icon(Icons.arrow_back),
             ),
           )),
-        body: SafeArea(
-          child: Obx(() {
+        body: Obx(() {
             return SingleChildScrollView(
               child: Column(
                 children: [
@@ -632,7 +632,8 @@ class _AppBarSettingPageState extends State<AppBarSettingPage> {
               ),
             );
           }),
-        ));
+      )
+    );
   }
 
 }

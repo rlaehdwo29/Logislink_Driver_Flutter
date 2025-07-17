@@ -404,10 +404,10 @@ class _TermsPageState extends State<TermsPage> {
   Widget build(BuildContext context) {
     final height = MediaQuery.of(context).size.height;
     final width = MediaQuery.of(context).size.width;
-    return Scaffold(
+    return SafeArea(
+        child: Scaffold(
         backgroundColor: Colors.white,
-        body: SafeArea(
-              child: Obx((){
+        body: Obx((){
                 return Container(
                   width: width,
                   height: height,
@@ -428,8 +428,7 @@ class _TermsPageState extends State<TermsPage> {
                     ],
                   )
               );
-          })
-        ),
+          }),
       bottomNavigationBar: SizedBox(
           height: CustomStyle.getHeight(60.0),
           child: Obx((){
@@ -464,7 +463,7 @@ class _TermsPageState extends State<TermsPage> {
             ],
           );
         })
-      )
+      ))
     );
   }
 

@@ -913,7 +913,8 @@ class _HistoryPageState extends State<HistoryPage> {
           fbroad.FBroadcast.instance().broadcast(Const.INTENT_ORDER_REFRESH);
           return true;
         },
-        child: Scaffold(
+        child: SafeArea(
+            child: Scaffold(
       backgroundColor: order_item_background,
       appBar: PreferredSize(
           preferredSize: Size.fromHeight(CustomStyle.getHeight(50.0)),
@@ -932,8 +933,7 @@ class _HistoryPageState extends State<HistoryPage> {
               icon: const Icon(Icons.arrow_back),
             ),
           )),
-      body: SafeArea(
-        child: Obx(() {
+      body:Obx(() {
         return Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisAlignment: MainAxisAlignment.start,
@@ -943,9 +943,8 @@ class _HistoryPageState extends State<HistoryPage> {
               itemListFuture()
             ]
         );
-      })
-      ),
-    )
+      }),
+    ))
     );
   }
 

@@ -19,7 +19,8 @@ class _ReceiptDetailPageState extends State<ReceiptDetailPage>{
   @override
   Widget build(BuildContext context) {
     var filePath = "$SERVER_URL$RECEIPT_PATH${widget.item.fileName}";
-    return Scaffold(
+    return SafeArea(
+        child: Scaffold(
         backgroundColor: Colors.white,
         appBar: PreferredSize(
             preferredSize: Size.fromHeight(CustomStyle.getHeight(50.0)),
@@ -38,8 +39,7 @@ class _ReceiptDetailPageState extends State<ReceiptDetailPage>{
               ),
             )
         ),
-    body: SafeArea(
-      child: PhotoView(
+    body: PhotoView(
         imageProvider: NetworkImage(
             filePath
         ),
@@ -47,8 +47,8 @@ class _ReceiptDetailPageState extends State<ReceiptDetailPage>{
         maxScale: PhotoViewComputedScale.covered * 2,
         enableRotation: true,
         tightMode: true,
+        )
       )
-    ),
     );
   }
 

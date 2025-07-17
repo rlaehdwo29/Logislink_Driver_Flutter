@@ -113,7 +113,8 @@ class _AppBarNoticePageState extends State<AppBarNoticePage> {
   @override
   Widget build(BuildContext context) {
     pr = Util.networkProgress(context);
-    return Scaffold(
+    return SafeArea(
+        child: Scaffold(
       backgroundColor: styleWhiteCol,
       appBar: PreferredSize(
           preferredSize: Size.fromHeight(CustomStyle.getHeight(50.0)),
@@ -131,14 +132,13 @@ class _AppBarNoticePageState extends State<AppBarNoticePage> {
               icon: const Icon(Icons.arrow_back),
             ),
           )),
-      body: SafeArea(
-          child: SingleChildScrollView(
+      body:SingleChildScrollView(
                 child: SizedBox(
                   width: MediaQuery.of(context).size.width,
                   child: getNoticeFuture(),
                 )
             )
-      ),
+      )
     );
   }
   

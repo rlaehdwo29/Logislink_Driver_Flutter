@@ -104,7 +104,7 @@ class OrderModel extends ResultModel {
   String? siteCd;            // (산재결제) 로지스유 가맹점코드
   String? kcpgroupId;        // (산재결제) 로지스유 가맹점 그룹코드
   String? batchKey;          // (산재결제) 차주 카드별 배치키
-  String? cardCd;            // (산재결제) 카드사 코드
+  String? cardNo;            // (산재결제) 카드번호
   String? cardName;          // (산재결제) 카드사명
   String? kcpCertInfo;       // (산재결제)KCP 인증값
   String? mid;               // (운송비결제) 차주상점 고유값
@@ -202,7 +202,7 @@ class OrderModel extends ResultModel {
     this.siteCd,
     this.kcpgroupId,
     this.batchKey,
-    this.cardCd,
+    this.cardNo,
     this.cardName,
     this.kcpCertInfo,
     this.mid
@@ -299,7 +299,7 @@ class OrderModel extends ResultModel {
       siteCd: json['siteCd'],
       kcpgroupId: json['kcpgroupId'],
       batchKey: json['batchKey'],
-      cardCd: json['cardCd'],
+      cardNo: json['cardNo'],
       cardName: json['cardName'],
       kcpCertInfo: json['kcpCertInfo'],
       mid: json['mid']

@@ -250,7 +250,8 @@ class _AddrSearchPageState extends State<AddrSearchPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    return SafeArea(
+        child: Scaffold(
       backgroundColor: Colors.white,
       appBar: PreferredSize(
           preferredSize: Size.fromHeight(CustomStyle.getHeight(60.0)),
@@ -271,8 +272,7 @@ class _AddrSearchPageState extends State<AddrSearchPage> {
               ),
             )
       ),
-      body: SafeArea(
-           child: Column(
+      body: Column(
              crossAxisAlignment: CrossAxisAlignment.start,
              mainAxisAlignment: MainAxisAlignment.start,
                   children: [

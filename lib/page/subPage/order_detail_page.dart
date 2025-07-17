@@ -292,6 +292,11 @@ class _OrderDetailPageState extends State<OrderDetailPage> with WidgetsBindingOb
                                           openOkBox(context, res_msg, Strings.of(context)?.get("confirm")??"Error!!",() {Navigator.of(context).pop(false);});
                                         }
                                       });
+                                   controller.addJavaScriptHandler(
+                                       handlerName: 'webViewClose',
+                                       callback: (args) {
+                                         Navigator.pop(context);
+                                       });
                                 },
                                 onCreateWindow: (controller, createWindowRequest) async{
                                     showDialog(
@@ -1273,12 +1278,12 @@ class _OrderDetailPageState extends State<OrderDetailPage> with WidgetsBindingOb
           OrderModel? gData = OrderModel.fromJSON(list[0]);
           if(gData?.finishYn == "N") {
             if(!tvPay.value) {
-              if (app.bankchkDate == null) {
-                app_util.Util.snackbar(context, "계좌정보를 확인해 주세요. 등록된 계좌정보가 없거나 확인되지 않은 계좌입니다.");
-              } else {
+              //if (app.bankchkDate == null) {
+              //  app_util.Util.snackbar(context, "계좌정보를 확인해 주세요. 등록된 계좌정보가 없거나 확인되지 않은 계좌입니다.");
+              //} else {
                 showPay(showPayConfirm);
                 await getPopUpTask();
-              }
+              //}
             }else{
               if(!(gData.loadStatus == "0")) {
                 if(!(gData.reqPayYN == "N")) {
@@ -1332,16 +1337,11 @@ class _OrderDetailPageState extends State<OrderDetailPage> with WidgetsBindingOb
 
   Future<void> showPayConfirm(Map<String,String>? _result) async {
     if(_result?["result"] == "200") {
-      var result = await checkBankDate();
       var validation_y_check = await validation_finishYn();
       if(validation_y_check == "N"){
         // 계좌정보가 30일 이내로 업데이트 되었다면 계좌 정보를 체크하지 않음
-        if(result != true) {
-          await sendSmartroMid(_result); // MID 가져오기 API 대기 2024.08.07
-          //await sendPay(_result);
-        }else{
-          await checkAccNm(_result);
-        }
+        //await sendSmartroMid(_result); // MID 가져오기 API 대기 2024.08.07
+        await sendPay(_result);
       }else if(validation_y_check == "Y") {
         openOkBox(context, "해당 오더는 마감처리 또는 빠른지급 신청이 완료된 건으로 \n 빠른지급 신청이 불가합니다.", Strings.of(context)?.get("confirm")??"Error!!", () { Navigator.of(context).pop(false);});
       }else if(validation_y_check == "error" || validation_y_check == "non") {
@@ -1558,8 +1558,8 @@ class _OrderDetailPageState extends State<OrderDetailPage> with WidgetsBindingOb
         //user.bankchkDate = app_util.Util.getDateCalToStr(DateTime.now(), "yyyy-MM-dd HH:mm:ss");
         user.bankchkDate = app_util.Util.getCurrentDate("yyyy-MM-dd HH:mm:ss");
         App().setUserInfo(user);
-        await sendSmartroMid(_result); // MID 가져오기 API 대기 2024.08.07
-        //await sendPay(_result);
+        //await sendSmartroMid(_result); // MID 가져오기 API 대기 2024.08.07
+        await sendPay(_result);
         setState(() {});
       }else{
         app_util.Util.toast(_response.message);
@@ -2098,7 +2098,7 @@ class _OrderDetailPageState extends State<OrderDetailPage> with WidgetsBindingOb
                                                         )
                                                     ),
                                                     child: Text(
-                                                      "${app_util.Util.getInCodeCommaWon(sellChargeFix.value)}원",
+                                                      "${app_util.Util.getInCodeCommaWon(orderItem.value.insureAmt)}원",
                                                       textAlign: TextAlign.left,
                                                       style: CustomStyle.CustomFont(styleFontSize12, text_color_01),
                                                     )
@@ -2144,7 +2144,7 @@ class _OrderDetailPageState extends State<OrderDetailPage> with WidgetsBindingOb
                                                         )
                                                     ),
                                                     child: Text(
-                                                      "${app.value.bankAccount??"-"} ",
+                                                      "${orderItem.value.cardName??"-"} ",
                                                       textAlign: TextAlign.left,
                                                       style: CustomStyle.CustomFont(styleFontSize12, text_color_01),
                                                     )
@@ -2178,7 +2178,7 @@ class _OrderDetailPageState extends State<OrderDetailPage> with WidgetsBindingOb
                                                 child: Container(
                                                     padding: const EdgeInsets.all(6.0),
                                                     child: Text(
-                                                      "${app.value.bankCnnm??"-"} ",
+                                                      "${orderItem.value.cardNo??"-"} ",
                                                       textAlign: TextAlign.left,
                                                       style: CustomStyle.CustomFont(styleFontSize12, text_color_01),
                                                     )
@@ -2912,6 +2912,7 @@ class _OrderDetailPageState extends State<OrderDetailPage> with WidgetsBindingOb
           Navigator.of(context).pop({'code':200});
           return false;
         },
+        child: SafeArea(
         child: Scaffold(
             backgroundColor: Colors.white,
             appBar: PreferredSize(
@@ -2932,8 +2933,7 @@ class _OrderDetailPageState extends State<OrderDetailPage> with WidgetsBindingOb
                   ),
                 )
             ),
-            body: SafeArea(
-              child: CustomScrollView(
+            body: CustomScrollView(
                 slivers: [
                   SliverAppBar(
                     pinned: false,
@@ -3029,7 +3029,6 @@ class _OrderDetailPageState extends State<OrderDetailPage> with WidgetsBindingOb
                   ),
                 ],
               ),
-            ),
             bottomNavigationBar: SizedBox(
                 height: CustomStyle.getHeight(60.0),
                 child: Row(
@@ -3094,6 +3093,7 @@ class _OrderDetailPageState extends State<OrderDetailPage> with WidgetsBindingOb
                   ],
                 )
             )
+          )
         )
     );
 

@@ -1877,7 +1877,8 @@ class _CarBookRegPageState extends State<CarBookRegPage>{
   Widget build(BuildContext context) {
     pr = Util.networkProgress(context);
 
-    return Scaffold(
+    return SafeArea(
+        child: Scaffold(
         backgroundColor: Colors.white,
       appBar: PreferredSize(
           preferredSize: Size.fromHeight(CustomStyle.getHeight(60.0)),
@@ -1897,10 +1898,8 @@ class _CarBookRegPageState extends State<CarBookRegPage>{
           )
       ),
       body: Obx(() {
-          return SafeArea(
-            child: SingleChildScrollView(
+          return SingleChildScrollView(
                 child: returnCodeWidget()
-            )
           );
         }),
         bottomNavigationBar: Row(
@@ -1962,7 +1961,8 @@ class _CarBookRegPageState extends State<CarBookRegPage>{
                 ),
               )
           ) : const SizedBox()
-      ])
+        ])
+      )
     );
   }
   

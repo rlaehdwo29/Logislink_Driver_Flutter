@@ -279,7 +279,8 @@ class _CarListPageState extends State<CarListPage> {
           widget.onCallback(true, null);
           return false;
         } ,
-      child: Scaffold(
+      child: SafeArea(
+          child: Scaffold(
       backgroundColor: Colors.white,
       appBar: PreferredSize(
           preferredSize: Size.fromHeight(CustomStyle.getHeight(60.0)),
@@ -300,9 +301,7 @@ class _CarListPageState extends State<CarListPage> {
           )
       ),
       body: Obx(() {
-        return SafeArea(
-            child: carListWidget()
-        );
+        return  carListWidget();
       }),
         bottomNavigationBar: InkWell(
           onTap: () async {
@@ -329,7 +328,7 @@ class _CarListPageState extends State<CarListPage> {
                   ])
           ),
         )
-      )
+      ))
     );
   }
 }

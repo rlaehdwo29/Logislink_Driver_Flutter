@@ -471,7 +471,8 @@ class _AppBarMonitorPageState extends State<AppBarMonitorPage> {
   @override
   Widget build(BuildContext context) {
     Util.notificationDialog(context,"실적현황",webViewKey);
-    return Scaffold(
+    return SafeArea(
+        child: Scaffold(
         backgroundColor: Colors.white,
       appBar: PreferredSize(
           preferredSize: Size.fromHeight(CustomStyle.getHeight(60.0)),
@@ -491,16 +492,15 @@ class _AppBarMonitorPageState extends State<AppBarMonitorPage> {
             )
       ),
       body: Obx((){
-         return SafeArea(
-         child: Column(
+         return Column(
            children: [
              topWidget(),
              calendarWidget(),
              itemListFuture()
-           ],
-         )
+           ]
         );
       }),
+    )
     );
   }
   

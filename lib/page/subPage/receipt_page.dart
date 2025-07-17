@@ -364,7 +364,8 @@ class _ReceiptPageState extends State<ReceiptPage>{
           Navigator.of(context).pop({'code':200});
           return false;
     } ,
-    child: Scaffold(
+    child: SafeArea(
+        child: Scaffold(
       backgroundColor: Colors.white,
       appBar: PreferredSize(
           preferredSize: Size.fromHeight(CustomStyle.getHeight(50.0)),
@@ -383,9 +384,7 @@ class _ReceiptPageState extends State<ReceiptPage>{
             ),
           )
       ),
-      body: SafeArea(
-         // child: Obx((){
-            child: Column(
+      body: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisAlignment: MainAxisAlignment.start,
               children: [
@@ -405,9 +404,7 @@ class _ReceiptPageState extends State<ReceiptPage>{
                 ),
                 getReceiptFuture()
               ],
-            )
-         // }),
-      ),
+            ),
           bottomNavigationBar: Container(
               height: 60.0,
               color: main_color,
@@ -459,7 +456,7 @@ class _ReceiptPageState extends State<ReceiptPage>{
                       )
                     ),
               ])),
-        )
+        ))
     );
   }
 
