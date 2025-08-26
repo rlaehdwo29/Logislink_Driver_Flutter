@@ -35,6 +35,8 @@
   const String URL_VERSION_CODE = "/cmm/version/list";
  // 로그 저장
  const String URL_EVENT_LOG = "/cmm/insert/eventLog";
+ // 신한카드 거래등록
+ const String URL_TRADE_REG = "/api/card/getTradeReg";
 
   // 스마트로 MID
   const String URL_SMARTRO_MID = "/api/card/getMidMB";

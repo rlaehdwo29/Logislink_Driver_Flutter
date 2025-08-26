@@ -43,6 +43,16 @@ abstract class Rest {
    );
 
   /**
+   * 신한카드 거래 등록
+   */
+  @POST(URL_TRADE_REG)
+  Future<HttpResponse> getTradeReg(
+      @Header("Authorization") String? Authorization,
+      @Body() Map<String, dynamic> bod
+      );
+
+
+  /**
    * 스마트로 MID
    */
   @FormUrlEncoded()

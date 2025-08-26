@@ -127,12 +127,12 @@ class _OrderDetailPageState extends State<OrderDetailPage> with WidgetsBindingOb
 
   void onCallback(bool? refresh) async {
     //setState(() async {
-      if (refresh != null) {
-        if (refresh) {
-          app.value = await controller.getUserInfo();
-        }
+    if (refresh != null) {
+      if (refresh) {
+        app.value = await controller.getUserInfo();
       }
-   // });
+    }
+    // });
   }
 
   void naviCheck(String? type) {
@@ -181,7 +181,14 @@ class _OrderDetailPageState extends State<OrderDetailPage> with WidgetsBindingOb
       }else{
         launchBrowserTab(Uri.parse(NaviApi.webNaviInstall));
       }
-    }else {
+    } else if(navi == "Apple Map"){
+      final appleMapsUrl = 'http://maps.apple.com/?ll=$lat,$lon';
+      if (await canLaunch(appleMapsUrl)) {
+        await launch(appleMapsUrl);
+      } else {
+        throw 'Apple Maps를 열 수 없습니다.';
+      }
+    } else {
       _showActivity(name,lat,lon);
     }
   }
@@ -292,48 +299,48 @@ class _OrderDetailPageState extends State<OrderDetailPage> with WidgetsBindingOb
                                           openOkBox(context, res_msg, Strings.of(context)?.get("confirm")??"Error!!",() {Navigator.of(context).pop(false);});
                                         }
                                       });
-                                   controller.addJavaScriptHandler(
-                                       handlerName: 'webViewClose',
-                                       callback: (args) {
-                                         Navigator.pop(context);
-                                       });
+                                  controller.addJavaScriptHandler(
+                                      handlerName: 'webViewClose',
+                                      callback: (args) {
+                                        Navigator.pop(context);
+                                      });
                                 },
                                 onCreateWindow: (controller, createWindowRequest) async{
-                                    showDialog(
-                                      context: context, builder: (context) {
-                                      return AlertDialog(
-                                        shape: const RoundedRectangleBorder(
-                                            borderRadius: BorderRadius.all(Radius.circular(0.0))
-                                        ),
-                                        content: SizedBox(
-                                          width: MediaQuery.of(context).size.width,
-                                          height: 400,
-                                          child: InAppWebView(
-                                            // Setting the windowId property is important here!
-                                            windowId: createWindowRequest.windowId,
-                                            initialOptions: InAppWebViewGroupOptions(
-                                              android: AndroidInAppWebViewOptions(
-                                                builtInZoomControls: true,
-                                                thirdPartyCookiesEnabled: true,
-                                              ),
-                                              crossPlatform: InAppWebViewOptions(
-                                                  cacheEnabled: true,
-                                                  javaScriptEnabled: true,
-                                                  userAgent: "Mozilla/5.0 (Linux; Android 9; LG-H870 Build/PKQ1.190522.001) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/83.0.4103.106 Mobile Safari/537.36"
-                                              ),
-                                              ios: IOSInAppWebViewOptions(
-                                                allowsInlineMediaPlayback: true,
-                                                allowsBackForwardNavigationGestures: true,
-                                              ),
+                                  showDialog(
+                                    context: context, builder: (context) {
+                                    return AlertDialog(
+                                      shape: const RoundedRectangleBorder(
+                                          borderRadius: BorderRadius.all(Radius.circular(0.0))
+                                      ),
+                                      content: SizedBox(
+                                        width: MediaQuery.of(context).size.width,
+                                        height: 400,
+                                        child: InAppWebView(
+                                          // Setting the windowId property is important here!
+                                          windowId: createWindowRequest.windowId,
+                                          initialOptions: InAppWebViewGroupOptions(
+                                            android: AndroidInAppWebViewOptions(
+                                              builtInZoomControls: true,
+                                              thirdPartyCookiesEnabled: true,
                                             ),
-                                            onCloseWindow: (controller) async{
-                                              if (Navigator.canPop(context)) {
-                                                Navigator.pop(context);
-                                              }
-                                            },
+                                            crossPlatform: InAppWebViewOptions(
+                                                cacheEnabled: true,
+                                                javaScriptEnabled: true,
+                                                userAgent: "Mozilla/5.0 (Linux; Android 9; LG-H870 Build/PKQ1.190522.001) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/83.0.4103.106 Mobile Safari/537.36"
+                                            ),
+                                            ios: IOSInAppWebViewOptions(
+                                              allowsInlineMediaPlayback: true,
+                                              allowsBackForwardNavigationGestures: true,
+                                            ),
                                           ),
-                                        ),);
-                                    },
+                                          onCloseWindow: (controller) async{
+                                            if (Navigator.canPop(context)) {
+                                              Navigator.pop(context);
+                                            }
+                                          },
+                                        ),
+                                      ),);
+                                  },
                                   );
                                   return true;
                                 },
@@ -698,7 +705,7 @@ class _OrderDetailPageState extends State<OrderDetailPage> with WidgetsBindingOb
 
               try {
                 // 카드 입력창 호출 및 배치키 발급 호출
-                  final htmlData = '''
+                final htmlData = '''
                 <html>
                  <body onload="document.order_info.submit();">
                     <form name="order_info" method="post" action="${PayUrl}">
@@ -722,7 +729,7 @@ class _OrderDetailPageState extends State<OrderDetailPage> with WidgetsBindingOb
                 </html>
                 ''';
 
-                  await openWebView(context,webViewKey,PayUrl, htmlData);
+                await openWebView(context,webViewKey,PayUrl, htmlData);
 
               }catch(e) {
                 print("HttpException => ${e}");
@@ -750,32 +757,32 @@ class _OrderDetailPageState extends State<OrderDetailPage> with WidgetsBindingOb
 
   Future<void> GetPayTask() async {
     Logger logger = Logger();
-      await DioService.dioClient(header: true).getCodeList(Const.DRIVER_POPUP_CHECK,filter1: "02").then((it) async {
-        ReturnMap _response = DioService.dioResponse(it);
-        logger.d("GetPayTask() _response -> ${_response.status} // ${_response.resultMap}");
-        if(_response.status == "200") {
-          if(_response.resultMap?["data"].length != 0) {
-              openCustomOkBox(context, _response.resultMap?["data"][0]["memo"],
-                  Strings.of(context)?.get("confirm") ?? "Error!!", () {
-                    Navigator.of(context).pop(false);
-                  }, align: TextAlign.left);
-          }else{
-            await goToPay();
-          }
+    await DioService.dioClient(header: true).getCodeList(Const.DRIVER_POPUP_CHECK,filter1: "02").then((it) async {
+      ReturnMap _response = DioService.dioResponse(it);
+      logger.d("GetPayTask() _response -> ${_response.status} // ${_response.resultMap}");
+      if(_response.status == "200") {
+        if(_response.resultMap?["data"].length != 0) {
+          openCustomOkBox(context, _response.resultMap?["data"][0]["memo"],
+              Strings.of(context)?.get("confirm") ?? "Error!!", () {
+                Navigator.of(context).pop(false);
+              }, align: TextAlign.left);
+        }else{
+          await goToPay();
         }
-      }).catchError((Object obj) async {
-        openOkBox(context, "네트워크 통신중 오류가 발생했습니다.(CODE:0000)", Strings.of(context)?.get("confirm")??"Error!!",() {Navigator.of(context).pop(false);});
-        switch (obj.runtimeType) {
-          case DioError:
-          // Here's the sample to get the failed response error code and message
-            final res = (obj as DioError).response;
-            logger.e("brige_page.dart GetCodeTask() Error Default: ${res?.statusCode} -> ${res?.statusMessage}");
-            break;
-          default:
-            logger.e("brige_page.dart GetCodeTask() Error Default:");
-            break;
-        }
-      });
+      }
+    }).catchError((Object obj) async {
+      openOkBox(context, "네트워크 통신중 오류가 발생했습니다.(CODE:0000)", Strings.of(context)?.get("confirm")??"Error!!",() {Navigator.of(context).pop(false);});
+      switch (obj.runtimeType) {
+        case DioError:
+        // Here's the sample to get the failed response error code and message
+          final res = (obj as DioError).response;
+          logger.e("brige_page.dart GetCodeTask() Error Default: ${res?.statusCode} -> ${res?.statusMessage}");
+          break;
+        default:
+          logger.e("brige_page.dart GetCodeTask() Error Default:");
+          break;
+      }
+    });
   }
 
   Future<void> set_EP_SP(String code) async {
@@ -882,29 +889,29 @@ class _OrderDetailPageState extends State<OrderDetailPage> with WidgetsBindingOb
               style: CustomStyle.CustomFont(styleFontSize14, app_util.Util.getOrderStateColor(orderItem.value?.allocState)),
             ),
             orderItem.value?.sellCustId == "C20210802130835001" ?
-              orderItem.value?.taxinvYn == "N" ?
-                orderItem.value?.allocState == "05" && app_util.Util.ynToBoolean(orderItem.value?.payType)?
-                  orderItem.value.mid != null || orderItem.value.mid?.isNotEmpty == true ? // 빠른지급은 운송비 결제가 선행이 되어야함.운송비 결제(운송비와 산재보험 결제는 다름.)가되면 MID가 생성되는데 MID값이 없을 경우에 빠른지급 신청 불가하여 disable.
-                  InkWell(
-                      onTap: () async {
-                        if(orderItem.value.batchKey == null || orderItem.value.batchKey?.isEmpty == true) {
-                          await setTradeReg();
-                        }else{
-                          await GetPayTask();
-                        }
-                      },
-                      child: Container(
-                        padding: EdgeInsets.symmetric(vertical: CustomStyle.getHeight(5.0),horizontal: CustomStyle.getWidth(10.0)),
-                        decoration: tvPay.value ? CustomStyle.customBoxDeco(styleWhiteCol,border_color: text_color_02) : CustomStyle.customBoxDeco(sub_color),
-                        child: Text(
-                          Strings.of(context)?.get("pay_title")??"Not Found",
-                          style: CustomStyle.CustomFont(styleFontSize10, tvPay.value ? text_color_02 : styleWhiteCol),
-                        ),
-                      )
-                  ) : const SizedBox()
-               : const SizedBox()
-              :const SizedBox()
-            : const SizedBox()
+            orderItem.value?.taxinvYn == "N" ?
+            orderItem.value?.allocState == "05" && app_util.Util.ynToBoolean(orderItem.value?.payType)?
+            orderItem.value.mid != null || orderItem.value.mid?.isNotEmpty == true ? // 빠른지급은 운송비 결제가 선행이 되어야함.운송비 결제(운송비와 산재보험 결제는 다름.)가되면 MID가 생성되는데 MID값이 없을 경우에 빠른지급 신청 불가하여 disable.
+            InkWell(
+                onTap: () async {
+                  if(orderItem.value.batchKey == null || orderItem.value.batchKey?.isEmpty == true) {
+                    await setTradeReg();
+                  }else{
+                    await GetPayTask();
+                  }
+                },
+                child: Container(
+                  padding: EdgeInsets.symmetric(vertical: CustomStyle.getHeight(5.0),horizontal: CustomStyle.getWidth(10.0)),
+                  decoration: tvPay.value ? CustomStyle.customBoxDeco(styleWhiteCol,border_color: text_color_02) : CustomStyle.customBoxDeco(sub_color),
+                  child: Text(
+                    Strings.of(context)?.get("pay_title")??"Not Found",
+                    style: CustomStyle.CustomFont(styleFontSize10, tvPay.value ? text_color_02 : styleWhiteCol),
+                  ),
+                )
+            ) : const SizedBox()
+                : const SizedBox()
+                :const SizedBox()
+                : const SizedBox()
           ],
         )
     );
@@ -941,24 +948,24 @@ class _OrderDetailPageState extends State<OrderDetailPage> with WidgetsBindingOb
                       ),
                     ),
                     orderItem.value?.reqPayYN == "N" ?
-                      orderItem.value?.chargeType == "01" ?
-                        Container(
-                           margin: EdgeInsets.only(left: CustomStyle.getWidth(10.0)),
-                           child: InkWell(
-                           onTap: () async {
-                             await goToTax();
-                           },
-                           child: Container(
-                               decoration: tvTax.value ? CustomStyle.customBoxDeco(styleWhiteCol,border_color: text_color_02) : CustomStyle.customBoxDeco(sub_color),
-                               padding: EdgeInsets.symmetric(vertical: CustomStyle.getHeight(5.0),horizontal: CustomStyle.getWidth(10.0)),
-                               child:Text(
-                                 Strings.of(context)?.get("tax_title")??"Not Found",
-                                 style: CustomStyle.CustomFont(styleFontSize10, tvTax.value ? text_color_02 : styleWhiteCol),
-                               )
-                           ),
-                         )
-                       ) : const SizedBox()
-                     : const SizedBox()
+                    orderItem.value?.chargeType == "01" ?
+                    Container(
+                        margin: EdgeInsets.only(left: CustomStyle.getWidth(10.0)),
+                        child: InkWell(
+                          onTap: () async {
+                            await goToTax();
+                          },
+                          child: Container(
+                              decoration: tvTax.value ? CustomStyle.customBoxDeco(styleWhiteCol,border_color: text_color_02) : CustomStyle.customBoxDeco(sub_color),
+                              padding: EdgeInsets.symmetric(vertical: CustomStyle.getHeight(5.0),horizontal: CustomStyle.getWidth(10.0)),
+                              child:Text(
+                                Strings.of(context)?.get("tax_title")??"Not Found",
+                                style: CustomStyle.CustomFont(styleFontSize10, tvTax.value ? text_color_02 : styleWhiteCol),
+                              )
+                          ),
+                        )
+                    ) : const SizedBox()
+                        : const SizedBox()
                   ]
               ) : const SizedBox()
             ]
@@ -1281,8 +1288,8 @@ class _OrderDetailPageState extends State<OrderDetailPage> with WidgetsBindingOb
               //if (app.bankchkDate == null) {
               //  app_util.Util.snackbar(context, "계좌정보를 확인해 주세요. 등록된 계좌정보가 없거나 확인되지 않은 계좌입니다.");
               //} else {
-                showPay(showPayConfirm);
-                await getPopUpTask();
+              showPay(showPayConfirm);
+              await getPopUpTask();
               //}
             }else{
               if(!(gData.loadStatus == "0")) {
@@ -1617,714 +1624,714 @@ class _OrderDetailPageState extends State<OrderDetailPage> with WidgetsBindingOb
               ),
 
               content: Column(
-              children: [
-                Obx((){
-                  return Expanded(
-                    child: SingleChildScrollView(
-                      child: SizedBox(
-                          width: MediaQuery.of(context).size.width,
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              InkWell(
-                                onTap:(){
-                                  _isChecked.value = !_isChecked.value;
-                                },
-                                child: Container(
-                                    padding:EdgeInsets.symmetric(vertical: CustomStyle.getHeight(5)),
-                                    margin: EdgeInsets.only(top: CustomStyle.getHeight(10.0),left: CustomStyle.getWidth(10), right: CustomStyle.getWidth(10)),
-                                    decoration: BoxDecoration(
-                                      borderRadius: const BorderRadius.all(Radius.circular(10)),
-                                      border: Border.all(color: _isChecked.value ? sub_color : light_gray23),
-                                      color: light_gray24
-                                    ),
-                                    child: Stack(
-                                      clipBehavior: Clip.none,
-                                      children: [
-                                        Column(
-                                      crossAxisAlignment: CrossAxisAlignment.center,
-                                      mainAxisAlignment: MainAxisAlignment.center,
-                                      children: [
-                                        Column(
-                                            crossAxisAlignment: CrossAxisAlignment.center,
-                                            mainAxisAlignment: MainAxisAlignment.start,
-                                            children: [
-                                              Row(
-                                                crossAxisAlignment: CrossAxisAlignment.center,
-                                                mainAxisAlignment: MainAxisAlignment.center,
-                                                children: [
-                                                  Text(
-                                                    "일반운임",
-                                                    style: CustomStyle.CustomFont(styleFontSize14, text_color_01,font_weight: FontWeight.w700),
-                                                  ),
-                                                  Text(
-                                                    "(vat포함)",
-                                                    textAlign: TextAlign.center,
-                                                    style: CustomStyle.CustomFont(styleFontSize8, text_color_01,font_weight: FontWeight.w700),
-                                                  ),
-                                                ],
+                  children: [
+                    Obx((){
+                      return Expanded(
+                          child: SingleChildScrollView(
+                              child: SizedBox(
+                                  width: MediaQuery.of(context).size.width,
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      InkWell(
+                                          onTap:(){
+                                            _isChecked.value = !_isChecked.value;
+                                          },
+                                          child: Container(
+                                              padding:EdgeInsets.symmetric(vertical: CustomStyle.getHeight(5)),
+                                              margin: EdgeInsets.only(top: CustomStyle.getHeight(10.0),left: CustomStyle.getWidth(10), right: CustomStyle.getWidth(10)),
+                                              decoration: BoxDecoration(
+                                                  borderRadius: const BorderRadius.all(Radius.circular(10)),
+                                                  border: Border.all(color: _isChecked.value ? sub_color : light_gray23),
+                                                  color: light_gray24
                                               ),
-                                              Obx(() =>
-                                              Container(
-                                                margin: EdgeInsets.only(left: CustomStyle.getWidth(5)),
-                                                child: Text(
-                                                  "${app_util.Util.getInCodeCommaWon(sellChargeFix.value)}원",
-                                                  style: CustomStyle.CustomFont(styleFontSize16, text_color_01,font_weight: FontWeight.w700),
+                                              child: Stack(
+                                                  clipBehavior: Clip.none,
+                                                  children: [
+                                                    Column(
+                                                      crossAxisAlignment: CrossAxisAlignment.center,
+                                                      mainAxisAlignment: MainAxisAlignment.center,
+                                                      children: [
+                                                        Column(
+                                                          crossAxisAlignment: CrossAxisAlignment.center,
+                                                          mainAxisAlignment: MainAxisAlignment.start,
+                                                          children: [
+                                                            Row(
+                                                              crossAxisAlignment: CrossAxisAlignment.center,
+                                                              mainAxisAlignment: MainAxisAlignment.center,
+                                                              children: [
+                                                                Text(
+                                                                  "일반운임",
+                                                                  style: CustomStyle.CustomFont(styleFontSize14, text_color_01,font_weight: FontWeight.w700),
+                                                                ),
+                                                                Text(
+                                                                  "(vat포함)",
+                                                                  textAlign: TextAlign.center,
+                                                                  style: CustomStyle.CustomFont(styleFontSize8, text_color_01,font_weight: FontWeight.w700),
+                                                                ),
+                                                              ],
+                                                            ),
+                                                            Obx(() =>
+                                                                Container(
+                                                                    margin: EdgeInsets.only(left: CustomStyle.getWidth(5)),
+                                                                    child: Text(
+                                                                      "${app_util.Util.getInCodeCommaWon(sellChargeFix.value)}원",
+                                                                      style: CustomStyle.CustomFont(styleFontSize16, text_color_01,font_weight: FontWeight.w700),
+                                                                    )
+                                                                )
+                                                            ),
+                                                          ],
+                                                        ),
+                                                        Icon(Icons.arrow_downward_outlined),
+                                                        Column(
+                                                          crossAxisAlignment: CrossAxisAlignment.center,
+                                                          mainAxisAlignment: MainAxisAlignment.center,
+                                                          children: [
+                                                            Row(
+                                                              crossAxisAlignment: CrossAxisAlignment.center,
+                                                              mainAxisAlignment: MainAxisAlignment.center,
+                                                              children: [
+                                                                Text(
+                                                                  "빠른운임",
+                                                                  style: CustomStyle.CustomFont(styleFontSize14, addr_zip_no,font_weight: FontWeight.w700),
+                                                                ),
+                                                                Text(
+                                                                  " (수수료 ${app_util.Util.getInCodeCommaWon(app_util.Util.getPayFee(sellChargeFix.value, 1.298))}원 제외)",
+                                                                  style: CustomStyle.CustomFont(styleFontSize10, addr_zip_no),
+                                                                ),
+                                                              ],
+                                                            ),
+                                                            Container(
+                                                                margin: EdgeInsets.only(left: CustomStyle.getWidth(5)),
+                                                                child: Text(
+                                                                  "$charge 원",
+                                                                  style: CustomStyle.CustomFont(styleFontSize16, addr_zip_no,font_weight: FontWeight.w700),
+                                                                )
+                                                            ),
+                                                          ],
+                                                        ),
+                                                        Container(
+                                                          height: 1.h,
+                                                          color: light_gray18,
+                                                          margin: EdgeInsets.symmetric(horizontal: CustomStyle.getWidth(25),vertical: CustomStyle.getHeight(8)),
+                                                        ),
+                                                        Row(
+                                                            crossAxisAlignment: CrossAxisAlignment.center,
+                                                            mainAxisAlignment: MainAxisAlignment.center,
+                                                            children: [
+                                                              Container(
+                                                                margin: EdgeInsets.only(right: CustomStyle.getWidth(5)),
+                                                                child: Text(
+                                                                  "(차주분)",
+                                                                  style: CustomStyle.CustomFont(styleFontSize8, light_gray18,font_weight: FontWeight.w700),
+                                                                ),
+                                                              ),
+                                                              Text(
+                                                                "산재보험료: ${app_util.Util.getInCodeCommaWon(orderItem.value.insureAmt)}원",
+                                                                style: CustomStyle.CustomFont(styleFontSize16, light_gray18,font_weight: FontWeight.w700),
+                                                              )
+                                                            ]
+                                                        )
+                                                      ],
+                                                    )
+                                                  ])
+                                          )
+                                      ),
+                                      CustomStyle.sizedBoxHeight(CustomStyle.getHeight(5.0)),
+                                      Container(
+                                          margin: EdgeInsets.symmetric(horizontal: CustomStyle.getWidth(10)),
+                                          child: Row(
+                                              children: [
+                                                Row(children :[
+                                                  Text(
+                                                    "동의",
+                                                    style: CustomStyle.CustomFont(styleFontSize12, text_color_01,font_weight: FontWeight.w700),
+                                                  ),
+                                                  Checkbox(
+                                                      value: _isChecked.value,
+                                                      materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                                                      onChanged: (value) {
+                                                        setState(() {
+                                                          _isChecked.value = !_isChecked.value;
+                                                        });
+                                                      }
+                                                  )
+                                                ]),
+                                                Column(
+                                                  mainAxisAlignment: MainAxisAlignment.center,
+                                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                                  children: [
+                                                    Text(
+                                                      "* 왼쪽의 빠른지급신청에 동의해주세요.",
+                                                      textAlign: TextAlign.start,
+                                                      style: CustomStyle.CustomFont(styleFontSize11, addr_zip_no,font_weight: FontWeight.w600),
+                                                    ),
+                                                    RichText(
+                                                      textAlign: TextAlign.start,
+                                                      text: TextSpan(
+                                                        text: "* 산재보험료는 기신청해주신 카드로 결제후\n운임료가 지급됩니다.",
+                                                        style: CustomStyle.CustomFont(styleFontSize11, addr_zip_no,font_weight: FontWeight.w600),
+                                                      ),
+                                                    ),
+                                                  ],
                                                 )
-                                              )
-                                              ),
-                                            ],
-                                          ),
-                                        Icon(Icons.arrow_downward_outlined),
-                                        Column(
-                                          crossAxisAlignment: CrossAxisAlignment.center,
-                                          mainAxisAlignment: MainAxisAlignment.center,
-                                          children: [
-                                            Row(
+                                              ]
+                                          )
+                                      ),
+                                      Container(
+                                        height: 1.h,
+                                        color: light_gray18,
+                                        margin: EdgeInsets.symmetric(vertical: CustomStyle.getHeight(5)),
+                                      ),
+                                      Container(
+                                          margin:EdgeInsets.symmetric(horizontal: CustomStyle.getWidth(10.0)),
+                                          child: Row(
                                               crossAxisAlignment: CrossAxisAlignment.center,
-                                              mainAxisAlignment: MainAxisAlignment.center,
+                                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                              children: [
+                                                Row(
+                                                    children: [
+                                                      Text(
+                                                        "신청정보",
+                                                        style: CustomStyle.CustomFont(styleFontSize15, text_color_01,font_weight: FontWeight.w600),
+                                                      ),
+                                                      Text(
+                                                        "(*아래 정보는 모두 필수 정보입니다.)",
+                                                        style: CustomStyle.CustomFont(styleFontSize8, text_color_01),
+                                                      ),
+                                                    ]
+                                                ),
+                                              ]
+                                          )
+                                      ),
+                                      Container(
+                                          margin: EdgeInsets.symmetric(horizontal: CustomStyle.getWidth(10.0), vertical:CustomStyle.getHeight(5.0) ),
+                                          decoration: BoxDecoration(
+                                            border: CustomStyle.borderAllBase(),
+                                          ),
+                                          child: Column(
+                                              crossAxisAlignment: CrossAxisAlignment.stretch,
+                                              children: [
+                                                Row(
+                                                    children: [
+                                                      Expanded(
+                                                          flex: 1,
+                                                          child: Container(
+                                                            padding: const EdgeInsets.all(5.0),
+                                                            decoration: BoxDecoration(
+                                                                border: Border(
+                                                                    bottom: BorderSide(
+                                                                        color: line,
+                                                                        width: CustomStyle.getWidth(1.0)
+                                                                    ),
+                                                                    right: BorderSide(
+                                                                        color: line,
+                                                                        width: CustomStyle.getWidth(1.0)
+                                                                    )
+                                                                )
+                                                            ),
+                                                            child: Text(
+                                                              "대표자",
+                                                              textAlign: TextAlign.center,
+                                                              style: CustomStyle.CustomFont(styleFontSize12, text_color_01),
+                                                            ),
+                                                          )
+                                                      ),
+                                                      Expanded(
+                                                          flex: 3,
+                                                          child: Container(
+                                                              padding: const EdgeInsets.all(5.0),
+                                                              decoration: BoxDecoration(
+                                                                  border: Border(
+                                                                    bottom: BorderSide(
+                                                                        color: line,
+                                                                        width: CustomStyle.getWidth(1.0)
+                                                                    ),
+                                                                  )
+                                                              ),
+                                                              child: Text(
+                                                                "${app.value.ceo??""} ",
+                                                                textAlign: TextAlign.left,
+                                                                style: CustomStyle.CustomFont(styleFontSize12, text_color_01),
+                                                              )
+                                                          )
+                                                      )
+                                                    ]
+                                                ),
+                                                Row(
+                                                    children: [
+                                                      Expanded(
+                                                          flex: 1,
+                                                          child: Container(
+                                                            padding: const EdgeInsets.all(6.0),
+                                                            decoration: BoxDecoration(
+                                                                border: Border(
+                                                                    bottom: BorderSide(
+                                                                        color: line,
+                                                                        width: CustomStyle.getWidth(1.0)
+                                                                    ),
+                                                                    right: BorderSide(
+                                                                        color: line,
+                                                                        width: CustomStyle.getWidth(1.0)
+                                                                    )
+                                                                )
+                                                            ),
+                                                            child: Text(
+                                                              "전화번호",
+                                                              textAlign: TextAlign.center,
+                                                              style: CustomStyle.CustomFont(styleFontSize12, text_color_01),
+                                                            ),
+                                                          )
+                                                      ),
+                                                      Expanded(
+                                                          flex: 3,
+                                                          child: Container(
+                                                              padding: const EdgeInsets.all(6.0),
+                                                              decoration: BoxDecoration(
+                                                                  border: Border(
+                                                                    bottom: BorderSide(
+                                                                        color: line,
+                                                                        width: CustomStyle.getWidth(1.0)
+                                                                    ),
+                                                                  )
+                                                              ),
+                                                              child: Text(
+                                                                "${app_util.Util.makePhoneNumber(app.value.mobile)}",
+                                                                textAlign: TextAlign.left,
+                                                                style: CustomStyle.CustomFont(styleFontSize12, text_color_01),
+                                                              )
+                                                          )
+                                                      )
+                                                    ]
+                                                ),
+                                                Row(
+                                                    children: [
+                                                      Expanded(
+                                                          flex: 1,
+                                                          child: Container(
+                                                            padding: const EdgeInsets.all(6.0),
+                                                            decoration: BoxDecoration(
+                                                                border: Border(
+                                                                    bottom: BorderSide(
+                                                                        color: line,
+                                                                        width: CustomStyle.getWidth(1.0)
+                                                                    ),
+                                                                    right: BorderSide(
+                                                                        color: line,
+                                                                        width: CustomStyle.getWidth(1.0)
+                                                                    )
+                                                                )
+                                                            ),
+                                                            child: Text(
+                                                              "이메일",
+                                                              textAlign: TextAlign.center,
+                                                              style: CustomStyle.CustomFont(styleFontSize12, text_color_01),
+                                                            ),
+                                                          )
+                                                      ),
+                                                      Expanded(
+                                                          flex: 3,
+                                                          child: Container(
+                                                              padding: const EdgeInsets.all(6.0),
+                                                              decoration: BoxDecoration(
+                                                                  border: Border(
+                                                                    bottom: BorderSide(
+                                                                        color: line,
+                                                                        width: CustomStyle.getWidth(1.0)
+                                                                    ),
+                                                                  )
+                                                              ),
+                                                              child: Text(
+                                                                "${app.value.driverEmail}",
+                                                                textAlign: TextAlign.left,
+                                                                style: CustomStyle.CustomFont(styleFontSize12, text_color_01),
+                                                              )
+                                                          )
+                                                      )
+                                                    ]
+                                                ),
+                                                Row(
+                                                    children: [
+                                                      Expanded(
+                                                          flex: 1,
+                                                          child: Container(
+                                                            padding: const EdgeInsets.all(6.0),
+                                                            decoration: BoxDecoration(
+                                                                border: Border(
+                                                                    bottom: BorderSide(
+                                                                        color: line,
+                                                                        width: CustomStyle.getWidth(1.0)
+                                                                    ),
+                                                                    right: BorderSide(
+                                                                        color: line,
+                                                                        width: CustomStyle.getWidth(1.0)
+                                                                    )
+                                                                )
+                                                            ),
+                                                            child: Text(
+                                                              "사업자번호",
+                                                              textAlign: TextAlign.center,
+                                                              style: CustomStyle.CustomFont(styleFontSize12, text_color_01),
+                                                            ),
+                                                          )
+                                                      ),
+                                                      Expanded(
+                                                          flex: 3,
+                                                          child: Container(
+                                                              padding: const EdgeInsets.all(6.0),
+                                                              decoration: BoxDecoration(
+                                                                  border: Border(
+                                                                    bottom: BorderSide(
+                                                                        color: line,
+                                                                        width: CustomStyle.getWidth(1.0)
+                                                                    ),
+                                                                  )
+                                                              ),
+                                                              child: Text(
+                                                                "${app_util.Util.makeBizNum(app.value.bizNum)}",
+                                                                textAlign: TextAlign.left,
+                                                                style: CustomStyle.CustomFont(styleFontSize12, text_color_01),
+                                                              )
+                                                          )
+                                                      )
+                                                    ]
+                                                ),
+                                                Row(
+                                                    children: [
+                                                      Expanded(
+                                                          flex: 1,
+                                                          child: Container(
+                                                            padding: const EdgeInsets.all(6.0),
+                                                            decoration: BoxDecoration(
+                                                                border: Border(
+                                                                    bottom: BorderSide(
+                                                                        color:line,
+                                                                        width:CustomStyle.getWidth(1.0)
+                                                                    ),
+                                                                    right: BorderSide(
+                                                                        color: line,
+                                                                        width: CustomStyle.getWidth(1.0)
+                                                                    )
+                                                                )
+                                                            ),
+                                                            child: Text(
+                                                              "상호명",
+                                                              textAlign: TextAlign.center,
+                                                              style: CustomStyle.CustomFont(styleFontSize12, text_color_01),
+                                                            ),
+                                                          )
+                                                      ),
+                                                      Expanded(
+                                                          flex: 3,
+                                                          child: Container(
+                                                              padding: const EdgeInsets.all(6.0),
+                                                              decoration: BoxDecoration(
+                                                                  border: Border(
+                                                                      bottom: BorderSide(
+                                                                          color: line,
+                                                                          width: CustomStyle.getWidth(1.0)
+                                                                      )
+                                                                  )
+                                                              ),
+                                                              child: Text(
+                                                                "${app.value.bizName}",
+                                                                textAlign: TextAlign.left,
+                                                                style: CustomStyle.CustomFont(styleFontSize12, text_color_01),
+                                                              )
+                                                          )
+                                                      )
+                                                    ]
+                                                )
+                                              ]
+                                          )
+                                      ),
+                                      Container(
+                                          margin:EdgeInsets.symmetric(horizontal: CustomStyle.getWidth(10.0)),
+                                          child: Row(
+                                              crossAxisAlignment: CrossAxisAlignment.center,
+                                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                               children: [
                                                 Text(
-                                                  "빠른운임",
-                                                  style: CustomStyle.CustomFont(styleFontSize14, addr_zip_no,font_weight: FontWeight.w700),
-                                                ),
+                                                  "산재보험료 결제정보",
+                                                  style: CustomStyle.CustomFont(styleFontSize15, text_color_01,font_weight: FontWeight.w600),
+                                                )
+                                              ]
+                                          )
+                                      ),
+                                      Container(
+                                          margin: EdgeInsets.symmetric(horizontal: CustomStyle.getWidth(10.0), vertical:CustomStyle.getHeight(5.0) ),
+                                          decoration: BoxDecoration(
+                                            border: CustomStyle.borderAllBase(),
+                                          ),
+                                          child: Column(
+                                            crossAxisAlignment: CrossAxisAlignment.stretch,
+                                            children: [
+                                              Row(
+                                                  children: [
+                                                    Expanded(
+                                                        flex: 1,
+                                                        child: Container(
+                                                          padding: const EdgeInsets.all(6.0),
+                                                          decoration: BoxDecoration(
+                                                              border: Border(
+                                                                  bottom: BorderSide(
+                                                                      color: line,
+                                                                      width: CustomStyle.getWidth(1.0)
+                                                                  ),
+                                                                  right: BorderSide(
+                                                                      color: line,
+                                                                      width: CustomStyle.getWidth(1.0)
+                                                                  )
+                                                              )
+                                                          ),
+                                                          child: Text(
+                                                            "금액",
+                                                            textAlign: TextAlign.center,
+                                                            style: CustomStyle.CustomFont(styleFontSize12, text_color_01),
+                                                          ),
+                                                        )
+                                                    ),
+                                                    Expanded(
+                                                        flex: 3,
+                                                        child: Container(
+                                                            padding: const EdgeInsets.all(6.0),
+                                                            decoration: BoxDecoration(
+                                                                border: Border(
+                                                                  bottom: BorderSide(
+                                                                      color: line,
+                                                                      width: CustomStyle.getWidth(1.0)
+                                                                  ),
+                                                                )
+                                                            ),
+                                                            child: Text(
+                                                              "${app_util.Util.getInCodeCommaWon(orderItem.value.insureAmt)}원",
+                                                              textAlign: TextAlign.left,
+                                                              style: CustomStyle.CustomFont(styleFontSize12, text_color_01),
+                                                            )
+                                                        )
+                                                    )
+                                                  ]
+                                              ),
+                                              Row(
+                                                  children: [
+                                                    Expanded(
+                                                        flex: 1,
+                                                        child: Container(
+                                                          padding: const EdgeInsets.all(6.0),
+                                                          decoration: BoxDecoration(
+                                                              border: Border(
+                                                                  bottom: BorderSide(
+                                                                      color: line,
+                                                                      width: CustomStyle.getWidth(1.0)
+                                                                  ),
+                                                                  right: BorderSide(
+                                                                      color: line,
+                                                                      width: CustomStyle.getWidth(1.0)
+                                                                  )
+                                                              )
+                                                          ),
+                                                          child: Text(
+                                                            "카드사",
+                                                            textAlign: TextAlign.center,
+                                                            style: CustomStyle.CustomFont(styleFontSize12, text_color_01),
+                                                          ),
+                                                        )
+                                                    ),
+                                                    Expanded(
+                                                        flex: 3,
+                                                        child: Container(
+                                                            padding: const EdgeInsets.all(6.0),
+                                                            decoration: BoxDecoration(
+                                                                border: Border(
+                                                                  bottom: BorderSide(
+                                                                      color: line,
+                                                                      width: CustomStyle.getWidth(1.0)
+                                                                  ),
+                                                                )
+                                                            ),
+                                                            child: Text(
+                                                              "${orderItem.value.cardName??"-"} ",
+                                                              textAlign: TextAlign.left,
+                                                              style: CustomStyle.CustomFont(styleFontSize12, text_color_01),
+                                                            )
+                                                        )
+                                                    )
+                                                  ]
+                                              ),
+                                              Row(
+                                                  children: [
+                                                    Expanded(
+                                                        flex: 1,
+                                                        child: Container(
+                                                          padding: const EdgeInsets.all(6.0),
+                                                          decoration: BoxDecoration(
+                                                              border: Border(
+                                                                  right: BorderSide(
+                                                                      color: line,
+                                                                      width: CustomStyle.getWidth(1.0)
+                                                                  )
+                                                              )
+                                                          ),
+                                                          child: Text(
+                                                            "카드번호",
+                                                            textAlign: TextAlign.center,
+                                                            style: CustomStyle.CustomFont(styleFontSize12, text_color_01),
+                                                          ),
+                                                        )
+                                                    ),
+                                                    Expanded(
+                                                        flex: 3,
+                                                        child: Container(
+                                                            padding: const EdgeInsets.all(6.0),
+                                                            child: Text(
+                                                              "${orderItem.value.cardNo??"-"} ",
+                                                              textAlign: TextAlign.left,
+                                                              style: CustomStyle.CustomFont(styleFontSize12, text_color_01),
+                                                            )
+                                                        )
+                                                    )
+                                                  ]
+                                              ),
+                                            ],
+                                          )
+                                      ),
+                                      Container(
+                                          margin:EdgeInsets.symmetric(horizontal: CustomStyle.getWidth(10.0)),
+                                          child: Row(
+                                              crossAxisAlignment: CrossAxisAlignment.center,
+                                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                              children: [
                                                 Text(
-                                                  " (수수료 ${app_util.Util.getInCodeCommaWon(app_util.Util.getPayFee(sellChargeFix.value, 1.298))}원 제외)",
-                                                  style: CustomStyle.CustomFont(styleFontSize10, addr_zip_no),
-                                                ),
-                                              ],
-                                            ),
-                                            Container(
-                                                margin: EdgeInsets.only(left: CustomStyle.getWidth(5)),
-                                                child: Text(
-                                                  "$charge 원",
-                                                  style: CustomStyle.CustomFont(styleFontSize16, addr_zip_no,font_weight: FontWeight.w700),
+                                                  "계좌정보",
+                                                  style: CustomStyle.CustomFont(styleFontSize15, text_color_01,font_weight: FontWeight.w600),
                                                 )
-                                            ),
-                                          ],
-                                        ),
-                                        Container(
-                                          height: 1.h,
-                                          color: light_gray18,
-                                          margin: EdgeInsets.symmetric(horizontal: CustomStyle.getWidth(25),vertical: CustomStyle.getHeight(8)),
-                                        ),
-                                        Row(
-                                          crossAxisAlignment: CrossAxisAlignment.center,
-                                          mainAxisAlignment: MainAxisAlignment.center,
-                                          children: [
-                                            Container(
-                                                margin: EdgeInsets.only(right: CustomStyle.getWidth(5)),
-                                                child: Text(
-                                                  "(차주분)",
-                                                  style: CustomStyle.CustomFont(styleFontSize8, light_gray18,font_weight: FontWeight.w700),
-                                                ),
-                                            ),
-                                            Text(
-                                              "산재보험료: ${app_util.Util.getInCodeCommaWon(orderItem.value.insureAmt)}원",
-                                              style: CustomStyle.CustomFont(styleFontSize16, light_gray18,font_weight: FontWeight.w700),
-                                            )
-                                          ]
-                                        )
-                                      ],
-                                    )
-                                    ])
-                                )
-                              ),
-                              CustomStyle.sizedBoxHeight(CustomStyle.getHeight(5.0)),
-                              Container(
-                                margin: EdgeInsets.symmetric(horizontal: CustomStyle.getWidth(10)),
-                                child: Row(
-                                  children: [
-                                    Row(children :[
-                                      Text(
-                                        "동의",
-                                        style: CustomStyle.CustomFont(styleFontSize12, text_color_01,font_weight: FontWeight.w700),
+                                              ]
+                                          )
                                       ),
-                                      Checkbox(
-                                          value: _isChecked.value,
-                                          materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                                          onChanged: (value) {
-                                            setState(() {
-                                              _isChecked.value = !_isChecked.value;
-                                            });
-                                          }
-                                      )
-                                    ]),
-                                    Column(
-                                      mainAxisAlignment: MainAxisAlignment.center,
-                                      crossAxisAlignment: CrossAxisAlignment.start,
-                                      children: [
-                                        Text(
-                                          "* 왼쪽의 빠른지급신청에 동의해주세요.",
-                                          textAlign: TextAlign.start,
-                                          style: CustomStyle.CustomFont(styleFontSize11, addr_zip_no,font_weight: FontWeight.w600),
-                                        ),
-                                        RichText(
-                                          textAlign: TextAlign.start,
-                                          text: TextSpan(
-                                            text: "* 산재보험료는 기신청해주신 카드로 결제후\n운임료가 지급됩니다.",
-                                            style: CustomStyle.CustomFont(styleFontSize11, addr_zip_no,font_weight: FontWeight.w600),
+                                      Container(
+                                          margin: EdgeInsets.symmetric(horizontal: CustomStyle.getWidth(10.0), vertical:CustomStyle.getHeight(5.0) ),
+                                          decoration: BoxDecoration(
+                                            border: CustomStyle.borderAllBase(),
                                           ),
-                                        ),
-                                      ],
-                                    )
-                                  ]
-                                )
-                              ),
-                              Container(
-                                height: 1.h,
-                                color: light_gray18,
-                                margin: EdgeInsets.symmetric(vertical: CustomStyle.getHeight(5)),
-                              ),
-                              Container(
-                                  margin:EdgeInsets.symmetric(horizontal: CustomStyle.getWidth(10.0)),
-                                  child: Row(
-                                      crossAxisAlignment: CrossAxisAlignment.center,
-                                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                      children: [
-                                        Row(
-                                          children: [
-                                            Text(
-                                              "신청정보",
-                                              style: CustomStyle.CustomFont(styleFontSize15, text_color_01,font_weight: FontWeight.w600),
-                                            ),
-                                            Text(
-                                              "(*아래 정보는 모두 필수 정보입니다.)",
-                                              style: CustomStyle.CustomFont(styleFontSize8, text_color_01),
-                                            ),
-                                          ]
-                                        ),
-                                      ]
-                                  )
-                              ),
-                              Container(
-                              margin: EdgeInsets.symmetric(horizontal: CustomStyle.getWidth(10.0), vertical:CustomStyle.getHeight(5.0) ),
-                              decoration: BoxDecoration(
-                                border: CustomStyle.borderAllBase(),
-                              ),
-                                  child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                                  children: [
-                                    Row(
-                                        children: [
-                                          Expanded(
-                                              flex: 1,
-                                              child: Container(
-                                                padding: const EdgeInsets.all(5.0),
-                                                decoration: BoxDecoration(
-                                                    border: Border(
-                                                        bottom: BorderSide(
-                                                            color: line,
-                                                            width: CustomStyle.getWidth(1.0)
-                                                        ),
-                                                        right: BorderSide(
-                                                            color: line,
-                                                            width: CustomStyle.getWidth(1.0)
-                                                        )
-                                                    )
-                                                ),
-                                                child: Text(
-                                                  "대표자",
-                                                  textAlign: TextAlign.center,
-                                                  style: CustomStyle.CustomFont(styleFontSize12, text_color_01),
-                                                ),
-                                              )
-                                          ),
-                                          Expanded(
-                                              flex: 3,
-                                              child: Container(
-                                                  padding: const EdgeInsets.all(5.0),
-                                                  decoration: BoxDecoration(
-                                                      border: Border(
-                                                        bottom: BorderSide(
-                                                            color: line,
-                                                            width: CustomStyle.getWidth(1.0)
-                                                        ),
-                                                      )
-                                                  ),
-                                                  child: Text(
-                                                    "${app.value.ceo??""} ",
-                                                    textAlign: TextAlign.left,
-                                                    style: CustomStyle.CustomFont(styleFontSize12, text_color_01),
-                                                  )
-                                              )
-                                          )
-                                        ]
-                                    ),
-                                    Row(
-                                        children: [
-                                          Expanded(
-                                              flex: 1,
-                                              child: Container(
-                                                padding: const EdgeInsets.all(6.0),
-                                                decoration: BoxDecoration(
-                                                    border: Border(
-                                                        bottom: BorderSide(
-                                                            color: line,
-                                                            width: CustomStyle.getWidth(1.0)
-                                                        ),
-                                                        right: BorderSide(
-                                                            color: line,
-                                                            width: CustomStyle.getWidth(1.0)
-                                                        )
-                                                    )
-                                                ),
-                                                child: Text(
-                                                  "전화번호",
-                                                  textAlign: TextAlign.center,
-                                                  style: CustomStyle.CustomFont(styleFontSize12, text_color_01),
-                                                ),
-                                              )
-                                          ),
-                                          Expanded(
-                                              flex: 3,
-                                              child: Container(
-                                                  padding: const EdgeInsets.all(6.0),
-                                                  decoration: BoxDecoration(
-                                                      border: Border(
-                                                        bottom: BorderSide(
-                                                            color: line,
-                                                            width: CustomStyle.getWidth(1.0)
-                                                        ),
-                                                      )
-                                                  ),
-                                                  child: Text(
-                                                    "${app_util.Util.makePhoneNumber(app.value.mobile)}",
-                                                    textAlign: TextAlign.left,
-                                                    style: CustomStyle.CustomFont(styleFontSize12, text_color_01),
-                                                  )
-                                              )
-                                          )
-                                        ]
-                                    ),
-                                    Row(
-                                        children: [
-                                          Expanded(
-                                              flex: 1,
-                                              child: Container(
-                                                padding: const EdgeInsets.all(6.0),
-                                                decoration: BoxDecoration(
-                                                    border: Border(
-                                                        bottom: BorderSide(
-                                                            color: line,
-                                                            width: CustomStyle.getWidth(1.0)
-                                                        ),
-                                                        right: BorderSide(
-                                                            color: line,
-                                                            width: CustomStyle.getWidth(1.0)
-                                                        )
-                                                    )
-                                                ),
-                                                child: Text(
-                                                  "이메일",
-                                                  textAlign: TextAlign.center,
-                                                  style: CustomStyle.CustomFont(styleFontSize12, text_color_01),
-                                                ),
-                                              )
-                                          ),
-                                          Expanded(
-                                              flex: 3,
-                                              child: Container(
-                                                  padding: const EdgeInsets.all(6.0),
-                                                  decoration: BoxDecoration(
-                                                      border: Border(
-                                                        bottom: BorderSide(
-                                                            color: line,
-                                                            width: CustomStyle.getWidth(1.0)
-                                                        ),
-                                                      )
-                                                  ),
-                                                  child: Text(
-                                                    "${app.value.driverEmail}",
-                                                    textAlign: TextAlign.left,
-                                                    style: CustomStyle.CustomFont(styleFontSize12, text_color_01),
-                                                  )
-                                              )
-                                          )
-                                        ]
-                                    ),
-                                    Row(
-                                        children: [
-                                          Expanded(
-                                              flex: 1,
-                                              child: Container(
-                                                padding: const EdgeInsets.all(6.0),
-                                                decoration: BoxDecoration(
-                                                    border: Border(
-                                                        bottom: BorderSide(
-                                                            color: line,
-                                                            width: CustomStyle.getWidth(1.0)
-                                                        ),
-                                                        right: BorderSide(
-                                                            color: line,
-                                                            width: CustomStyle.getWidth(1.0)
-                                                        )
-                                                    )
-                                                ),
-                                                child: Text(
-                                                  "사업자번호",
-                                                  textAlign: TextAlign.center,
-                                                  style: CustomStyle.CustomFont(styleFontSize12, text_color_01),
-                                                ),
-                                              )
-                                          ),
-                                          Expanded(
-                                              flex: 3,
-                                              child: Container(
-                                                  padding: const EdgeInsets.all(6.0),
-                                                  decoration: BoxDecoration(
-                                                      border: Border(
-                                                        bottom: BorderSide(
-                                                            color: line,
-                                                            width: CustomStyle.getWidth(1.0)
-                                                        ),
-                                                      )
-                                                  ),
-                                                  child: Text(
-                                                    "${app_util.Util.makeBizNum(app.value.bizNum)}",
-                                                    textAlign: TextAlign.left,
-                                                    style: CustomStyle.CustomFont(styleFontSize12, text_color_01),
-                                                  )
-                                              )
-                                          )
-                                        ]
-                                    ),
-                                    Row(
-                                        children: [
-                                          Expanded(
-                                              flex: 1,
-                                              child: Container(
-                                                padding: const EdgeInsets.all(6.0),
-                                                decoration: BoxDecoration(
-                                                    border: Border(
-                                                        bottom: BorderSide(
-                                                          color:line,
-                                                          width:CustomStyle.getWidth(1.0)
-                                                        ),
-                                                        right: BorderSide(
-                                                            color: line,
-                                                            width: CustomStyle.getWidth(1.0)
-                                                        )
-                                                    )
-                                                ),
-                                                child: Text(
-                                                  "상호명",
-                                                  textAlign: TextAlign.center,
-                                                  style: CustomStyle.CustomFont(styleFontSize12, text_color_01),
-                                                ),
-                                              )
-                                          ),
-                                          Expanded(
-                                              flex: 3,
-                                              child: Container(
-                                                  padding: const EdgeInsets.all(6.0),
-                                                  decoration: BoxDecoration(
-                                                    border: Border(
-                                                      bottom: BorderSide(
-                                                        color: line,
-                                                        width: CustomStyle.getWidth(1.0)
-                                                      )
-                                                    )
-                                                  ),
-                                                  child: Text(
-                                                    "${app.value.bizName}",
-                                                    textAlign: TextAlign.left,
-                                                    style: CustomStyle.CustomFont(styleFontSize12, text_color_01),
-                                                  )
-                                              )
-                                          )
-                                        ]
-                                    )
-                                  ]
-                                )
-                              ),
-                              Container(
-                                  margin:EdgeInsets.symmetric(horizontal: CustomStyle.getWidth(10.0)),
-                                  child: Row(
-                                      crossAxisAlignment: CrossAxisAlignment.center,
-                                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                      children: [
-                                        Text(
-                                          "산재보험료 결제정보",
-                                          style: CustomStyle.CustomFont(styleFontSize15, text_color_01,font_weight: FontWeight.w600),
-                                        )
-                                      ]
-                                  )
-                              ),
-                              Container(
-                                  margin: EdgeInsets.symmetric(horizontal: CustomStyle.getWidth(10.0), vertical:CustomStyle.getHeight(5.0) ),
-                                  decoration: BoxDecoration(
-                                    border: CustomStyle.borderAllBase(),
-                                  ),
-                                  child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                                    children: [
-                                      Row(
-                                          children: [
-                                            Expanded(
-                                                flex: 1,
-                                                child: Container(
-                                                  padding: const EdgeInsets.all(6.0),
-                                                  decoration: BoxDecoration(
-                                                      border: Border(
-                                                          bottom: BorderSide(
-                                                              color: line,
-                                                              width: CustomStyle.getWidth(1.0)
+                                          child: Column(
+                                            crossAxisAlignment: CrossAxisAlignment.stretch,
+                                            children: [
+                                              Row(
+                                                  children: [
+                                                    Expanded(
+                                                        flex: 1,
+                                                        child: Container(
+                                                          padding: const EdgeInsets.all(6.0),
+                                                          decoration: BoxDecoration(
+                                                              border: Border(
+                                                                  bottom: BorderSide(
+                                                                      color: line,
+                                                                      width: CustomStyle.getWidth(1.0)
+                                                                  ),
+                                                                  right: BorderSide(
+                                                                      color: line,
+                                                                      width: CustomStyle.getWidth(1.0)
+                                                                  )
+                                                              )
                                                           ),
-                                                          right: BorderSide(
-                                                              color: line,
-                                                              width: CustomStyle.getWidth(1.0)
-                                                          )
-                                                      )
-                                                  ),
-                                                  child: Text(
-                                                    "금액",
-                                                    textAlign: TextAlign.center,
-                                                    style: CustomStyle.CustomFont(styleFontSize12, text_color_01),
-                                                  ),
-                                                )
-                                            ),
-                                            Expanded(
-                                                flex: 3,
-                                                child: Container(
-                                                    padding: const EdgeInsets.all(6.0),
-                                                    decoration: BoxDecoration(
-                                                        border: Border(
-                                                          bottom: BorderSide(
-                                                              color: line,
-                                                              width: CustomStyle.getWidth(1.0)
+                                                          child: Text(
+                                                            "은행명",
+                                                            textAlign: TextAlign.center,
+                                                            style: CustomStyle.CustomFont(styleFontSize12, text_color_01),
                                                           ),
                                                         )
                                                     ),
-                                                    child: Text(
-                                                      "${app_util.Util.getInCodeCommaWon(orderItem.value.insureAmt)}원",
-                                                      textAlign: TextAlign.left,
-                                                      style: CustomStyle.CustomFont(styleFontSize12, text_color_01),
+                                                    Expanded(
+                                                        flex: 3,
+                                                        child: Container(
+                                                            padding: const EdgeInsets.all(6.0),
+                                                            decoration: BoxDecoration(
+                                                                border: Border(
+                                                                  bottom: BorderSide(
+                                                                      color: line,
+                                                                      width: CustomStyle.getWidth(1.0)
+                                                                  ),
+                                                                )
+                                                            ),
+                                                            child: Text(
+                                                              "${getBankName(app.value.bankCode??"")} ",
+                                                              textAlign: TextAlign.left,
+                                                              style: CustomStyle.CustomFont(styleFontSize12, text_color_01),
+                                                            )
+                                                        )
                                                     )
-                                                )
-                                            )
-                                          ]
-                                      ),
-                                      Row(
-                                          children: [
-                                            Expanded(
-                                                flex: 1,
-                                                child: Container(
-                                                  padding: const EdgeInsets.all(6.0),
-                                                  decoration: BoxDecoration(
-                                                      border: Border(
-                                                          bottom: BorderSide(
-                                                              color: line,
-                                                              width: CustomStyle.getWidth(1.0)
+                                                  ]
+                                              ),
+                                              Row(
+                                                  children: [
+                                                    Expanded(
+                                                        flex: 1,
+                                                        child: Container(
+                                                          padding: const EdgeInsets.all(6.0),
+                                                          decoration: BoxDecoration(
+                                                              border: Border(
+                                                                  bottom: BorderSide(
+                                                                      color: line,
+                                                                      width: CustomStyle.getWidth(1.0)
+                                                                  ),
+                                                                  right: BorderSide(
+                                                                      color: line,
+                                                                      width: CustomStyle.getWidth(1.0)
+                                                                  )
+                                                              )
                                                           ),
-                                                          right: BorderSide(
-                                                              color: line,
-                                                              width: CustomStyle.getWidth(1.0)
-                                                          )
-                                                      )
-                                                  ),
-                                                  child: Text(
-                                                    "카드사",
-                                                    textAlign: TextAlign.center,
-                                                    style: CustomStyle.CustomFont(styleFontSize12, text_color_01),
-                                                  ),
-                                                )
-                                            ),
-                                            Expanded(
-                                                flex: 3,
-                                                child: Container(
-                                                    padding: const EdgeInsets.all(6.0),
-                                                    decoration: BoxDecoration(
-                                                        border: Border(
-                                                          bottom: BorderSide(
-                                                              color: line,
-                                                              width: CustomStyle.getWidth(1.0)
+                                                          child: Text(
+                                                            "계좌번호",
+                                                            textAlign: TextAlign.center,
+                                                            style: CustomStyle.CustomFont(styleFontSize12, text_color_01),
                                                           ),
                                                         )
                                                     ),
-                                                    child: Text(
-                                                      "${orderItem.value.cardName??"-"} ",
-                                                      textAlign: TextAlign.left,
-                                                      style: CustomStyle.CustomFont(styleFontSize12, text_color_01),
+                                                    Expanded(
+                                                        flex: 3,
+                                                        child: Container(
+                                                            padding: const EdgeInsets.all(6.0),
+                                                            decoration: BoxDecoration(
+                                                                border: Border(
+                                                                  bottom: BorderSide(
+                                                                      color: line,
+                                                                      width: CustomStyle.getWidth(1.0)
+                                                                  ),
+                                                                )
+                                                            ),
+                                                            child: Text(
+                                                              "${app.value.bankAccount??"-"} ",
+                                                              textAlign: TextAlign.left,
+                                                              style: CustomStyle.CustomFont(styleFontSize12, text_color_01),
+                                                            )
+                                                        )
                                                     )
-                                                )
-                                            )
-                                          ]
+                                                  ]
+                                              )
+                                            ],
+                                          )
                                       ),
-                                      Row(
-                                          children: [
-                                            Expanded(
-                                                flex: 1,
-                                                child: Container(
-                                                  padding: const EdgeInsets.all(6.0),
-                                                  decoration: BoxDecoration(
-                                                      border: Border(
-                                                          right: BorderSide(
-                                                              color: line,
-                                                              width: CustomStyle.getWidth(1.0)
-                                                          )
-                                                      )
-                                                  ),
-                                                  child: Text(
-                                                    "카드번호",
-                                                    textAlign: TextAlign.center,
-                                                    style: CustomStyle.CustomFont(styleFontSize12, text_color_01),
-                                                  ),
-                                                )
-                                            ),
-                                            Expanded(
-                                                flex: 3,
-                                                child: Container(
-                                                    padding: const EdgeInsets.all(6.0),
-                                                    child: Text(
-                                                      "${orderItem.value.cardNo??"-"} ",
-                                                      textAlign: TextAlign.left,
-                                                      style: CustomStyle.CustomFont(styleFontSize12, text_color_01),
-                                                    )
-                                                )
-                                            )
-                                          ]
+                                      Container(
+                                          margin: EdgeInsets.symmetric(horizontal: CustomStyle.getWidth(10.w)),
+                                          child: Column(
+                                              mainAxisAlignment: MainAxisAlignment.start,
+                                              crossAxisAlignment: CrossAxisAlignment.start,
+                                              children :[
+                                                Text(
+                                                  "위와 같이 로지스링크에 빠른운임을 신청합니다.",
+                                                  textAlign: TextAlign.start,
+                                                  style: CustomStyle.CustomFont(styleFontSize12, text_color_01),
+                                                ),
+                                              ]
+                                          )
                                       ),
                                     ],
                                   )
-                              ),
-                              Container(
-                                  margin:EdgeInsets.symmetric(horizontal: CustomStyle.getWidth(10.0)),
-                                  child: Row(
-                                      crossAxisAlignment: CrossAxisAlignment.center,
-                                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                      children: [
-                                        Text(
-                                          "계좌정보",
-                                          style: CustomStyle.CustomFont(styleFontSize15, text_color_01,font_weight: FontWeight.w600),
-                                        )
-                                      ]
-                                  )
-                              ),
-                              Container(
-                                  margin: EdgeInsets.symmetric(horizontal: CustomStyle.getWidth(10.0), vertical:CustomStyle.getHeight(5.0) ),
-                                  decoration: BoxDecoration(
-                                    border: CustomStyle.borderAllBase(),
-                                  ),
-                                  child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                                    children: [
-                                      Row(
-                                          children: [
-                                            Expanded(
-                                                flex: 1,
-                                                child: Container(
-                                                  padding: const EdgeInsets.all(6.0),
-                                                  decoration: BoxDecoration(
-                                                      border: Border(
-                                                          bottom: BorderSide(
-                                                              color: line,
-                                                              width: CustomStyle.getWidth(1.0)
-                                                          ),
-                                                          right: BorderSide(
-                                                              color: line,
-                                                              width: CustomStyle.getWidth(1.0)
-                                                          )
-                                                      )
-                                                  ),
-                                                  child: Text(
-                                                    "은행명",
-                                                    textAlign: TextAlign.center,
-                                                    style: CustomStyle.CustomFont(styleFontSize12, text_color_01),
-                                                  ),
-                                                )
-                                            ),
-                                            Expanded(
-                                                flex: 3,
-                                                child: Container(
-                                                    padding: const EdgeInsets.all(6.0),
-                                                    decoration: BoxDecoration(
-                                                        border: Border(
-                                                          bottom: BorderSide(
-                                                              color: line,
-                                                              width: CustomStyle.getWidth(1.0)
-                                                          ),
-                                                        )
-                                                    ),
-                                                    child: Text(
-                                                      "${getBankName(app.value.bankCode??"")} ",
-                                                      textAlign: TextAlign.left,
-                                                      style: CustomStyle.CustomFont(styleFontSize12, text_color_01),
-                                                    )
-                                                )
-                                            )
-                                          ]
-                                      ),
-                                      Row(
-                                          children: [
-                                            Expanded(
-                                                flex: 1,
-                                                child: Container(
-                                                  padding: const EdgeInsets.all(6.0),
-                                                  decoration: BoxDecoration(
-                                                      border: Border(
-                                                          bottom: BorderSide(
-                                                              color: line,
-                                                              width: CustomStyle.getWidth(1.0)
-                                                          ),
-                                                          right: BorderSide(
-                                                              color: line,
-                                                              width: CustomStyle.getWidth(1.0)
-                                                          )
-                                                      )
-                                                  ),
-                                                  child: Text(
-                                                    "계좌번호",
-                                                    textAlign: TextAlign.center,
-                                                    style: CustomStyle.CustomFont(styleFontSize12, text_color_01),
-                                                  ),
-                                                )
-                                            ),
-                                            Expanded(
-                                                flex: 3,
-                                                child: Container(
-                                                    padding: const EdgeInsets.all(6.0),
-                                                    decoration: BoxDecoration(
-                                                        border: Border(
-                                                          bottom: BorderSide(
-                                                              color: line,
-                                                              width: CustomStyle.getWidth(1.0)
-                                                          ),
-                                                        )
-                                                    ),
-                                                    child: Text(
-                                                      "${app.value.bankAccount??"-"} ",
-                                                      textAlign: TextAlign.left,
-                                                      style: CustomStyle.CustomFont(styleFontSize12, text_color_01),
-                                                    )
-                                                )
-                                            )
-                                          ]
-                                      )
-                                    ],
-                                  )
-                              ),
-                              Container(
-                                  margin: EdgeInsets.symmetric(horizontal: CustomStyle.getWidth(10.w)),
-                                  child: Column(
-                                      mainAxisAlignment: MainAxisAlignment.start,
-                                      crossAxisAlignment: CrossAxisAlignment.start,
-                                      children :[
-                                        Text(
-                                          "위와 같이 로지스링크에 빠른운임을 신청합니다.",
-                                          textAlign: TextAlign.start,
-                                          style: CustomStyle.CustomFont(styleFontSize12, text_color_01),
-                                        ),
-                                      ]
-                                  )
-                              ),
-                            ],
+                              )
                           )
-                      )
-                    )
-                  );
-                }),
+                      );
+                    }),
                     Row(
                       children: [
                         Expanded(
@@ -2358,26 +2365,26 @@ class _OrderDetailPageState extends State<OrderDetailPage> with WidgetsBindingOb
                                     height: 50.h,
                                     //padding: EdgeInsets.symmetric(vertical: CustomStyle.getHeight(15.0)),
                                     child: Row(
-                                      crossAxisAlignment: CrossAxisAlignment.center,
-                                      mainAxisAlignment: MainAxisAlignment.center,
-                                      children: [
-                                        Text(
-                                          "$charge원",
-                                          textAlign: TextAlign.center,
-                                          style: CustomStyle.CustomFont(styleFontSize14, styleWhiteCol,font_weight: FontWeight.w800),
-                                        ),
-                                        Text(
-                                          " 지급신청",
-                                          textAlign: TextAlign.center,
-                                          style: CustomStyle.CustomFont(styleFontSize14, styleWhiteCol),
-                                        )
-                                      ])
-                                  )
-                              )
-                          )
+                                        crossAxisAlignment: CrossAxisAlignment.center,
+                                        mainAxisAlignment: MainAxisAlignment.center,
+                                        children: [
+                                          Text(
+                                            "$charge원",
+                                            textAlign: TextAlign.center,
+                                            style: CustomStyle.CustomFont(styleFontSize14, styleWhiteCol,font_weight: FontWeight.w800),
+                                          ),
+                                          Text(
+                                            " 지급신청",
+                                            textAlign: TextAlign.center,
+                                            style: CustomStyle.CustomFont(styleFontSize14, styleWhiteCol),
+                                          )
+                                        ])
+                                )
+                            )
+                        )
                       ],
                     )
-            ])
+                  ])
           );
         }
     );
@@ -2538,34 +2545,34 @@ class _OrderDetailPageState extends State<OrderDetailPage> with WidgetsBindingOb
 
   Future<void> getPopUpTask() async {
     Logger logger = Logger();
-      await DioService.dioClient(header: true).getCodeList(Const.DRIVER_POPUP_CHECK,filter1: "01").then((it) async {
-        ReturnMap _response = DioService.dioResponse(it);
-        logger.d("GetPopUpTask() _response -> ${_response.status} // ${_response.resultMap}");
-        if(_response.status == "200") {
-          if(_response.resultMap?["data"] != null) {
-            var jsonString = jsonEncode(it.response.data);
-            Map<String, dynamic> jsonData = jsonDecode(jsonString);
-            var list = jsonData?["data"] as List;
-            List<CodeModel>? itemsList = list.map((i) => CodeModel.fromJSON(i)).toList();
-            if(itemsList[0].useYn == "Y") {
-              openOkBox(context, "${itemsList[0].codeName} \n\n ${itemsList[0].memo}", Strings.of(context)?.get("confirm") ?? "Error!!", () async {
-                Navigator.of(context).pop(false);
-              },align: TextAlign.left);
-            }
+    await DioService.dioClient(header: true).getCodeList(Const.DRIVER_POPUP_CHECK,filter1: "01").then((it) async {
+      ReturnMap _response = DioService.dioResponse(it);
+      logger.d("GetPopUpTask() _response -> ${_response.status} // ${_response.resultMap}");
+      if(_response.status == "200") {
+        if(_response.resultMap?["data"] != null) {
+          var jsonString = jsonEncode(it.response.data);
+          Map<String, dynamic> jsonData = jsonDecode(jsonString);
+          var list = jsonData?["data"] as List;
+          List<CodeModel>? itemsList = list.map((i) => CodeModel.fromJSON(i)).toList();
+          if(itemsList[0].useYn == "Y") {
+            openOkBox(context, "${itemsList[0].codeName} \n\n ${itemsList[0].memo}", Strings.of(context)?.get("confirm") ?? "Error!!", () async {
+              Navigator.of(context).pop(false);
+            },align: TextAlign.left);
           }
         }
-      }).catchError((Object obj) async {
-        switch (obj.runtimeType) {
-          case DioError:
-          // Here's the sample to get the failed response error code and message
-            final res = (obj as DioError).response;
-            logger.e("brige_page.dart GetPopUpTask() Error Default: ${res?.statusCode} -> ${res?.statusMessage}");
-            break;
-          default:
-            logger.e("brige_page.dart GetPopUpTask() Error Default:");
-            break;
-        }
-      });
+      }
+    }).catchError((Object obj) async {
+      switch (obj.runtimeType) {
+        case DioError:
+        // Here's the sample to get the failed response error code and message
+          final res = (obj as DioError).response;
+          logger.e("brige_page.dart GetPopUpTask() Error Default: ${res?.statusCode} -> ${res?.statusMessage}");
+          break;
+        default:
+          logger.e("brige_page.dart GetPopUpTask() Error Default:");
+          break;
+      }
+    });
   }
 
   Future<void> _setState() async {
@@ -2913,187 +2920,187 @@ class _OrderDetailPageState extends State<OrderDetailPage> with WidgetsBindingOb
           return false;
         },
         child: SafeArea(
-        child: Scaffold(
-            backgroundColor: Colors.white,
-            appBar: PreferredSize(
-                preferredSize: Size.fromHeight(CustomStyle.getHeight(50.0)),
-                child: AppBar(
-                  centerTitle: true,
-                  title: Text(
-                      Strings.of(context)?.get("order_detail_title")??"Not Found",
-                      style: CustomStyle.appBarTitleFont(styleFontSize16,styleWhiteCol)
-                  ),
-                  leading: IconButton(
-                    onPressed: (){
-                      broadcast.FBroadcast.instance().broadcast(Const.INTENT_ORDER_REFRESH);
-                      Navigator.of(context).pop({'code':200});
-                    },
-                    color: styleWhiteCol,
-                    icon: const Icon(Icons.arrow_back),
-                  ),
-                )
-            ),
-            body: CustomScrollView(
-                slivers: [
-                  SliverAppBar(
-                    pinned: false,
-                    snap: false,
-                    floating: true,
-                    expandedHeight: CustomStyle.getHeight(300.0),
-                    flexibleSpace: FlexibleSpaceBar(
-                      title: KakaoMap(
-                        onMapCreated: ((controller) async {
-
-                          setState(() {
-
-                            List<LatLng> bounds = List.empty(growable: true);
-                            if(orderItem.value?.sLat.isNull != true && orderItem.value?.sLon.isNull != null) {
-                              bounds.add(LatLng(orderItem.value!.sLat!, orderItem.value!.sLon!));
-                              markers.add(Marker(
-                                  markerId: orderItem.value?.sComName ?? "상차지",
-                                  markerImageSrc: 'https://t1.daumcdn.net/localimg/localimages/07/2018/pc/flagImg/blue_b.png',
-                                  latLng: LatLng(orderItem.value!.sLat!, orderItem.value!.sLon!),
-                                  infoWindowContent: '<div style="font: bold italic 0.5em 돋움체;">${orderItem.value?.sComName ?? "상차지"}</div>'
-                              ));
-                            }
-
-                            if(orderItem.value?.eLat.isNull != true && orderItem.value?.eLon.isNull != null) {
-                              bounds.add(LatLng(orderItem.value!.eLat!, orderItem.value!.eLon!));
-                              markers.add(Marker(
-                                markerId: orderItem.value?.eComName??"하차지",
-                                markerImageSrc: 'https://t1.daumcdn.net/localimg/localimages/07/2018/pc/flagImg/red_b.png',
-                                latLng: LatLng(orderItem.value!.eLat!, orderItem.value!.eLon!),
-                                infoWindowContent: '<div style="font: bold italic 0.5em 돋움체;">${orderItem.value?.eComName??"하차지"}</div>',
-                              ));
-                            }
-
-                            mapController = controller;
-                            mapController?.fitBounds(bounds);
-                            mapController?.setBounds();
-                          });
-
-                        }),
-                        currentLevel: 23,
-                        center: LatLng(35.81588719434526, 128.10472746046923),
-                        markers: markers.toList(),
-                        zoomControl: false,
-
-                        onMarkerTap: (markerId, latLng, zoomLevel) {
-                          setState(() {
-                            mapController?.setLevel(3);
-                            mapController?.panTo(latLng);
-                          });
-                        },
+            child: Scaffold(
+                backgroundColor: Colors.white,
+                appBar: PreferredSize(
+                    preferredSize: Size.fromHeight(CustomStyle.getHeight(50.0)),
+                    child: AppBar(
+                      centerTitle: true,
+                      title: Text(
+                          Strings.of(context)?.get("order_detail_title")??"Not Found",
+                          style: CustomStyle.appBarTitleFont(styleFontSize16,styleWhiteCol)
                       ),
-                      titlePadding: const EdgeInsets.all(0.0),
-                    ),
-                    leading: const SizedBox(),
-                  ),
-                  SliverList(
-                      delegate: SliverChildBuilderDelegate(
-                              (BuildContext context, int index){
-                            int? stopCnt = orderItem.value?.stopCount;
-                            return Obx((){
-                              return Container(
-                                  padding: EdgeInsets.all(CustomStyle.getHeight(10.0)),
-                                  child: Column(
-                                    children: [
-                                      // 길안내 버튼
-                                      finished.value == false? getNaviBtn() : const SizedBox(),
-                                      // 운송 상태 및 지불 방법
-                                      getAllocStateAndPayType(),
-                                      // 화물 적재 타입 및 운송 타입
-                                      getMixAndReturnYN(),
-                                      // 빠른 지급
-                                      orderItem.value?.sellCustId == "C20210802130835001" ? getPayType() : const SizedBox(),
-                                      // 화물 정보 및 요청사항
-                                      getOrderInfo(),
-                                      // 상차 상태 및 운송 시간
-                                      getCargoesStateAndTime("wayon"),
-                                      // 운송 상세 정보
-                                      getWayCargoesInfo("wayon"),
-                                      CustomStyle.getDivider1(),
-                                      //경유지 정보
-                                      stopCnt.isNull? const SizedBox() : stopCnt! > 0 ? getStopPointFuture():const SizedBox(),
-                                      CustomStyle.sizedBoxHeight(CustomStyle.getHeight(10.0)),
-                                      getCargoesStateAndTime("wayoff"),
-                                      getWayCargoesInfo("wayoff"),
-                                      //하차 정보
-                                    ],
-                                  )
-                              );
+                      leading: IconButton(
+                        onPressed: (){
+                          broadcast.FBroadcast.instance().broadcast(Const.INTENT_ORDER_REFRESH);
+                          Navigator.of(context).pop({'code':200});
+                        },
+                        color: styleWhiteCol,
+                        icon: const Icon(Icons.arrow_back),
+                      ),
+                    )
+                ),
+                body: CustomScrollView(
+                  slivers: [
+                    SliverAppBar(
+                      pinned: false,
+                      snap: false,
+                      floating: true,
+                      expandedHeight: CustomStyle.getHeight(300.0),
+                      flexibleSpace: FlexibleSpaceBar(
+                        title: KakaoMap(
+                          onMapCreated: ((controller) async {
+
+                            setState(() {
+
+                              List<LatLng> bounds = List.empty(growable: true);
+                              if(orderItem.value?.sLat.isNull != true && orderItem.value?.sLon.isNull != null) {
+                                bounds.add(LatLng(orderItem.value!.sLat!, orderItem.value!.sLon!));
+                                markers.add(Marker(
+                                    markerId: orderItem.value?.sComName ?? "상차지",
+                                    markerImageSrc: 'https://t1.daumcdn.net/localimg/localimages/07/2018/pc/flagImg/blue_b.png',
+                                    latLng: LatLng(orderItem.value!.sLat!, orderItem.value!.sLon!),
+                                    infoWindowContent: '<div style="font: bold italic 0.5em 돋움체;">${orderItem.value?.sComName ?? "상차지"}</div>'
+                                ));
+                              }
+
+                              if(orderItem.value?.eLat.isNull != true && orderItem.value?.eLon.isNull != null) {
+                                bounds.add(LatLng(orderItem.value!.eLat!, orderItem.value!.eLon!));
+                                markers.add(Marker(
+                                  markerId: orderItem.value?.eComName??"하차지",
+                                  markerImageSrc: 'https://t1.daumcdn.net/localimg/localimages/07/2018/pc/flagImg/red_b.png',
+                                  latLng: LatLng(orderItem.value!.eLat!, orderItem.value!.eLon!),
+                                  infoWindowContent: '<div style="font: bold italic 0.5em 돋움체;">${orderItem.value?.eComName??"하차지"}</div>',
+                                ));
+                              }
+
+                              mapController = controller;
+                              mapController?.fitBounds(bounds);
+                              mapController?.setBounds();
+                            });
+
+                          }),
+                          currentLevel: 23,
+                          center: LatLng(35.81588719434526, 128.10472746046923),
+                          markers: markers.toList(),
+                          zoomControl: false,
+
+                          onMarkerTap: (markerId, latLng, zoomLevel) {
+                            setState(() {
+                              mapController?.setLevel(3);
+                              mapController?.panTo(latLng);
                             });
                           },
-                          childCount: 1
-                      )
-                  ),
-                ],
-              ),
-            bottomNavigationBar: SizedBox(
-                height: CustomStyle.getHeight(60.0),
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    !finished.value == true ? Expanded(
-                        flex: 1,
-                        child: InkWell(
-                            onTap: () async {
-                              await showCancelDialog();
+                        ),
+                        titlePadding: const EdgeInsets.all(0.0),
+                      ),
+                      leading: const SizedBox(),
+                    ),
+                    SliverList(
+                        delegate: SliverChildBuilderDelegate(
+                                (BuildContext context, int index){
+                              int? stopCnt = orderItem.value?.stopCount;
+                              return Obx((){
+                                return Container(
+                                    padding: EdgeInsets.all(CustomStyle.getHeight(10.0)),
+                                    child: Column(
+                                      children: [
+                                        // 길안내 버튼
+                                        finished.value == false? getNaviBtn() : const SizedBox(),
+                                        // 운송 상태 및 지불 방법
+                                        getAllocStateAndPayType(),
+                                        // 화물 적재 타입 및 운송 타입
+                                        getMixAndReturnYN(),
+                                        // 빠른 지급
+                                        orderItem.value?.sellCustId == "C20210802130835001" ? getPayType() : const SizedBox(),
+                                        // 화물 정보 및 요청사항
+                                        getOrderInfo(),
+                                        // 상차 상태 및 운송 시간
+                                        getCargoesStateAndTime("wayon"),
+                                        // 운송 상세 정보
+                                        getWayCargoesInfo("wayon"),
+                                        CustomStyle.getDivider1(),
+                                        //경유지 정보
+                                        stopCnt.isNull? const SizedBox() : stopCnt! > 0 ? getStopPointFuture():const SizedBox(),
+                                        CustomStyle.sizedBoxHeight(CustomStyle.getHeight(10.0)),
+                                        getCargoesStateAndTime("wayoff"),
+                                        getWayCargoesInfo("wayoff"),
+                                        //하차 정보
+                                      ],
+                                    )
+                                );
+                              });
                             },
-                            child: Container(
-                              height: CustomStyle.getHeight(60.0),
-                              alignment: Alignment.center,
-                              decoration: BoxDecoration(
-                                  color: cancel_btn
-                              ),
-                              child: Text(
-                                textAlign: TextAlign.center,
-                                Strings.of(context)?.get("order_detail_cancel_driving")??"Not Found",
-                                style: CustomStyle.CustomFont(styleFontSize16, styleWhiteCol),
-                              ),
-                            )
+                            childCount: 1
                         )
-                    ) : SizedBox(),
-                    Expanded(
-                        flex: 1,
-                        child: InkWell(
-                            onTap: ()  async {
-                              var guest = await SP.getBoolean(Const.KEY_GUEST_MODE);
-                              if(guest){
-                                showGuestDialog();
-                                return;
-                              }
-                              if(io.Platform.isAndroid) {
-                                DeviceInfoPlugin deviceInfo = DeviceInfoPlugin();
-                                AndroidDeviceInfo info = await deviceInfo.androidInfo;
-                                if (info.version.sdkInt >= 23) {
-                                  await FlutterDirectCallerPlugin.callNumber("${orderItem.value?.sellStaffTel}");
-                                }else{
-                                  await launch("tel://${orderItem.value?.sellStaffTel}");
-                                }
-                              }else{
-                                await launch("tel://${orderItem.value?.sellStaffTel}");
-                              }
-                            },
-                            child: Container(
-                              height: CustomStyle.getHeight(60.0),
-                              alignment: Alignment.center,
-                              decoration: BoxDecoration(
-                                  color: main_color
-                              ),
-                              child: Text(
-                                textAlign: TextAlign.center,
-                                Strings.of(context)?.get("order_detail_call")??"Not Found",
-                                style: CustomStyle.CustomFont(styleFontSize16, styleWhiteCol),
-                              ),
-                            )
-                        )
-                    )
+                    ),
                   ],
+                ),
+                bottomNavigationBar: SizedBox(
+                    height: CustomStyle.getHeight(60.0),
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        !finished.value == true ? Expanded(
+                            flex: 1,
+                            child: InkWell(
+                                onTap: () async {
+                                  await showCancelDialog();
+                                },
+                                child: Container(
+                                  height: CustomStyle.getHeight(60.0),
+                                  alignment: Alignment.center,
+                                  decoration: BoxDecoration(
+                                      color: cancel_btn
+                                  ),
+                                  child: Text(
+                                    textAlign: TextAlign.center,
+                                    Strings.of(context)?.get("order_detail_cancel_driving")??"Not Found",
+                                    style: CustomStyle.CustomFont(styleFontSize16, styleWhiteCol),
+                                  ),
+                                )
+                            )
+                        ) : SizedBox(),
+                        Expanded(
+                            flex: 1,
+                            child: InkWell(
+                                onTap: ()  async {
+                                  var guest = await SP.getBoolean(Const.KEY_GUEST_MODE);
+                                  if(guest){
+                                    showGuestDialog();
+                                    return;
+                                  }
+                                  if(io.Platform.isAndroid) {
+                                    DeviceInfoPlugin deviceInfo = DeviceInfoPlugin();
+                                    AndroidDeviceInfo info = await deviceInfo.androidInfo;
+                                    if (info.version.sdkInt >= 23) {
+                                      await FlutterDirectCallerPlugin.callNumber("${orderItem.value?.sellStaffTel}");
+                                    }else{
+                                      await launch("tel://${orderItem.value?.sellStaffTel}");
+                                    }
+                                  }else{
+                                    await launch("tel://${orderItem.value?.sellStaffTel}");
+                                  }
+                                },
+                                child: Container(
+                                  height: CustomStyle.getHeight(60.0),
+                                  alignment: Alignment.center,
+                                  decoration: BoxDecoration(
+                                      color: main_color
+                                  ),
+                                  child: Text(
+                                    textAlign: TextAlign.center,
+                                    Strings.of(context)?.get("order_detail_call")??"Not Found",
+                                    style: CustomStyle.CustomFont(styleFontSize16, styleWhiteCol),
+                                  ),
+                                )
+                            )
+                        )
+                      ],
+                    )
                 )
             )
-          )
         )
     );
 

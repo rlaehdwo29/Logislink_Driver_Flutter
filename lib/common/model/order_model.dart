@@ -110,8 +110,6 @@ class OrderModel extends ResultModel {
   String? mid;               // (운송비결제) 차주상점 고유값
 
 
-
-
   OrderModel({
     this.orderId,
     this.allocId,

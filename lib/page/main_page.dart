@@ -506,17 +506,16 @@ class _MainPageState extends State<MainPage> with CommonMainWidget,WidgetsBindin
   }
 
   Future<void> showTrackingPermissionDialog() async {
-<<<<<<< HEAD
        if(Platform.isAndroid){
-      return openOkBox(
-          context,
-          Strings.of(context)?.get("tracking_permission_failed")??"Not Found",
-          Strings.of(context)?.get("confirm")??"Not Found",
-              () async {
-            Navigator.of(context).pop(false);
-            await AppSettings.openAppSettings();
-          }
-      );
+         return openOkBox(
+             context,
+             Strings.of(context)?.get("tracking_permission_failed")??"Not Found",
+             Strings.of(context)?.get("confirm")??"Not Found",
+                 () async {
+               Navigator.of(context).pop(false);
+               await Permission.appTrackingTransparency.request();
+             }
+         );
     }else{
       return openCommonConfirmBox(
           context,
@@ -529,19 +528,6 @@ class _MainPageState extends State<MainPage> with CommonMainWidget,WidgetsBindin
             await AppSettings.openAppSettings();
           });
     }
-
-=======
-    return openOkBox(
-        context,
-        Strings.of(context)?.get("tracking_permission_failed")??"Not Found",
-        Strings.of(context)?.get("confirm")??"Not Found",
-            () async {
-          Navigator.of(context).pop(false);
-          await Permission.appTrackingTransparency.request();
-          //await AppSettings.openAppSettings();
-        }
-    );
->>>>>>> 91a2918c27002cde9116722c3e1ff1486ccc3169
   }
 
   void onCallback(bool? result) {

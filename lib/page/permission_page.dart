@@ -342,28 +342,28 @@ class _PermissionPageState extends State<PermissionPage>{
             if(result){
               Navigator.of(context).pop({'code': 200});
             }else{
-              openOkBox(
-<<<<<<< HEAD
-                      context,
-                      Strings.of(context)?.get("permission_failed")??"Not Found",
-                      Strings.of(context)?.get("confirm")??"Not Found",
-                          () async {
-                       await AppSettings.openAppSettings();
-                      }
-                  );
-
-=======
-                  context,
-                  Strings.of(context)?.get("permission_failed")??"필요한 권한을 설정해 주세요. 앱이 종료됩니다.",
-                  Strings.of(context)?.get("confirm")??"Not Found",
-                      () async {
-                        AppSettings.openAppSettings();
-                        Future.delayed(const Duration(milliseconds: 300), () {
-                          exit(0);
-                        });
-                  }
-              );
->>>>>>> 91a2918c27002cde9116722c3e1ff1486ccc3169
+              if(Platform.isAndroid) {
+                openOkBox(
+                    context,
+                    Strings.of(context)?.get("permission_failed")??"필요한 권한을 설정해 주세요. 앱이 종료됩니다.",
+                    Strings.of(context)?.get("confirm")??"Not Found",
+                        () async {
+                      AppSettings.openAppSettings();
+                      Future.delayed(const Duration(milliseconds: 300), () {
+                        exit(0);
+                      });
+                    }
+                );
+              }else {
+                openOkBox(
+                    context,
+                    Strings.of(context)?.get("permission_failed")??"Not Found",
+                    Strings.of(context)?.get("confirm")??"Not Found",
+                        () async {
+                      await AppSettings.openAppSettings();
+                    }
+                );
+              }
             }
           },
           child: Container(
