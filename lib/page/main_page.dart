@@ -384,6 +384,7 @@ class _MainPageState extends State<MainPage> with CommonMainWidget,WidgetsBindin
     if (data is int) {
       if(!Geofencing.instance.isRunningService) {
         Geofencing.instance.addGeofenceStatusChangedListener(_onGeofenceStatusChanged);
+        Geofencing.instance.addLocationChangedListener(_onLocationChanged);
         Geofencing.instance.addGeofenceErrorCallbackListener(_onGeofenceError);
         await Geofencing.instance.start(regions: geofenceList);
         if (widget.allocId != null) {

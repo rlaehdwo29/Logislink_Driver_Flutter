@@ -513,7 +513,7 @@ class Util {
                     width: MediaQuery.of(context).size.width,
                     child: Column(children: <Widget>[
                       _progress < 1.0
-                              ? LinearProgressIndicator(value: _progress, color: Colors.red)
+                              ? LinearProgressIndicator(value: _progress, color: main_color)
                               : Container(),
                           Expanded(
                             child: Stack(
@@ -635,6 +635,153 @@ class Util {
                                     ),
                                   )
                               )
+
+                  ],
+                );
+              }
+          );
+        }
+    );
+  }
+
+  static openWebView(BuildContext context,GlobalKey webviewKey, String url, var htmlData){
+
+    InAppWebViewController? webViewController;
+    PullToRefreshController? pullToRefreshController;
+    double _progress = 0;
+
+    pullToRefreshController = (kIsWeb
+        ? null
+        : PullToRefreshController(
+      options: PullToRefreshOptions(color: Colors.red),
+      onRefresh: () async {
+        if (defaultTargetPlatform == TargetPlatform.android) {
+          webViewController?.reload();
+        } else if (defaultTargetPlatform == TargetPlatform.iOS || defaultTargetPlatform == TargetPlatform.macOS) {
+          webViewController?.loadUrl(urlRequest: URLRequest(url: await webViewController?.getUrl()));}
+      },
+    ))!;
+    String myUrl = url;
+
+    return showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (BuildContext context) {
+          return StatefulBuilder(
+              builder: (BuildContext context, StateSetter setState) {
+                return AlertDialog(
+                  contentPadding: EdgeInsets.all(CustomStyle.getWidth(0.0)),
+                  titlePadding: EdgeInsets.all(CustomStyle.getWidth(0.0)),
+                  shape: const RoundedRectangleBorder(
+                      borderRadius: BorderRadius.all(Radius.circular(0.0))
+                  ),
+                  content: Container(
+                      width: MediaQuery.of(context).size.width,
+                      height: MediaQuery.of(context).size.height * 0.75,
+                      child: Column(children: <Widget>[
+                        _progress < 1.0
+                            ? LinearProgressIndicator(value: _progress, color: Colors.red)
+                            : Container(),
+                        Expanded(
+                          child: Stack(
+                            children: [
+                              InAppWebView(
+                                key: webviewKey,
+                                //initialUrlRequest: URLRequest(url: WebUri(myUrl)),
+                                initialData: InAppWebViewInitialData(data: htmlData),
+                                initialOptions: InAppWebViewGroupOptions(
+                                  crossPlatform: InAppWebViewOptions(
+                                      javaScriptCanOpenWindowsAutomatically: true,
+                                      javaScriptEnabled: true,
+                                      useOnDownloadStart: true,
+                                      useOnLoadResource: true,
+                                      useShouldOverrideUrlLoading: true,
+                                      mediaPlaybackRequiresUserGesture: true,
+                                      allowFileAccessFromFileURLs: true,
+                                      allowUniversalAccessFromFileURLs: true,
+                                      verticalScrollBarEnabled: true,
+                                      userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/81.0.4044.122 Safari/537.36'
+                                  ),
+                                  android: AndroidInAppWebViewOptions(
+                                      useHybridComposition: true,
+                                      allowContentAccess: true,
+                                      builtInZoomControls: true,
+                                      thirdPartyCookiesEnabled: true,
+                                      allowFileAccess: true,
+                                      supportMultipleWindows: true
+                                  ),
+                                  ios: IOSInAppWebViewOptions(
+                                    allowsInlineMediaPlayback: true,
+                                    allowsBackForwardNavigationGestures: true,
+                                  ),
+                                ),
+                                pullToRefreshController: pullToRefreshController,
+                                onLoadStart: (InAppWebViewController controller, uri) {
+                                  setState(() {
+                                    myUrl = uri.toString();
+                                  });
+                                },
+                                onLoadStop: (InAppWebViewController controller, uri) {
+                                  setState(() {myUrl = uri.toString();});
+                                },
+                                onProgressChanged: (controller, progress) {
+                                  if (progress == 100) {pullToRefreshController?.endRefreshing();}
+                                  setState(() {_progress = progress / 100;});
+                                },
+                                androidOnPermissionRequest: (controller, origin, resources) async {
+                                  return PermissionRequestResponse(
+                                      resources: resources,
+                                      action: PermissionRequestResponseAction.GRANT);
+                                },
+                                onWebViewCreated: (InAppWebViewController controller) {
+                                  webViewController = controller;
+                                },
+                                onCreateWindow: (controller, createWindowRequest) async{
+                                  showDialog(
+                                    context: context, builder: (context) {
+                                    return AlertDialog(
+                                      shape: const RoundedRectangleBorder(
+                                          borderRadius: BorderRadius.all(Radius.circular(0.0))
+                                      ),
+                                      content: SizedBox(
+                                        width: MediaQuery.of(context).size.width,
+                                        height: 400,
+                                        child: InAppWebView(
+                                          // Setting the windowId property is important here!
+                                          windowId: createWindowRequest.windowId,
+                                          initialOptions: InAppWebViewGroupOptions(
+                                            android: AndroidInAppWebViewOptions(
+                                              builtInZoomControls: true,
+                                              thirdPartyCookiesEnabled: true,
+                                            ),
+                                            crossPlatform: InAppWebViewOptions(
+                                                cacheEnabled: true,
+                                                javaScriptEnabled: true,
+                                                userAgent: "Mozilla/5.0 (Linux; Android 9; LG-H870 Build/PKQ1.190522.001) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/83.0.4103.106 Mobile Safari/537.36"
+                                            ),
+                                            ios: IOSInAppWebViewOptions(
+                                              allowsInlineMediaPlayback: true,
+                                              allowsBackForwardNavigationGestures: true,
+                                            ),
+                                          ),
+                                          onCloseWindow: (controller) async{
+                                            if (Navigator.canPop(context)) {
+                                              Navigator.pop(context);
+                                            }
+                                          },
+                                        ),
+                                      ),);
+                                  },
+                                  );
+                                  return true;
+                                },
+                              )
+                            ],
+                          ),
+                        ),
+                      ])
+                  ),
+                  actions: [
 
                   ],
                 );

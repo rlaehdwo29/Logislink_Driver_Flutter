@@ -229,7 +229,7 @@ class _BridgePageState extends State<BridgePage> {
             logger.e("brige_page.dart GetCodeTask() Error Default: ${res?.statusCode} -> ${res?.statusMessage}");
             break;
           default:
-            logger.e("brige_page.dart GetCodeTask() Error Default:");
+            logger.e("brige_page.dart GetCodeTask() Error Default: ${obj}");
             break;
         }
       });
