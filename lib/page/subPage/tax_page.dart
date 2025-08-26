@@ -5,6 +5,7 @@ import 'package:get/get.dart';
 import 'package:logger/logger.dart';
 import 'package:logislink_driver_flutter/common/app.dart';
 import 'package:logislink_driver_flutter/common/common_util.dart';
+import 'package:logislink_driver_flutter/common/config_url.dart';
 import 'package:logislink_driver_flutter/common/model/order_model.dart';
 import 'package:logislink_driver_flutter/common/model/user_model.dart';
 import 'package:logislink_driver_flutter/common/strings.dart';

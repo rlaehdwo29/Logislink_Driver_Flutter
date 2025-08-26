@@ -3,11 +3,13 @@ import 'package:get/get.dart';
 import 'package:logger/logger.dart';
 import 'package:logislink_driver_flutter/common/app.dart';
 import 'package:logislink_driver_flutter/common/common_util.dart';
+import 'package:logislink_driver_flutter/common/config_url.dart';
 import 'package:logislink_driver_flutter/common/model/order_model.dart';
 import 'package:logislink_driver_flutter/common/model/stop_point_model.dart';
 import 'package:logislink_driver_flutter/common/strings.dart';
 import 'package:logislink_driver_flutter/provider/dio_service.dart';
 import 'package:dio/dio.dart';
+import 'package:logislink_driver_flutter/utils/util.dart';
 import 'package:path/path.dart';
 
 import '../common/config_url.dart';
@@ -38,6 +40,7 @@ class OrderService with ChangeNotifier {
     await DioService.dioClient(header: true).getHistory(app.authorization, _fromDate, _toDate, app.vehicId, _receiptYn, _taxYn, _payType, _payYn).then((it) async {
       ReturnMap _response = DioService.dioResponse(it);
       logger.d("getHistory() _response -> ${_response.status} // ${_response.resultMap}");
+      await Util.setEventLog(URL_ORDER_HISTORY_LIST, "운송실적");
       if(_response.status == "200") {
         await Util.setEventLog(URL_ORDER_HISTORY_LIST, "운송실적");
         if (_response.resultMap?["data"] != null) {

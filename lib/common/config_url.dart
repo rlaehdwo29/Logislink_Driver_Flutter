@@ -4,14 +4,13 @@
 
   const String m_ServerRelease = "https://app.logis-link.co.kr";    // 실 서버
 
-  //const String m_ServerDebug = "http://192.168.62.46:9080";         // localhost
- const String m_ServerDebug = "http://192.168.68.125:9080";         // localhost
- //const String m_ServerDebug2 = "http://192.168.53.62:8070";    //손팀장님 IP
+  const String m_ServerDebug = "http://192.168.53.51:9080";         // localhost
+  //const String m_ServerDebug2 = "http://192.168.53.62:8070";    //손팀장님 IP
   //const String m_ServerDebug = "http://59.15.228.197:8080";
 
   const String m_ServerTest = "http://211.252.86.30:806";           // Test 서버
   //const String m_ServerTest = "http://211.252.86.30:8005";
-  const String SERVER_URL = m_ServerDebug;
+  const String SERVER_URL = m_ServerRelease;
 
   const String RECEIPT_PATH = "/files/receipt/";
 
@@ -36,8 +35,6 @@
   const String URL_VERSION_CODE = "/cmm/version/list";
  // 로그 저장
  const String URL_EVENT_LOG = "/cmm/insert/eventLog";
- // 신한카드 거래등록
- const String URL_TRADE_REG = "/api/card/getTradeReg";
 
   // 스마트로 MID
   const String URL_SMARTRO_MID = "/api/card/getMidMB";

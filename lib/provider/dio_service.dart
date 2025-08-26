@@ -3,7 +3,6 @@ import 'dart:convert';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
-import 'package:get/get.dart';
 import 'package:logger/logger.dart';
 import 'package:dio/dio.dart';
 import 'package:logislink_driver_flutter/common/common_util.dart';
@@ -19,11 +18,11 @@ import 'package:logislink_driver_flutter/utils/util.dart';
 class DioService {
 
 
-  static Rest dioClient({header = false, json = false, image_option = false}) {
+  static Rest dioClient({header = false, image_option = false}) {
     Logger logger = Logger();
     logger.i("login_page.dart userLogin() => ${header}");
     Dio dio = Dio()..interceptors.add(CustomLogInterceptor());
-    if(header) dio.options.headers["Content-Type"] = json ? "application/json" : "application/x-www-form-urlencoded";
+    if(header) dio.options.headers["Content-Type"] = "application/x-www-form-urlencoded";
     if(image_option) dio.options.contentType = 'multipart/form-data';
     dio.options.connectTimeout = Duration(seconds: Const.CONNECT_TIMEOUT);
     return Rest(dio);

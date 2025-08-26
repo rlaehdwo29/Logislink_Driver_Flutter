@@ -2,7 +2,7 @@
   "project_info": {
     "project_number": "443385345478",
     "project_id": "logislink-driver",
-    "storage_bucket": "logislink-driver.appspot.com"
+    "storage_bucket": "logislink-driver.firebasestorage.app"
   },
   "client": [
     {

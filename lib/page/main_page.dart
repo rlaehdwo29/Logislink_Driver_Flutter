@@ -62,6 +62,8 @@ class _MainPageState extends State<MainPage> with CommonMainWidget,WidgetsBindin
   final controller = Get.find<App>();
   final beforeUser = UserModel().obs;
   final _nowUser = UserModel().obs;
+    Location? _lastPosition;
+
 
   static bool? isRunning;
 
@@ -249,6 +251,21 @@ class _MainPageState extends State<MainPage> with CommonMainWidget,WidgetsBindin
     print('location: ${location.toJson()}');
     double lat = location.latitude;
     double lon = location.longitude;
+
+    if(_lastPosition != null) {
+      double lastLat = _lastPosition!.latitude;
+      double lastLon = _lastPosition!.longitude;
+      double distance = geolocation.Geolocator.distanceBetween(lastLat,lastLon,lat,lon);
+
+      if(distance < 50) {
+        print("Ignoring duplication location update.");
+        return;
+      }
+    }
+
+    _lastPosition =  Location(latitude: lat, longitude: lon, accuracy: 0, altitude: 0, heading: 0, speed: 0, speedAccuracy: 0, millisecondsSinceEpoch: 1000, timestamp: DateTime.now(), isMock: false);
+    print('Update location: ${location.toJson()}');
+
 
     await SP.putString(Const.KEY_LAT, lat.toString());
     await SP.putString(Const.KEY_LON, lon.toString());
@@ -489,6 +506,31 @@ class _MainPageState extends State<MainPage> with CommonMainWidget,WidgetsBindin
   }
 
   Future<void> showTrackingPermissionDialog() async {
+<<<<<<< HEAD
+       if(Platform.isAndroid){
+      return openOkBox(
+          context,
+          Strings.of(context)?.get("tracking_permission_failed")??"Not Found",
+          Strings.of(context)?.get("confirm")??"Not Found",
+              () async {
+            Navigator.of(context).pop(false);
+            await AppSettings.openAppSettings();
+          }
+      );
+    }else{
+      return openCommonConfirmBox(
+          context,
+          "'\추적 허용'\ 권한이 거부되어 있습니다.\n\n앱의 콘텐츠와 기능에 액세스하려면 사용자가 추적을 활성화해야 합니다.\n\n수집된 데이터는 위치기반으로\n출.도착 처리시 사용되며\n수집된 데이터는 즉시 소멸됩니다.",
+          Strings.of(context)?.get("cancel")??"Not Found",
+          Strings.of(context)?.get("confirm")??"Not Found",
+              () => Navigator.of(context).pop(false),
+              () async {
+            Navigator.of(context).pop(false);
+            await AppSettings.openAppSettings();
+          });
+    }
+
+=======
     return openOkBox(
         context,
         Strings.of(context)?.get("tracking_permission_failed")??"Not Found",
@@ -499,6 +541,7 @@ class _MainPageState extends State<MainPage> with CommonMainWidget,WidgetsBindin
           //await AppSettings.openAppSettings();
         }
     );
+>>>>>>> 91a2918c27002cde9116722c3e1ff1486ccc3169
   }
 
   void onCallback(bool? result) {
@@ -1255,12 +1298,17 @@ class _MainPageState extends State<MainPage> with CommonMainWidget,WidgetsBindin
         priority: NotificationPriority.LOW,
       ),
       iosNotificationOptions: const IOSNotificationOptions(
-        showNotification: true,
+        showNotification: false,
         playSound: false,
       ),
-      foregroundTaskOptions: ForegroundTaskOptions(
-          eventAction: ForegroundTaskEventAction.repeat(60000),
+        foregroundTaskOptions: ForegroundTaskOptions(
+        eventAction: ForegroundTaskEventAction.repeat(60000),
+        autoRunOnBoot: true,
+        autoRunOnMyPackageReplaced: true,
+        allowWakeLock: true,
+        allowWifiLock: true
       ),
+
     );
   }
 

@@ -106,7 +106,7 @@ class _BridgePageState extends State<BridgePage> {
         var storage_per = await Permission.storage.status;
         if (location_per != PermissionStatus.granted) {
           return false;
-        } else if (storage_per != PermissionStatus.denied) {
+        } else if (storage_per == PermissionStatus.denied) {
           return false;
         } else if (phone_per != PermissionStatus.granted) {
           return false;

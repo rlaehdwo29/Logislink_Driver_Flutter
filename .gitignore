@@ -32,6 +32,11 @@ migrate_working_dir/
 .pub-cache/
 .pub/
 /build/
+.lock
+**/ios/Runner/
+**/iOS/RunnerTests/
+/macOS/Flutter
+
 
 # Symbolication related
 app.*.symbols
